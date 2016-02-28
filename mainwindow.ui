@@ -65,9 +65,9 @@
       <item>
        <layout class="QHBoxLayout" name="fileSystemsLayout">
         <item>
-         <layout class="QVBoxLayout" name="localFS_Layout">
+         <layout class="QVBoxLayout" name="vdiFsLayout">
           <item>
-           <widget class="QLabel" name="localFsLabel">
+           <widget class="QLabel" name="vdiFsLabel">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -83,26 +83,14 @@
            </widget>
           </item>
           <item>
-           <widget class="QTreeWidget" name="localFsTreeWidget">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <column>
-             <property name="text">
-              <string notr="true">1</string>
-             </property>
-            </column>
-           </widget>
+           <widget class="QTreeView" name="vdiFsTreeView"/>
           </item>
          </layout>
         </item>
         <item>
-         <layout class="QVBoxLayout" name="vdiFsLayout">
+         <layout class="QVBoxLayout" name="localFsLayout">
           <item>
-           <widget class="QLabel" name="vdiFsLabel">
+           <widget class="QLabel" name="localFsLabel">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -118,13 +106,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QTreeWidget" name="vdiFsTreeWidget">
-            <column>
-             <property name="text">
-              <string notr="true">1</string>
-             </property>
-            </column>
-           </widget>
+           <widget class="QTreeView" name="localFsTreeView"/>
           </item>
          </layout>
         </item>

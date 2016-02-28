@@ -2,21 +2,24 @@
 #define LOCALFILESYSTEM_H
 
 #include <QObject>
-#include <QTreeWidget>
+#include <QTreeView>
+#include <QFileSystemModel>
 
 class LocalFileSystem : public QObject
 {
     Q_OBJECT
 public:
-    explicit LocalFileSystem(QObject *parent = 0);
-    void setTreeWidget(QTreeWidget *initialTree);
+    explicit LocalFileSystem(QTreeView *initialTree, QObject *parent = 0);
+    ~LocalFileSystem();
 
 signals:
 
 public slots:
+    void onRootPathChanged(QString newRootPath);
 
 private:
-    QTreeWidget *tree;
+    QTreeView *tree;
+    QFileSystemModel *fileSystem;
 };
 
 #endif // LOCALFILESYSTEM_H
