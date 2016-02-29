@@ -1,13 +1,15 @@
 #include "vdifilesystem.h"
 
-VdiFileSystem::VdiFileSystem(QTreeView *initialTree, QObject *parent) : QAbstractItemModel(parent)
+
+VdiFileSystem::VdiFileSystem(QTreeView *initialTree, VdiFile *file, QObject *parent) : QAbstractItemModel(parent)
 {
     tree = initialTree;
-    vdi = new VdiFile();
+    this->setParent(parent);
+    vdi = file;
 }
 
 VdiFileSystem::~VdiFileSystem() {
-    delete vdi;
+
 }
 
 //mandantory overloads (full of junk to get rid of warnings

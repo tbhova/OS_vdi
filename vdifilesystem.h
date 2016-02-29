@@ -9,7 +9,7 @@ class VdiFileSystem : public QAbstractItemModel
 {
     Q_OBJECT
 public:
-    explicit VdiFileSystem(QTreeView *intialTree, QObject *parent = 0);
+    explicit VdiFileSystem(QTreeView *intialTree, VdiFile *file, QObject *parent = 0);
     ~VdiFileSystem();
 
     //mandantory method overloads for QAbstractItemModel inheritance
@@ -18,6 +18,7 @@ public:
     virtual int rowCount(const QModelIndex &parent) const;
     virtual int columnCount(const QModelIndex &parent) const;
     virtual QVariant data(const QModelIndex &index, int role) const;
+
 
 private:
     QTreeView *tree;
