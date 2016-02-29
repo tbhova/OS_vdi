@@ -1,13 +1,24 @@
 #include "vdifilesystem.h"
+#include <QMessageBox>
+#include <QFileDialog>
 
 VdiFileSystem::VdiFileSystem(QTreeView *initialTree, QObject *parent) : QAbstractItemModel(parent)
 {
     tree = initialTree;
     vdi = new VdiFile();
+    this->setParent(parent);
 }
 
 VdiFileSystem::~VdiFileSystem() {
     delete vdi;
+}
+
+void VdiFileSystem::selectVdiPrompt() {
+    //Open File
+    QString fileName = QFileDialog::getOpenFileName(NULL, tr("Please open a .vdi file"), "C://", ".VDI File (*.*);;All Files (*.*)");
+
+    QMessageBox::information(NULL,tr("FileNameOut"),fileName);
+    emit(this->vdiFileSelected(fileName));
 }
 
 //mandantory overloads (full of junk to get rid of warnings

@@ -24,6 +24,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     localFS = new LocalFileSystem(ui->localFsTreeView, this);
     vdiFS = new VdiFileSystem(ui->vdiFsTreeView, this);
+
+    connect(vdiFS, VdiFileSystem::vdiFileSelected, this, onVdiFileChosen);
 }
 
 MainWindow::~MainWindow()
@@ -31,13 +33,20 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::on_browseVDIPushButton_clicked()
-{
+void MainWindow::onVdiFileChosen(QString fileName) {
+    //find index of last / character
+    int vdiNameIndex = fileName.lastIndexOf("/");
 
+    //make sure the last index is not -1, if so it is 0, else increment to skip the /
+    vdiNameIndex = (vdiNameIndex == -1) ? 0 : ++vdiNameIndex;
+
+    //set the selectVDI label to state the selected VDI file
+    ui->selecVDILabel->setText(QString("Selected VDI: ").append(fileName.midRef(vdiNameIndex)));
 }
 
 void MainWindow::on_browseVDIPushButton_clicked()
 {
+    vdiFS->selectVdiPrompt();
     //Open File
     QString fileName = QFileDialog::getOpenFileName(this, tr("Please open a .vdi file"), "C://", ".VDI File (*.*);;All Files (*.*)");
 

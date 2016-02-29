@@ -11,6 +11,7 @@ class VdiFileSystem : public QAbstractItemModel
 public:
     explicit VdiFileSystem(QTreeView *intialTree, QObject *parent = 0);
     ~VdiFileSystem();
+    void selectVdiPrompt();
 
     //mandantory method overloads for QAbstractItemModel inheritance
     virtual QModelIndex index(int row, int column, const QModelIndex &parent) const;
@@ -18,6 +19,9 @@ public:
     virtual int rowCount(const QModelIndex &parent) const;
     virtual int columnCount(const QModelIndex &parent) const;
     virtual QVariant data(const QModelIndex &index, int role) const;
+
+signals:
+    void vdiFileSelected(QString fileName);
 
 private:
     QTreeView *tree;

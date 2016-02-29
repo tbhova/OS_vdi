@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QString>
 #include "localfilesystem.h"
 #include "vdifilesystem.h"
 
@@ -18,6 +19,7 @@ public:
     ~MainWindow();
 
 public slots:
+    void onVdiFileChosen(QString fileName);
 
 private slots:
     void on_browseVDIPushButton_clicked();
