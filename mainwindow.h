@@ -5,6 +5,7 @@
 #include <QString>
 #include "localfilesystem.h"
 #include "vdifilesystem.h"
+#include "vdifile.h"
 
 namespace Ui {
 class MainWindow;
@@ -28,6 +29,7 @@ private:
     Ui::MainWindow *ui;
     LocalFileSystem *localFS;
     VdiFileSystem *vdiFS;
+    VdiFile *vdi;
 };
 
 #endif // MAINWINDOW_H

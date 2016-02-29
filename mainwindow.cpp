@@ -23,22 +23,21 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     localFS = new LocalFileSystem(ui->localFsTreeView, this);
-    vdiFS = new VdiFileSystem(ui->vdiFsTreeView, this);
+    vdi = new VdiFile();
+    vdiFS = new VdiFileSystem(ui->vdiFsTreeView, vdi, this);
 
-    connect(vdiFS, VdiFileSystem::vdiFileSelected, this, onVdiFileChosen);
+    connect(vdi, VdiFile::vdiFileSelected, this, onVdiFileChosen);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete vdi;
 }
 
 void MainWindow::onVdiFileChosen(QString fileName) {
     //find index of last / character
-    int vdiNameIndex = fileName.lastIndexOf("/");
-
-    //make sure the last index is not -1, if so it is 0, else increment to skip the /
-    vdiNameIndex = (vdiNameIndex == -1) ? 0 : ++vdiNameIndex;
+    int vdiNameIndex = fileName.lastIndexOf("/")+1; //+1 to skip the '/'
 
     //set the selectVDI label to state the selected VDI file
     ui->selecVDILabel->setText(QString("Selected VDI: ").append(fileName.midRef(vdiNameIndex)));
@@ -46,7 +45,7 @@ void MainWindow::onVdiFileChosen(QString fileName) {
 
 void MainWindow::on_browseVDIPushButton_clicked()
 {
-    vdiFS->selectVdiPrompt();
+    vdi->selectVdiPrompt();
     //Open File
     QString fileName = QFileDialog::getOpenFileName(this, tr("Please open a .vdi file"), "C://", ".VDI File (*.*);;All Files (*.*)");
 
@@ -80,7 +79,7 @@ void MainWindow::on_browseVDIPushButton_clicked()
     //Size of Header
     unsigned char header_size[4];
     input.seekg(72);
-    for (int i=0; i<4;i++){
+    for (int i=0; i<4;i++) {
         input >> header_size[i];
         cout << hex << setw(2) << setfill('0') << (int)header_size[i] << " ";
     }
