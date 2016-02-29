@@ -13,8 +13,42 @@
 #include <iomanip>
 #include <cstring>
 #include <fstream>
+#include <cmath>
+#include <sstream>
 using namespace std;
 
+long long convertEndian(unsigned char C[], int size){
+
+    unsigned char temp [size];
+    int b =size-1;
+    for (int a=0; a<size; a++){
+        temp[b]= C[a];
+       // cout << hex << setw(2) << setfill('0') << (int)temp[b] << " ";
+        b=b-1;
+    }
+    //cout << endl;
+
+    int power=size-1;
+    long long total=0;
+    stringstream charNums;
+    for(int i=0; i<size;i++){
+        //cout << hex << setw(2) << setfill('0') << (int)temp[i] << " "<<endl;
+        charNums << hex << setw(2) << setfill('0') << (int)temp[i];
+       // cout << "in charNums: " << charNums.str() << endl;
+        power--;
+    }
+    QString chars = QString::fromStdString(charNums.str());
+    //cout << chars.toStdString() <<endl;
+    bool ok;
+    total=chars.toLongLong(&ok,16);
+
+
+    if(!ok)
+        cout << "Unable to convert String"<< endl;
+
+    return total;
+
+}
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -22,6 +56,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    //andy fork
     localFS = new LocalFileSystem(ui->localFsTreeView, this);
     vdi = new VdiFile();
     vdiFS = new VdiFileSystem(ui->vdiFsTreeView, vdi, this);
@@ -68,11 +103,18 @@ void MainWindow::on_browseVDIPushButton_clicked()
     input.open(fileChar,std::ios::in);
 
 
+
     if(!input.is_open())
         cout << "tru" << endl;
     input >> noskipws;
 
 
+            //
+            // Put in getHeader Method
+            //---------------------------------------------------
+            //Size of Header
+            unsigned char header_size[4];
+            input.seekg(72);
     //
     // Put in getHeader Method
     //---------------------------------------------------
@@ -85,51 +127,133 @@ void MainWindow::on_browseVDIPushButton_clicked()
     }
     cout << endl;
 
-    //---------------------------------------------
-    //Image Type
-    unsigned char image_type[4];
-    input.seekg(76);
-    for (int i=0; i<4;i++){
-        input >> image_type[i];
-        cout << hex << setw(2) << setfill('0') << (int)image_type[i] << " ";
-    }
-    cout << endl;
+            //---------------------------------------------
+            //Image Type
+            unsigned char image_type[4];
+            input.seekg(76);
+            for (int i=0; i<4;i++){
+                input >> image_type[i];
+                //cout << hex << setw(2) << setfill('0') << (int)image_type[i] << " ";
+            }
+            long long image_type_size=convertEndian(image_type,4);
+            //cout << endl;
 
-    //---------------------------------------------
-    //Offset Blocks
-    unsigned char offsetBlocks[4];
-    input.seekg(340);
-    for (int i=0; i<4;i++){
-        input >> offsetBlocks[i];
-        cout << hex << setw(2) << setfill('0') << (int)offsetBlocks[i] << " ";
-    }
-    cout << endl;
-
-
-    //---------------------------------------------
-    //Offset Data
-    unsigned char offsetData[4];
-    input.seekg(344);
-    for (int i=0; i<4;i++){
-        input >> offsetData[i];
-        cout << hex << setw(2) << setfill('0') << (int)offsetData[i] << " ";
-    }
-    cout << endl;
-
-    //---------------------------------------------
-    //Offset Data
-    unsigned char sectorSize[4];
-    input.seekg(360);
-    for (int i=0; i<4;i++){
-        input >> sectorSize[i];
-        cout << hex << setw(2) << setfill('0') << (int)sectorSize[i] << " ";
-    }
-    cout << endl;
+            //---------------------------------------------
+            //Offset Blocks
+            unsigned char offsetBlocks[4];
+            input.seekg(340);
+            for (int i=0; i<4;i++){
+                input >> offsetBlocks[i];
+               // cout << hex << setw(2) << setfill('0') << (int)offsetBlocks[i] << " ";
+            }
+            long long offsetBlocks_size=convertEndian(offsetBlocks,4);
+            //cout << endl;
 
 
+            //---------------------------------------------
+            //Offset Data
+            unsigned char offsetData[4];
+            input.seekg(344);
+            for (int i=0; i<4;i++){
+                input >> offsetData[i];
+              //  cout << hex << setw(2) << setfill('0') << (int)offsetData[i] << " ";
+            }
+            long long offsetData_size=convertEndian(offsetData,4);
+            // cout << endl;
+
+            //---------------------------------------------
+            //Sector Size
+            unsigned char sectorSize[4];
+            input.seekg(360);
+            for (int i=0; i<4;i++){
+                input >> sectorSize[i];
+              //  cout << hex << setw(2) << setfill('0') << (int)sectorSize[i] << " ";
+            }
+            long long sectorSize_size=convertEndian(sectorSize,4);
+            // cout << endl;
+
+            //---------------------------------------------
+            //Disk Size (Bytes)
+            unsigned char discSize[8];
+            input.seekg(368);
+            for (int i=0; i<8;i++){
+                input >> discSize[i];
+              //  cout << hex << setw(2) << setfill('0') << (int)discSize[i] << " ";
+            }
+            long long discSize_size=convertEndian(discSize,8);
+            cout << discSize_size << endl;
+            // cout << endl;
+
+            //---------------------------------------------
+            //Block Size
+            unsigned char blockSize[4];
+            input.seekg(376);
+            for (int i=0; i<4;i++){
+                input >> blockSize[i];
+            //    cout << hex << setw(2) << setfill('0') << (int)blockSize[i] << " ";
+            }
+            long long blockSize_size=convertEndian(blockSize,4);
+            //cout << endl;
+
+            //---------------------------------------------
+            //Blocks in HDD
+            unsigned char blocksInHDD[4];
+            input.seekg(384);
+            for (int i=0; i<4;i++){
+                input >> blocksInHDD[i];
+             //   cout << hex << setw(2) << setfill('0') << (int)blocksInHDD[i] << " ";
+            }
+            long long blocksInHDD_size=convertEndian(blocksInHDD,4);
+            // cout << endl;
+
+            //---------------------------------------------
+            //Blocks Allocated
+            unsigned char blocksAllocated[4];
+            input.seekg(388);
+            for (int i=0; i<4;i++){
+                input >> blocksAllocated[i];
+             //   cout << hex << setw(2) << setfill('0') << (int)blocksAllocated[i] << " ";
+            }
+            long long blocksAllocated_size=convertEndian(blocksAllocated,4);
+            //cout << endl;
+
+            //---------------------------------------------
+            //UUID of this VDI
+            unsigned char UUIDofVDI[16];
+            input.seekg(392);
+            for (int i=0; i<16;i++){
+                input >> UUIDofVDI[i];
+             //   cout << hex << setw(2) << setfill('0') << (int)UUIDofVDI[i] << " ";
+            }
+            //cout << endl;
+
+
+            //---------------------------------------------
+            //UUID of last SNAP
+            unsigned char UUIDofSNAP[16];
+            input.seekg(408);
+            for (int i=0; i<16;i++){
+                input >> UUIDofSNAP[i];
+              //  cout << hex << setw(2) << setfill('0') << (int)UUIDofSNAP[i] << " ";
+            }
+            //cout << endl;
 
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
