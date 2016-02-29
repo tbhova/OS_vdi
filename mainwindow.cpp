@@ -42,7 +42,7 @@ long long convertEndian(unsigned char C[], int size){
     bool ok;
     total=chars.toLongLong(&ok,16);
 
-
+    //cout << total <<endl;
     if(!ok)
         cout << "Unable to convert String"<< endl;
 
@@ -115,17 +115,13 @@ void MainWindow::on_browseVDIPushButton_clicked()
             //Size of Header
             unsigned char header_size[4];
             input.seekg(72);
-    //
-    // Put in getHeader Method
-    //---------------------------------------------------
-    //Size of Header
-    unsigned char header_size[4];
-    input.seekg(72);
-    for (int i=0; i<4;i++) {
-        input >> header_size[i];
-        cout << hex << setw(2) << setfill('0') << (int)header_size[i] << " ";
-    }
-    cout << endl;
+            for (int i=0; i<4;i++){
+                input >> header_size[i];
+               // cout << hex << setw(2) << setfill('0') << (int)header_size[i] << " ";
+            }
+            long long size_of_header=convertEndian(header_size,4);
+            //cout << dec<< size_of_header << endl;
+            //cout << endl;
 
             //---------------------------------------------
             //Image Type
@@ -178,11 +174,12 @@ void MainWindow::on_browseVDIPushButton_clicked()
             input.seekg(368);
             for (int i=0; i<8;i++){
                 input >> discSize[i];
-              //  cout << hex << setw(2) << setfill('0') << (int)discSize[i] << " ";
+                //cout << hex << setw(2) << setfill('0') << (int)discSize[i] << " ";
             }
+           // cout << endl;
             long long discSize_size=convertEndian(discSize,8);
-            cout << discSize_size << endl;
-            // cout << endl;
+            //cout << discSize_size << endl;
+            //cout << endl;
 
             //---------------------------------------------
             //Block Size
