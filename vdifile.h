@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QFile>
 #include "vdimap.h"
+#include <fstream>
 
 class VdiFile : public QObject
 {
@@ -12,12 +13,20 @@ public:
     VdiFile(QObject *parent = 0);
     ~VdiFile();
 
+    void selectVdiPrompt();
+    void openFile(QString fileName);
+
 public slots:
-    void onVdiFileChanged(QString newFile); //slot when browse button produces a signal
+
+signals:
+    void vdiFileSelected(QString fileName);
 
 private:
+    void closeAndReset();
+
     QFile *vdi; //whatever filetype we intend to use
     VdiMap *map;
+    std::ifstream input;
 };
 
 #endif // VDIFILE_H

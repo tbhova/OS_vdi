@@ -57,15 +57,30 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     //andy fork
+    localFS = new LocalFileSystem(ui->localFsTreeView, this);
+    vdi = new VdiFile();
+    vdiFS = new VdiFileSystem(ui->vdiFsTreeView, vdi, this);
+
+    connect(vdi, VdiFile::vdiFileSelected, this, onVdiFileChosen);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete vdi;
+}
+
+void MainWindow::onVdiFileChosen(QString fileName) {
+    //find index of last / character
+    int vdiNameIndex = fileName.lastIndexOf("/")+1; //+1 to skip the '/'
+
+    //set the selectVDI label to state the selected VDI file
+    ui->selecVDILabel->setText(QString("Selected VDI: ").append(fileName.midRef(vdiNameIndex)));
 }
 
 void MainWindow::on_browseVDIPushButton_clicked()
 {
+    vdi->selectVdiPrompt();
     //Open File
     QString fileName = QFileDialog::getOpenFileName(this, tr("Please open a .vdi file"), "C://", ".VDI File (*.*);;All Files (*.*)");
 
@@ -78,6 +93,7 @@ void MainWindow::on_browseVDIPushButton_clicked()
 //
     string fileString = fileName.toStdString();
 
+    cout << fileString << endl;
     char *fileChar = new char[fileString.length() + 1];
 
     std::strcpy(fileChar, fileString.c_str());
@@ -88,6 +104,8 @@ void MainWindow::on_browseVDIPushButton_clicked()
 
 
 
+    if(!input.is_open())
+        cout << "tru" << endl;
     input >> noskipws;
 
 
