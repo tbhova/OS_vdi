@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-
 #include <QFileDialog.h>
 #include <QFile>
 #include <QTextStream>
@@ -37,19 +36,145 @@ void MainWindow::on_browseVDIPushButton_clicked()
 
     QMessageBox::information(this,tr("FileNameOut"),fileName);
 
-    //string file2 = fileName.toStdString();
 
 
+//
+// Put in Open File Method
+//
+    string fileString = fileName.toStdString();
 
-    unsigned char x;
+    cout << fileString << endl;
+    char *fileChar = new char[fileString.length() + 1];
+
+    std::strcpy(fileChar, fileString.c_str());
+
+
     ifstream input;
-    input.open("Test.vdi",std::ios::in);
+    input.open(fileChar,std::ios::in);
+
+
     if(!input.is_open())
         cout << "tru" << endl;
     input >> noskipws;
-    while (input >> x) {
-        std::cout << std::hex << std::setw(2) << std::setfill('0')
-                  << (int)x;
+
+
+    //
+    // Put in getHeader Method
+    //---------------------------------------------------
+    //Size of Header
+    unsigned char header_size[4];
+    input.seekg(72);
+    for (int i=0; i<4;i++){
+        input >> header_size[i];
+        cout << hex << setw(2) << setfill('0') << (int)header_size[i] << " ";
+    }
+    cout << endl;
+
+    //---------------------------------------------
+    //Image Type
+    unsigned char image_type[4];
+    input.seekg(76);
+    for (int i=0; i<4;i++){
+        input >> image_type[i];
+        cout << hex << setw(2) << setfill('0') << (int)image_type[i] << " ";
+    }
+    cout << endl;
+
+    //---------------------------------------------
+    //Offset Blocks
+    unsigned char offsetBlocks[4];
+    input.seekg(340);
+    for (int i=0; i<4;i++){
+        input >> offsetBlocks[i];
+        cout << hex << setw(2) << setfill('0') << (int)offsetBlocks[i] << " ";
+    }
+    cout << endl;
+
+
+    //---------------------------------------------
+    //Offset Data
+    unsigned char offsetData[4];
+    input.seekg(344);
+    for (int i=0; i<4;i++){
+        input >> offsetData[i];
+        cout << hex << setw(2) << setfill('0') << (int)offsetData[i] << " ";
+    }
+    cout << endl;
+
+    //---------------------------------------------
+    //Offset Data
+    unsigned char sectorSize[4];
+    input.seekg(360);
+    for (int i=0; i<4;i++){
+        input >> sectorSize[i];
+        cout << hex << setw(2) << setfill('0') << (int)sectorSize[i] << " ";
+    }
+    cout << endl;
+
+
+
+
+}
+
+
+
+
+//
+//
+// Some Bullshit Stufff
+//
+
+/*      //83 is decimal for 53 in hex, 239 for EF
+    unsigned char a;
+    unsigned char b;
+    long long count =1;
+    input.seekg(3853712);
+    input >> a;
+    input >> b;
+
+    cout << "done seeking" << endl;
+    while ((int)a!= 83 || (int)b !=239){
+        count ++;
+        input.unget();
+        input >> a;
+        input >> b;
+    }
+        cout << count << endl;
+
+  input.seekg(5);
+    unsigned char y;
+    input>>y;
+    std::cout << std::hex << std::setw(2) << std::setfill('0')
+          << (int)y << " ";
+    input>>y;
+    std::cout << std::hex << std::setw(2) << std::setfill('0')
+          << (int)y << " ";
+    input>>y;
+    std::cout << std::hex << std::setw(2) << std::setfill('0')
+          << (int)y << " ";
+    input>>y;
+    std::cout << std::hex << std::setw(2) << std::setfill('0')
+          << (int)y << " ";
+    cout << endl;
+input>>y;
+    std::cout << std::hex << std::setw(2) << std::setfill('0')
+          << (int)y << " ";
+
+    input.unget();
+input>>y;
+    std::cout << std::hex << std::setw(2) << std::setfill('0')
+          << (int)y << " ";
+    cout << endl;
+
+
+
+    for (int i=0; i<1000;i++){
+        for(int j=0; j<10;j++){
+            input >> x[j];
+            std::cout << std::hex << std::setw(2) << std::setfill('0')
+                  << (int)x[j] << " ";
+        }
+    cout << endl;
     }
 
 
@@ -90,4 +215,9 @@ void MainWindow::on_browseVDIPushButton_clicked()
         cout << input.toStdString()<< endl;
         QString input = in.read(64);
 */
-}
+
+
+
+
+
+
