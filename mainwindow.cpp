@@ -13,23 +13,42 @@
 #include <iomanip>
 #include <cstring>
 #include <fstream>
+#include <cmath>
+#include <sstream>
 using namespace std;
 
-int convertEndian(char C[], int size){
-    int  j = 0;
-    char temp [size] ;
-    for (int i = size-1; i>=0; i--){
-        C[i] = temp[j];
-        j++;
+long long convertEndian(unsigned char C[], int size){
 
-        cout << hex << setw(2) << setfill('0') << (int)temp[j] << " ";
+    unsigned char temp [size];
+    int b =size-1;
+    for (int a=0; a<size; a++){
+        temp[b]= C[a];
+       // cout << hex << setw(2) << setfill('0') << (int)temp[b] << " ";
+        b=b-1;
     }
-    cout << endl;
+    //cout << endl;
 
-    return 0;
+    int power=size-1;
+    long long total=0;
+    stringstream charNums;
+    for(int i=0; i<size;i++){
+        //cout << hex << setw(2) << setfill('0') << (int)temp[i] << " "<<endl;
+        charNums << hex << setw(2) << setfill('0') << (int)temp[i];
+       // cout << "in charNums: " << charNums.str() << endl;
+        power--;
+    }
+    QString chars = QString::fromStdString(charNums.str());
+    //cout << chars.toStdString() <<endl;
+    bool ok;
+    total=chars.toLongLong(&ok,16);
+
+
+    if(!ok)
+        cout << "Unable to convert String"<< endl;
+
+    return total;
 
 }
-
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -37,18 +56,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    localFS = new LocalFileSystem(ui->localFsTreeView, this);
-    vdiFS = new VdiFileSystem(ui->vdiFsTreeView, this);
+    //andy fork
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
-}
-
-void MainWindow::on_browseVDIPushButton_clicked()
-{
-
 }
 
 void MainWindow::on_browseVDIPushButton_clicked()
@@ -87,8 +100,9 @@ void MainWindow::on_browseVDIPushButton_clicked()
             for (int i=0; i<4;i++){
                 input >> header_size[i];
                 //cout << hex << setw(2) << setfill('0') << (int)header_size[i] << " ";
-                int size_of_header=convertEndian(header_size[4],4);
             }
+            long long size_of_header=convertEndian(header_size,4);
+
             //cout << endl;
 
             //---------------------------------------------
@@ -99,6 +113,7 @@ void MainWindow::on_browseVDIPushButton_clicked()
                 input >> image_type[i];
                 //cout << hex << setw(2) << setfill('0') << (int)image_type[i] << " ";
             }
+            long long image_type_size=convertEndian(image_type,4);
             //cout << endl;
 
             //---------------------------------------------
@@ -109,6 +124,7 @@ void MainWindow::on_browseVDIPushButton_clicked()
                 input >> offsetBlocks[i];
                // cout << hex << setw(2) << setfill('0') << (int)offsetBlocks[i] << " ";
             }
+            long long offsetBlocks_size=convertEndian(offsetBlocks,4);
             //cout << endl;
 
 
@@ -120,6 +136,7 @@ void MainWindow::on_browseVDIPushButton_clicked()
                 input >> offsetData[i];
               //  cout << hex << setw(2) << setfill('0') << (int)offsetData[i] << " ";
             }
+            long long offsetData_size=convertEndian(offsetData,4);
             // cout << endl;
 
             //---------------------------------------------
@@ -130,6 +147,7 @@ void MainWindow::on_browseVDIPushButton_clicked()
                 input >> sectorSize[i];
               //  cout << hex << setw(2) << setfill('0') << (int)sectorSize[i] << " ";
             }
+            long long sectorSize_size=convertEndian(sectorSize,4);
             // cout << endl;
 
             //---------------------------------------------
@@ -140,6 +158,8 @@ void MainWindow::on_browseVDIPushButton_clicked()
                 input >> discSize[i];
               //  cout << hex << setw(2) << setfill('0') << (int)discSize[i] << " ";
             }
+            long long discSize_size=convertEndian(discSize,8);
+            cout << discSize_size << endl;
             // cout << endl;
 
             //---------------------------------------------
@@ -150,6 +170,7 @@ void MainWindow::on_browseVDIPushButton_clicked()
                 input >> blockSize[i];
             //    cout << hex << setw(2) << setfill('0') << (int)blockSize[i] << " ";
             }
+            long long blockSize_size=convertEndian(blockSize,4);
             //cout << endl;
 
             //---------------------------------------------
@@ -160,6 +181,7 @@ void MainWindow::on_browseVDIPushButton_clicked()
                 input >> blocksInHDD[i];
              //   cout << hex << setw(2) << setfill('0') << (int)blocksInHDD[i] << " ";
             }
+            long long blocksInHDD_size=convertEndian(blocksInHDD,4);
             // cout << endl;
 
             //---------------------------------------------
@@ -170,6 +192,7 @@ void MainWindow::on_browseVDIPushButton_clicked()
                 input >> blocksAllocated[i];
              //   cout << hex << setw(2) << setfill('0') << (int)blocksAllocated[i] << " ";
             }
+            long long blocksAllocated_size=convertEndian(blocksAllocated,4);
             //cout << endl;
 
             //---------------------------------------------
