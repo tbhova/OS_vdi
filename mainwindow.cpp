@@ -31,17 +31,24 @@ int convertEndian(char C[], int size){
 }
 
 
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    //andy fork
+    localFS = new LocalFileSystem(ui->localFsTreeView, this);
+    vdiFS = new VdiFileSystem(ui->vdiFsTreeView, this);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::on_browseVDIPushButton_clicked()
+{
+
 }
 
 void MainWindow::on_browseVDIPushButton_clicked()
