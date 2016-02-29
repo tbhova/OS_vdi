@@ -14,9 +14,17 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    localfilesystem.cpp
+    localfilesystem.cpp \
+    vdimanager.cpp \
+    vdifile.cpp \
+    vdifilesystem.cpp \
+    vdimap.cpp
 
 HEADERS  += mainwindow.h \
-    localfilesystem.h
+    localfilesystem.h \
+    vdimanager.h \
+    vdifile.h \
+    vdifilesystem.h \
+    vdimap.h
 
 FORMS    += mainwindow.ui

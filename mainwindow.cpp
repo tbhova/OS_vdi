@@ -8,6 +8,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     localFS = new LocalFileSystem(ui->localFsTreeView, this);
+    vdiFS = new VdiFileSystem(ui->vdiFsTreeView, this);
 }
 
 MainWindow::~MainWindow()

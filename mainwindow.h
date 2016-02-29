@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include "localfilesystem.h"
+#include "vdifilesystem.h"
 
 namespace Ui {
 class MainWindow;
@@ -24,6 +25,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     LocalFileSystem *localFS;
+    VdiFileSystem *vdiFS;
 };
 
 #endif // MAINWINDOW_H

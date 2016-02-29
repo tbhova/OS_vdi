@@ -11,7 +11,6 @@ class LocalFileSystem : public QObject
 public:
     explicit LocalFileSystem(QTreeView *initialTree, QObject *parent = 0);
     ~LocalFileSystem();
-
 signals:
 
 public slots:
