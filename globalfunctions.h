@@ -4,8 +4,8 @@
 #include <vector>
 
 
-long long convertEndian(unsigned char C[], long long size);
+unsigned long long convertEndian(unsigned char C[], long long size, bool littleEndian = false);
 unsigned char getCharFromStream(int size, long long seek_to, std::ifstream &input);
-long long getStreamData(int size, long long seek_to, std::ifstream &input, std::string name = "", bool output = true);
+unsigned long long getStreamData(int size, long long seek_to, std::ifstream &input, std::string name = "", bool output = true, bool littleEndian = false);
 
 #endif // GLOBALFUNCTIONS

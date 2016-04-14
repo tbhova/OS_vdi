@@ -38,7 +38,7 @@ int ext2GroupDescriptor::getInodeBitmap(int block) {
 }
 
 int ext2GroupDescriptor::getInodeTable(int block) {
-    cout << "InodeTable Location (block#): " << groupDescriptors->at(0).bg_inode_table << endl;
+    cout << "InodeTable Location (block#): " << dec << groupDescriptors->at(0).bg_inode_table << endl;
     return groupDescriptors->at(0).bg_inode_table;
 }
 
