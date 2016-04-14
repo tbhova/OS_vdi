@@ -70,7 +70,7 @@ unsigned long long getStreamData(int size, long long seek_to, ifstream &input, s
     for (int i=0; i<size;i++){
         input >> data[i];
         if (output){
-            cout << endl<<endl;
+            //cout << endl<<endl;
             cout << hex << setw(2) << setfill('0') << (int)data[i] << " ";
         }
     }
@@ -78,7 +78,7 @@ unsigned long long getStreamData(int size, long long seek_to, ifstream &input, s
     size_of_part=convertEndian(data, size, littleEndian);
     if (output) {
         cout <<"Size of "<< name << ":" << dec << size_of_part << endl;
-        //cout << endl;
+        cout << endl;
     }
     return size_of_part;
 
@@ -217,9 +217,9 @@ void VdiFile::openFile(QString fileName) {
 
     unsigned int block_bitmap_address = bootBlockLocation + block_size*groupDescriptors->getBlockBitmap(1);
     unsigned int inode_bitmap_address = bootBlockLocation + block_size*groupDescriptors->getInodeBitmap(1);
-    cout << "Hellooo::: Inode Bitmap Location: " << hex << setw(2) << setfill('0') << bootBlockLocation + block_size*groupDescriptors->getInodeBitmap(1) << endl;
+    cout << "Hello::: Inode Bitmap Location: " << hex << setw(2) << setfill('0') << bootBlockLocation + block_size*groupDescriptors->getInodeBitmap(1) << endl;
     unsigned int inode_table_address = bootBlockLocation + block_size*groupDescriptors->getInodeTable(1);
-    cout << "Hellooo::: Inode Table Location: " << hex << setw(2) << setfill('0') << bootBlockLocation + inode_table_address << endl;
+    cout << "Hello::: Inode Table Location: " << hex << setw(2) << setfill('0') << inode_table_address << endl;
 
     //cout << hex << setw(2) << setfill('0') << inode_table_address <<" "<<endl << endl<< endl;
     //unsigned int block_bitmap = getStreamData(4,inode_bitmap_address, input);
@@ -227,15 +227,14 @@ void VdiFile::openFile(QString fileName) {
 
 
     //DataBlockBitmap = new QVector <unsigned char>;
-   // fillDataBlockBitmap(DataBlockBitmap, block_bitmap_address, inode_bitmap_address, input);
-    cout << "This is the adress of block bitmap" << hex<< block_bitmap_address << endl;
+    // fillDataBlockBitmap(DataBlockBitmap, block_bitmap_address, inode_bitmap_address, input);
+    //cout << "This is the adress of block bitmap" << hex<< block_bitmap_address << endl;
     blockBitmap = new vector<bool>;
     inodesBitmap = new vector<bool>;
     addBitsFromStreamData(blockBitmap, block_size*8, block_bitmap_address, input);
-
     addBitsFromStreamData(inodesBitmap, block_size*8, inode_bitmap_address, input);
-    cout << dec <<blockBitmap->size() << " " << sizeof(*blockBitmap) << endl;
-    cout << blockBitmap->max_size() << endl;
+    //cout << dec <<blockBitmap->size() << " " << sizeof(*blockBitmap) << endl;
+    //cout << blockBitmap->max_size() << endl;
     cout << "Bit reading/ converting complete" << endl;
 
 

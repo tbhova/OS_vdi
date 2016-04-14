@@ -16,22 +16,22 @@ ext2SuperBlock::ext2SuperBlock(QObject *parent, long long startOffset,  ifstream
 
     //Note the names of these are standardized, and were found online to keep it easy to read
     cout << "Start of SuperBlock" <<endl;
-    s_inodes_count = getStreamData(4,startOffset,file);            /* Inodes count */
-    s_blocks_count = getStreamData(4,startOffset+4,file);          /* Blocks count */
-    s_r_blocks_count = getStreamData(4,startOffset+8,file);        /* Reserved blocks count */
-    s_free_blocks_count = getStreamData(4,startOffset+12,file);    /* Free blocks count */
-    s_free_inodes_count = getStreamData(4,startOffset+16,file);    /* Free inodes count */
-    s_first_data_block = getStreamData(4,startOffset+20,file);     /* First Data Block */
-    s_log_block_size = getStreamData(4,startOffset+24,file);       /* Block size */
-    s_log_frag_size = getStreamData(4,startOffset+28,file);        /* Fragment size */
-    s_blocks_per_group = getStreamData(4,startOffset+32,file);     /* # Blocks per group */
-    s_frags_per_group = getStreamData(4,startOffset+36,file);      /* # Fragments per group */
-    s_inodes_per_group = getStreamData(4,startOffset+40,file);     /* # Inodes per group */
+    s_inodes_count = getStreamData(4,startOffset,file, "Number of Inodes");            /* Inodes count */
+    s_blocks_count = getStreamData(4,startOffset+4,file, "Number of Blocks");          /* Blocks count */
+    s_r_blocks_count = getStreamData(4,startOffset+8,file, " Reserved Blocks");        /* Reserved blocks count */
+    s_free_blocks_count = getStreamData(4,startOffset+12,file, "Blocks Free");    /* Free blocks count */
+    s_free_inodes_count = getStreamData(4,startOffset+16,file, "Free Inodes");    /* Free inodes count */
+    s_first_data_block = getStreamData(4,startOffset+20,file, "First Data Block");     /* First Data Block */
+    s_log_block_size = getStreamData(4,startOffset+24,file, "Block Size");       /* Block size */
+    s_log_frag_size = getStreamData(4,startOffset+28,file, "Fragment Size");        /* Fragment size */
+    s_blocks_per_group = getStreamData(4,startOffset+32,file, "Blocks per Group");     /* # Blocks per group */
+    s_frags_per_group = getStreamData(4,startOffset+36,file, "Frags per Group");      /* # Fragments per group */
+    s_inodes_per_group = getStreamData(4,startOffset+40,file, "Inodes per Group");     /* # Inodes per group */
     s_mtime = getStreamData(4,startOffset+44,file);                /* Mount time */
     s_wtime = getStreamData(4,startOffset+48,file);                /* Write time */
     s_mnt_count= getStreamData(2,startOffset+52,file);             /* Mount count */
     s_max_mnt_count= getStreamData(2,startOffset+54,file);         /* Maximal mount count */
-    s_magic= getStreamData(2,startOffset+56,file) ;                /* Magic signature */
+    s_magic= getStreamData(2,startOffset+56,file, "Magic Number") ;                /* Magic signature */
     s_state= getStreamData(2,startOffset+58,file) ;                /* File system state */
     s_errors= getStreamData(2,startOffset+60,file) ;               /* Behaviour when detecting errors */
     s_pad= getStreamData(2,startOffset+62,file) ;
