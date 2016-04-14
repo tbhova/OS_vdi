@@ -17,38 +17,7 @@
 #include <sstream>
 using namespace std;
 
-long long convertEndian(unsigned char C[], int size){
 
-    unsigned char temp [size];
-    int b =size-1;
-    for (int a=0; a<size; a++){
-        temp[b]= C[a];
-       // cout << hex << setw(2) << setfill('0') << (int)temp[b] << " ";
-        b=b-1;
-    }
-    //cout << endl;
-
-    int power=size-1;
-    long long total=0;
-    stringstream charNums;
-    for(int i=0; i<size;i++){
-        //cout << hex << setw(2) << setfill('0') << (int)temp[i] << " "<<endl;
-        charNums << hex << setw(2) << setfill('0') << (int)temp[i];
-       // cout << "in charNums: " << charNums.str() << endl;
-        power--;
-    }
-    QString chars = QString::fromStdString(charNums.str());
-    //cout << chars.toStdString() <<endl;
-    bool ok;
-    total=chars.toLongLong(&ok,16);
-
-    //cout << total <<endl;
-    if(!ok)
-        cout << "Unable to convert String"<< endl;
-
-    return total;
-
-}
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -81,7 +50,28 @@ void MainWindow::onVdiFileChosen(QString fileName) {
 void MainWindow::on_browseVDIPushButton_clicked()
 {
     vdi->selectVdiPrompt();
-    //Open File
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+//
+//
+// Some Bullshit Stuff
+//
+/*
+ * //Open File
     QString fileName = QFileDialog::getOpenFileName(this, tr("Please open a .vdi file"), "C://", ".VDI File (*.*);;All Files (*.*)");
 
     QMessageBox::information(this,tr("FileNameOut"),fileName);
@@ -103,12 +93,12 @@ void MainWindow::on_browseVDIPushButton_clicked()
     input.open(fileChar,std::ios::in);
 
 
-
+    // Check to see if file is open
     if(!input.is_open())
-        cout << "tru" << endl;
+        cout << "File not open" << endl;
     input >> noskipws;
 
-
+/*
             //
             // Put in getHeader Method
             //---------------------------------------------------
@@ -117,10 +107,10 @@ void MainWindow::on_browseVDIPushButton_clicked()
             input.seekg(72);
             for (int i=0; i<4;i++){
                 input >> header_size[i];
-               // cout << hex << setw(2) << setfill('0') << (int)header_size[i] << " ";
+                //cout << hex << setw(2) << setfill('0') << (int)header_size[i] << " ";
             }
             long long size_of_header=convertEndian(header_size,4);
-            //cout << dec<< size_of_header << endl;
+           // cout << dec<< size_of_header << endl;
             //cout << endl;
 
             //---------------------------------------------
@@ -132,7 +122,10 @@ void MainWindow::on_browseVDIPushButton_clicked()
                 //cout << hex << setw(2) << setfill('0') << (int)image_type[i] << " ";
             }
             long long image_type_size=convertEndian(image_type,4);
-            //cout << endl;
+           // cout << image_type_size <<endl;
+
+
+
 
             //---------------------------------------------
             //Offset Blocks
@@ -234,31 +227,6 @@ void MainWindow::on_browseVDIPushButton_clicked()
               //  cout << hex << setw(2) << setfill('0') << (int)UUIDofSNAP[i] << " ";
             }
             //cout << endl;
-
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//
-//
-// Some Bullshit Stufff
-//
 
 /*      //83 is decimal for 53 in hex, 239 for EF
     unsigned char a;
