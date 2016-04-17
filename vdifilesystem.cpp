@@ -1,5 +1,7 @@
 #include "vdifilesystem.h"
 
+using namespace std;
+using namespace CSCI5806;
 
 VdiFileSystem::VdiFileSystem(QTreeView *initialTree, VdiFile *file, QObject *parent) : QAbstractItemModel(parent)
 {

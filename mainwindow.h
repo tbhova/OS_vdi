@@ -7,6 +7,7 @@
 #include "vdifilesystem.h"
 #include "vdifile.h"
 
+
 namespace Ui {
 class MainWindow;
 }
@@ -27,9 +28,10 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    LocalFileSystem *localFS;
-    VdiFileSystem *vdiFS;
-    VdiFile *vdi;
+    CSCI5806::LocalFileSystem *localFS;
+    CSCI5806::VdiFileSystem *vdiFS;
+    CSCI5806::VdiFile *vdi;
 };
+
 
 #endif // MAINWINDOW_H

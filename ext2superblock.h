@@ -3,6 +3,7 @@
 #include <fstream>
 #include <QObject>
 
+namespace CSCI5806 {
 class ext2SuperBlock : public QObject
 {
     Q_OBJECT
@@ -47,5 +48,6 @@ private:
            unsigned int group_count;
            int block_size;
 };
+}
 
 #endif // EXT2SUPERBLOCK_H

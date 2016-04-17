@@ -15,9 +15,9 @@
 #include <fstream>
 #include <cmath>
 #include <sstream>
+
 using namespace std;
-
-
+using namespace CSCI5806;
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -25,7 +25,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    //andy fork
     localFS = new LocalFileSystem(ui->localFsTreeView, this);
     vdi = new VdiFile();
     vdiFS = new VdiFileSystem(ui->vdiFsTreeView, vdi, this);
@@ -35,8 +34,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+#warning double check for memory leaks
     delete ui;
     delete vdi;
+    delete vdiFS;
 }
 
 void MainWindow::onVdiFileChosen(QString fileName) {
@@ -50,10 +51,6 @@ void MainWindow::onVdiFileChosen(QString fileName) {
 void MainWindow::on_browseVDIPushButton_clicked()
 {
     vdi->selectVdiPrompt();
-
-
-
-
 }
 
 

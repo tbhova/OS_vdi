@@ -5,6 +5,7 @@
 #include <QTreeView>
 #include "vdifile.h"
 
+namespace CSCI5806 {
 class VdiFileSystem : public QAbstractItemModel
 {
     Q_OBJECT
@@ -24,5 +25,6 @@ private:
     QTreeView *tree;
     VdiFile *vdi;
 };
+}
 
 #endif // VDIFILESYSTEM_H

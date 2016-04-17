@@ -10,6 +10,7 @@
 #include <fstream>
 #include <vector>
 
+namespace CSCI5806 {
 struct VdiHeader {
 long long headerSize;
 long long imageType;
@@ -59,8 +60,7 @@ private:
     std::vector<bool> *blockBitmap, *inodesBitmap;
     //std::vector optimized bool storage to take 1 bit per boolean value when there are multiple bools
 
-
-
 };
+}
 
 #endif // VDIFILE_H

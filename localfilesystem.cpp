@@ -1,5 +1,8 @@
 #include "localfilesystem.h"
 
+using namespace std;
+using namespace CSCI5806;
+
 LocalFileSystem::LocalFileSystem(QTreeView *initialTree, QObject *parent) : QObject(parent)
 {
     tree = initialTree; //tree comes from ui

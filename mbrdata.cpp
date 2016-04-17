@@ -1,9 +1,11 @@
 #include "mbrdata.h"
-#include "globalfunctions.h"
+#include "vdifunctions.h"
 #include <iostream>
 #include <iomanip>
 #include <ios>
+
 using namespace std;
+using namespace CSCI5806;
 
 //get data from Stream
 unsigned char getStreamDataChar(int size, long long seek_to, ifstream &input){

@@ -5,6 +5,7 @@
 
 #include <QObject>
 
+namespace CSCI5806 {
 class VdiMap : public QObject
 {
     Q_OBJECT
@@ -18,5 +19,6 @@ public slots:
 private:
     QVector < unsigned int >*map; //dyanmic array of char for the map
 };
+}
 
 #endif // VDIMAP_H
