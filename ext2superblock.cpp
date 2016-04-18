@@ -78,5 +78,10 @@ int ext2SuperBlock::getBlocksPerGroup() {
     return s_blocks_per_group;
 }
 
+int ext2SuperBlock::getInodesPerGroup() {
+    return s_inodes_per_group;
+}
+
+
 
 

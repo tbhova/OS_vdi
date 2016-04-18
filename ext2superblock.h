@@ -12,6 +12,7 @@ public:
     int getGroupDescriptorBlockNumber();
     int getBlockSize();
     int getBlocksPerGroup();
+    int getInodesPerGroup();
 
 signals:
 

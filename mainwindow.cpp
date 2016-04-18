@@ -51,9 +51,6 @@ void MainWindow::on_browseVDIPushButton_clicked()
 {
     vdi->selectVdiPrompt();
 
-
-
-
 }
 
 
