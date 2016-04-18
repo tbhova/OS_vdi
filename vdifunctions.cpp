@@ -5,6 +5,8 @@
 #include <QString>
 #include <fstream>
 #include <vector>
+#include <QObject>
+#include <QDebug>
 
 
 using namespace std;
@@ -109,4 +111,37 @@ unsigned char getCharFromStream(int size, long long seek_to, ifstream &input){
 
 }
 
+QString FileSizeToString(unsigned long long size) {
+    QString ret = "";
+    if (size == 0)
+        return ret;
+
+    int divisions = 0, tempSize = size;
+
+    while(tempSize > 0) {
+        tempSize /= 1024;
+        divisions++;
+    }
+    tempSize = size;
+    for (int i = 0; i < divisions-1; i++) {
+        tempSize /= 1024;
+    }
+    ret += QString::number(tempSize);
+
+    switch (divisions) {
+        case(1) :
+            ret += QObject::tr(" bytes");
+            break;
+        case(2) :
+            ret += QObject::tr(" KB");
+            break;
+        case(3) :
+            ret += QObject::tr(" MB");
+            break;
+        case(4) :
+            ret += QObject::tr(" GB");
+            break;
+    }
+    return ret;
+}
 }
