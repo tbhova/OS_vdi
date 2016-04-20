@@ -9,6 +9,7 @@
 #include "ext2groupdescriptor.h"
 #include <fstream>
 #include <vector>
+#include <cstring>
 
 struct VdiHeader {
 long long headerSize;
@@ -46,6 +47,16 @@ struct InodeTable {
 
 };
 
+struct Inode_info {
+    unsigned int	inode;		/* Inode number */
+    unsigned short	rec_len;		/* Directory entry length */
+    unsigned char 	name_len;		/* Name length */
+    unsigned char	file_type;
+    //QVector <unsigned char>   name;	    /* File name */
+    std::string   name;	    /* File name */
+};
+
+
 
 class VdiFile : public QObject
 {
@@ -70,6 +81,7 @@ private:
     void fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsigned int block_bitmap_address,unsigned int inode_bitmap_address,std::ifstream& input);
     void getInodeTableData(long long beginningOfFirstInodeTable, int InodeNumber, std::ifstream &file);
     void getDataBlock(long long BlockNumber, std::ifstream &file);
+    void fillRootDir(long long block_num,long long offsetOfStruct, std::ifstream &file);
 
     QFile *vdi; //whatever filetype we intend to use
     VdiMap *map;
@@ -80,7 +92,9 @@ private:
     ext2GroupDescriptor *groupDescriptors;
     VdiHeader header;
     InodeTable tab;
+    Inode_info InodeIn;
     QVector<unsigned char> *DataBlockBitmap;
+    QVector <Inode_info> *InodeInfo;
 
     std::vector<bool> *blockBitmap, *inodesBitmap;
     //std::vector optimized bool storage to take 1 bit per boolean value when there are multiple bools
@@ -89,6 +103,7 @@ private:
     unsigned int superBlockLocation;
      unsigned int block_size;
      unsigned int bootBlockLocation;
+
 
 
 

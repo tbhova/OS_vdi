@@ -21,6 +21,7 @@
 #include <cmath>
 #include <sstream>
 #include <string>
+#include <cstring>
 #include "globalfunctions.h"
 
 using namespace std;
@@ -122,6 +123,23 @@ unsigned char getCharFromStream(int size, long long seek_to, ifstream &input){
     return data[size];
 
 }
+
+//get data from Stream
+char getSignedCharFromStream(int size, long long seek_to, ifstream &input){
+
+    char data[size];
+    input.clear();
+    input.seekg(seek_to);
+    for (int i=0; i<size;i++){
+        input >> data[i];
+        //cout << hex << setw(2) << setfill('0') << (int)data[i] << " ";
+    }
+    //cout <<"" <<endl;
+    return data[size];
+
+}
+
+
 
 VdiFile::VdiFile(QObject *parent) : QObject(parent)
 {
@@ -244,23 +262,34 @@ void VdiFile::openFile(QString fileName) {
 
     //for(int i=5;i<15; i++){
     getInodeTableData(inode_table_address,2, input);
-    int toBlock = tab.i_block[0];
-    cout << "This is the toBlock" << toBlock << endl;
-    getDataBlock(toBlock,input);
+    //int toBlock = tab.i_block[0];
+    //cout << "This is the toBlock" << toBlock << endl;
+    //getDataBlock(36,input);
     //getInodeTableData(hello23,0,input);
     //getInodeTableData(inode_table_address,11, input);
-    //getInodeTableData(inode_table_address,12, input);
+    // getInodeTableData(inode_table_address,12, input);
+    //getInodeTableData(inode_table_address,13, input);
+    //getInodeTableData(inode_table_address,14, input);
+
 
 
     //ACL is 0 if it is a file
 
-//}
 
-    cout << "The address of first block thing is:" << hex << superBlockLocation+(4096 * tab.i_block[0]) << endl;
+    //cout << "The boot block location is " << hex << bootBlockLocation << endl;
+    //cout << "THe block size is" << dec <<block_size << endl;
+    //cout << "The superBlock location is " << hex << superBlockLocation <<endl;
+    cout << "The address of first block thing is:" << hex << bootBlockLocation+(block_size * (tab.i_block[0])) << endl;
+    InodeInfo = new QVector <Inode_info>;
+    fillRootDir(tab.i_block[0],0,input);
 
 
+    //print out names
+    for (int i=0; i<InodeInfo->length(); i++)
+           cout << "Title "<< i << " : " << InodeInfo->at(i).name<< endl;
 
-
+    cout << "Num for next inode" << hex << bootBlockLocation +(block_size *InodeInfo->at(0).inode) << endl;
+    getInodeTableData(inode_table_address,InodeInfo->at(0).inode,input);
 }
 
 void VdiFile::closeAndReset() {
@@ -286,7 +315,7 @@ void VdiFile::getInodeTableData(long long InitialOffset, int InodeNumber, ifstre
 
     long long offset = InitialOffset + ((block_group)*group_size) + (local_inode_index * sizeof(tab));
 
-    tab.i_mode = getStreamData(2,offset, file, "Mode", false);
+    tab.i_mode = getStreamData(2,offset, file, "Mode", true);
     tab.i_uid = getStreamData(2,offset+2, file, "Uid", false);
     tab.i_size = getStreamData(4,offset+4, file, "Size", true);
     tab.i_atime = getStreamData(4,offset+8, file, "Atime", false);
@@ -343,8 +372,31 @@ void VdiFile::getDataBlock(long long BlockNumber, ifstream &file){
     tab.i_faddr = getStreamData(4,offset+112, file, "Faddr", false);
     tab.i_osd2[12] = getCharFromStream(12,offset+116, file);
 
-
-
 }
 
+void VdiFile::fillRootDir( long long block_num,long long offsetOfStruct,ifstream &file){
 
+    long long offset = bootBlockLocation+(block_size * (block_num))+24+offsetOfStruct; //the "+24" allows us to skip unneeded data
+
+    stringstream ss;
+
+    InodeIn.inode = getStreamData(4,offset, file, "Inode Number", true);
+    InodeIn.rec_len = getStreamData(2,offset+4, file, "Directory Length", true);
+    InodeIn.name_len  = getStreamData(1,offset+6, file, "Name Length", true);
+    InodeIn.file_type = getStreamData(1,offset+7, file, "File Type", true);
+
+    for(int i=0; i<(InodeIn.name_len); i++)
+        ss << (char)file.get();
+
+    string temp;
+    ss >> temp;
+    InodeIn.name = temp;
+
+    cout << "The name of the file is " << InodeIn.name << endl;
+
+    if(InodeIn.file_type !=0){
+            InodeInfo->push_back(InodeIn);
+            fillRootDir(block_num,offsetOfStruct+InodeIn.rec_len,file);
+        }
+
+}
