@@ -99,6 +99,7 @@ private:
     std::vector<bool> *blockBitmap, *inodesBitmap;
     //std::vector optimized bool storage to take 1 bit per boolean value when there are multiple bools
 
+    unsigned int bootBlockLocation, superBlockLocation, block_size, group_size;
 };
 }
 

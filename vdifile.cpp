@@ -205,9 +205,104 @@ void VdiFile::closeAndReset() {
 }
 
 
-void VdiFile::fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsigned int block_bitmap_address,unsigned int inode_bitmap_address,ifstream& input){
+void VdiFile::fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsigned int block_bitmap_address,unsigned int inode_bitmap_address,ifstream& input) {
     for (unsigned int i=block_bitmap_address; i <inode_bitmap_address; i++){
          DataBlockBitmap->push_back(getCharFromStream(1,i,input));
-    }
+    }   
 }
 
+void VdiFile::getInodeTableData(long long InitialOffset, int InodeNumber, ifstream &file){
+
+    unsigned int block_group= (InodeNumber -1) /superBlock->getInodesPerGroup();
+    //cout << block_group << endl;
+    unsigned int local_inode_index= (InodeNumber-1) % superBlock->getInodesPerGroup();
+    //cout << local_inode_index << endl;
+
+
+    long long offset = InitialOffset + ((block_group)*group_size) + (local_inode_index * sizeof(tab));
+
+    tab.i_mode = getStreamData(2,offset, file, "Mode", true);
+    tab.i_uid = getStreamData(2,offset+2, file, "Uid", false);
+    tab.i_size = getStreamData(4,offset+4, file, "Size", true);
+    tab.i_atime = getStreamData(4,offset+8, file, "Atime", false);
+    tab.i_ctime = getStreamData(4,offset+12, file, "Ctime", false);
+    tab.i_mtime = getStreamData(4,offset+16, file, "Mtime", false);
+    tab.i_dtime = getStreamData(4,offset+20, file, "Dtime", false);
+    tab.i_gid = getStreamData(2,offset+24, file, "Gid", false);
+    tab.i_links_count = getStreamData(2,offset+26, file, "Links Count", true);
+    tab.i_blocks = getStreamData(4,offset+28, file, "Blocks", true);
+    tab.i_flags = getStreamData(4,offset+32, file, "Flags", false);
+    tab.i_osd1 = getStreamData(4,offset+36, file, "Osd1", false);
+    int add =0;
+    for (int i=0; i<15; i++){
+        tab.i_block[i] = getStreamData(4,offset+40+add, file, "", true);
+        add+=4;
+    }
+    tab.i_generation = getStreamData(4,offset+100, file, "Generation", false);
+    tab.i_file_acl = getStreamData(4,offset+104, file, "File ACL", false);
+    tab.i_dir_acl = getStreamData(4,offset+108, file, "Dir ACL", true);
+    tab.i_faddr = getStreamData(4,offset+112, file, "Faddr", false);
+    tab.i_osd2[12] = getCharFromStream(12,offset+116, file);
+
+}
+
+void VdiFile::getDataBlock(long long BlockNumber, ifstream &file){
+
+    long long offset = bootBlockLocation + BlockNumber * block_size ;
+
+   // cout << "SuperBlock Location" << hex<< superBlockLocation << endl;
+   // cout << hex << offset << endl;
+
+   // cout << endl << "I am in the new one now" << endl;
+
+    tab.i_mode = getStreamData(2,offset, file, "Mode", false);
+    tab.i_uid = getStreamData(2,offset+2, file, "Uid", false);
+    tab.i_size = getStreamData(4,offset+4, file, "Size", true);
+    tab.i_atime = getStreamData(4,offset+8, file, "Atime", false);
+    tab.i_ctime = getStreamData(4,offset+12, file, "Ctime", false);
+    tab.i_mtime = getStreamData(4,offset+16, file, "Mtime", false);
+    tab.i_dtime = getStreamData(4,offset+20, file, "Dtime", false);
+    tab.i_gid = getStreamData(2,offset+24, file, "Gid", false);
+    tab.i_links_count = getStreamData(2,offset+26, file, "Links Count", true);
+    tab.i_blocks = getStreamData(4,offset+28, file, "Blocks", true);
+    tab.i_flags = getStreamData(4,offset+32, file, "Flags", false);
+    tab.i_osd1 = getStreamData(4,offset+36, file, "Osd1", false);
+    int add =0;
+    for (int i=0; i<15; i++){
+        tab.i_block[i] = getStreamData(4,offset+40+add, file, "", true);
+        add+=4;
+    }
+    tab.i_generation = getStreamData(4,offset+100, file, "Generation", false);
+    tab.i_file_acl = getStreamData(4,offset+104, file, "File ACL", false);
+    tab.i_dir_acl = getStreamData(4,offset+108, file, "Dir ACL", true);
+    tab.i_faddr = getStreamData(4,offset+112, file, "Faddr", false);
+    tab.i_osd2[12] = getCharFromStream(12,offset+116, file);
+
+}
+
+void VdiFile::fillRootDir( long long block_num,long long offsetOfStruct,ifstream &file){
+
+    long long offset = bootBlockLocation+(block_size * (block_num))+24+offsetOfStruct; //the "+24" allows us to skip unneeded data
+
+    stringstream ss;
+
+    InodeIn.inode = getStreamData(4,offset, file, "Inode Number", true);
+    InodeIn.rec_len = getStreamData(2,offset+4, file, "Directory Length", true);
+    InodeIn.name_len  = getStreamData(1,offset+6, file, "Name Length", true);
+    InodeIn.file_type = getStreamData(1,offset+7, file, "File Type", true);
+
+    for(int i=0; i<(InodeIn.name_len); i++)
+        ss << (char)file.get();
+
+    string temp;
+    ss >> temp;
+    InodeIn.name = temp;
+
+    cout << "The name of the file is " << InodeIn.name << endl;
+
+    if(InodeIn.file_type !=0){
+            InodeInfo->push_back(InodeIn);
+            fillRootDir(block_num,offsetOfStruct+InodeIn.rec_len,file);
+        }
+
+}
