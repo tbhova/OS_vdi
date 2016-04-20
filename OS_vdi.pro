@@ -23,7 +23,11 @@ SOURCES += main.cpp\
     ext2groupdescriptor.cpp \
     vdifunctions.cpp \
     vdifilesystemtreeitem.cpp \
-    vdifile.cpp
+    vdifile.cpp \
+    ext2folder.cpp \
+    ext2file.cpp \
+    ext2filesystemmanager.cpp \
+    ext2fsentry.cpp
 
 HEADERS  += mainwindow.h \
     localfilesystem.h \
@@ -35,6 +39,10 @@ HEADERS  += mainwindow.h \
     ext2superblock.h \
     ext2groupdescriptor.h \
     vdifunctions.h \
-    vdifilesystemtreeitem.h
+    vdifilesystemtreeitem.h \
+    ext2folder.h \
+    ext2file.h \
+    ext2filesystemmanager.h \
+    ext2fsentry.h
 
 FORMS    += mainwindow.ui
