@@ -5,6 +5,7 @@
 
 #include <QObject>
 
+namespace CSCI5806 {
 class mbrData : public QObject
 {
     Q_OBJECT
@@ -24,5 +25,6 @@ private:
     long long eofMagicNumber;
     long long mbrDataTable[4];
 };
+}
 
 #endif // MBRDATA_H

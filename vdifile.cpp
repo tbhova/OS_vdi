@@ -21,125 +21,11 @@
 #include <cmath>
 #include <sstream>
 #include <string>
-#include <cstring>
-#include "globalfunctions.h"
+#include "vdifunctions.h"
+#include <QDebug>
 
 using namespace std;
-
-//convert byte data to integers
-unsigned long long convertEndian(unsigned char C[], long long size, bool littleEndian){
-
-    unsigned char temp[size];
-    for (long long a=0; a<size; a++){
-        if (!littleEndian)
-            temp[size-1-a]= C[a];
-        else
-            temp[a] = C[a];
-       // cout << hex << setw(2) << setfill('0') << (int)temp[b] << " ";
-    }
-    //cout << endl;
-
-    unsigned long long total=0;
-    stringstream charNums;
-    for(long long i=0; i<size;i++){
-        //cout << hex << setw(2) << setfill('0') << (int)temp[i] << " "<<endl;
-        charNums << hex << setw(2) << setfill('0') << (int)temp[i];
-       // cout << "in charNums: " << charNums.str() << endl;
-    }
-    QString chars = QString::fromStdString(charNums.str());
-    //cout << chars.toStdString() <<endl;
-    bool ok;
-    total=chars.toULongLong(&ok,16);
-
-    //cout << total <<endl;
-    if(!ok)
-        cout << "Unable to convert String"<< endl;
-
-    return total;
-
-}
-
-//get data from Stream
-//long long getStreamData(int size, long long seek_to, std::ifstream &input, std::string name = "", bool output = true);
-unsigned long long getStreamData(int size, long long seek_to, ifstream &input, string name, bool output, bool littleEndian){
-
-
-    unsigned char data[size];
-    input.clear();
-    input.seekg(seek_to);
-
-    for (int i=0; i<size;i++){
-        input >> data[i];
-        if (output){
-            //cout << endl<<endl;
-            cout << hex << setw(2) << setfill('0') << (int)data[i] << " ";
-        }
-    }
-    unsigned long long size_of_part;
-    size_of_part=convertEndian(data, size, littleEndian);
-    if (output) {
-        cout <<"Size of "<< name << ":" << dec << size_of_part << endl;
-        cout << endl;
-    }
-    return size_of_part;
-
-}
-
-void addBitsFromStreamData(vector<bool> *bits, int numBits, long long seek_to, ifstream &input){
-    unsigned long long temp;
-
-    input.clear();
-    input.seekg(seek_to);
-    int seeks = 0;
-    for(int i = 0; i < numBits; i++) {
-        //if we have used all the bits in the long long, lets get another
-        if(i % (sizeof(unsigned long long)*8) == 0) {
-
-            temp = getStreamData(sizeof(unsigned long long), seek_to+(sizeof(unsigned long long))*seeks, input, (string)"  ", false, true);
-            cout << endl << "address: " << hex << seek_to+(sizeof(unsigned long long))*seeks << endl;
-            cout << hex << temp << endl;
-            seeks++;
-        }
-        bits->push_back((temp & ((unsigned long long)1 << (sizeof(unsigned long long)*8-1-(i % (sizeof(unsigned long long)*8))))) > 0);
-        //cout << hex << ((unsigned long long)1 << (sizeof(unsigned long long)*8-1-(i % (sizeof(unsigned long long)*8)))) << ' ';
-        //if (bits->back())
-        //    cout << '1';
-        //else cout << '0';
-    }
-    //cout << endl << endl;
-}
-
-//get data from Stream
-unsigned char getCharFromStream(int size, long long seek_to, ifstream &input){
-
-    unsigned char data[size];
-    input.clear();
-    input.seekg(seek_to);
-    for (int i=0; i<size;i++){
-        input >> data[i];
-        //cout << hex << setw(2) << setfill('0') << (int)data[i] << " ";
-    }
-    //cout <<"" <<endl;
-    return data[size];
-
-}
-
-//get data from Stream
-char getSignedCharFromStream(int size, long long seek_to, ifstream &input){
-
-    char data[size];
-    input.clear();
-    input.seekg(seek_to);
-    for (int i=0; i<size;i++){
-        input >> data[i];
-        //cout << hex << setw(2) << setfill('0') << (int)data[i] << " ";
-    }
-    //cout <<"" <<endl;
-    return data[size];
-
-}
-
-
+using namespace CSCI5806;
 
 VdiFile::VdiFile(QObject *parent) : QObject(parent)
 {
@@ -147,20 +33,36 @@ VdiFile::VdiFile(QObject *parent) : QObject(parent)
     map = NULL;
     mbr = NULL;
     superBlock = NULL;
-   // groupDescriptors = new QVector<ext2GroupDescriptor*>;
+    groupDescriptors = NULL;
+    DataBlockBitmap = new QVector<unsigned char>;
+    blockBitmap = new vector<bool>;
+    inodesBitmap = new vector<bool>;
 }
 
 VdiFile::~VdiFile() {
-#warning these can be null
 #warning delete everything allocated with new
+
     delete vdi;
-    delete map;
+    if (map != NULL)
+        delete map;
+    if (mbr != NULL)
+        delete mbr;
+    if (superBlock != NULL)
+        delete superBlock;
+    if (groupDescriptors != NULL)
+        delete groupDescriptors;
+    if (DataBlockBitmap != NULL)
+        delete DataBlockBitmap;
+    if (blockBitmap != NULL)
+        delete blockBitmap;
+    if (inodesBitmap != NULL)
+        delete inodesBitmap;
 }
 
 
 void VdiFile::selectVdiPrompt() {
     //Open File
-    QString fileName = QFileDialog::getOpenFileName(NULL, tr("Please open a .vdi file"), "C://", ".VDI File (*.*);;All Files (*.*)");
+    QString fileName = QFileDialog::getOpenFileName(NULL, tr("Please open a .vdi file"), "./", ".VDI File (*.*);;All Files (*.*)");
 
     QMessageBox::information(NULL,tr("FileNameOut"),fileName);
     emit(this->vdiFileSelected(fileName));
@@ -172,18 +74,22 @@ void VdiFile::openFile(QString fileName) {
     if (initialized)
         this->closeAndReset();
 
-    string fileString = fileName.toStdString();
+    qDebug() << QObject::tr("vdi file ") << fileName;
 
-    cout << fileString << endl;
-    char *fileChar = new char[fileString.length() + 1];
-
-    strcpy(fileChar, fileString.c_str());
-
-    input.open(fileChar, ios::in);
+    if (fileName.isEmpty() || fileName.isNull() || !(fileName.toLower()).contains(".vdi")) {
+        QMessageBox::information(NULL,tr("Error"), tr("Please choose a valid vdi file."));
+        return;
+    }
 
 
-    if(!input.is_open())
+    input.open(fileName.toStdString().c_str(), ios::in);
+
+
+
+    if(!input.is_open()) {
         cout << "File not open!" << endl;
+        return;
+    }
     input >> noskipws;
 
     initialized = true;
@@ -249,8 +155,7 @@ void VdiFile::openFile(QString fileName) {
     //DataBlockBitmap = new QVector <unsigned char>;
     // fillDataBlockBitmap(DataBlockBitmap, block_bitmap_address, inode_bitmap_address, input);
     //cout << "This is the adress of block bitmap" << hex<< block_bitmap_address << endl;
-    blockBitmap = new vector<bool>;
-    inodesBitmap = new vector<bool>;
+
     addBitsFromStreamData(blockBitmap, block_size*8, block_bitmap_address, input);
     addBitsFromStreamData(inodesBitmap, block_size*8, inode_bitmap_address, input);
     //cout << dec <<blockBitmap->size() << " " << sizeof(*blockBitmap) << endl;
@@ -294,109 +199,15 @@ void VdiFile::openFile(QString fileName) {
 
 void VdiFile::closeAndReset() {
     input.close();
-
+    DataBlockBitmap->clear();
+    blockBitmap->clear();
+    inodesBitmap->clear();
 }
 
 
-void VdiFile:: fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsigned int block_bitmap_address,unsigned int inode_bitmap_address,ifstream& input){
-    for (unsigned int i=block_bitmap_address; i++; i <inode_bitmap_address){
+void VdiFile::fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsigned int block_bitmap_address,unsigned int inode_bitmap_address,ifstream& input){
+    for (unsigned int i=block_bitmap_address; i <inode_bitmap_address; i++){
          DataBlockBitmap->push_back(getCharFromStream(1,i,input));
     }
 }
 
-
-void VdiFile::getInodeTableData(long long InitialOffset, int InodeNumber, ifstream &file){
-
-    unsigned int block_group= (InodeNumber -1) /superBlock->getInodesPerGroup();
-    //cout << block_group << endl;
-    unsigned int local_inode_index= (InodeNumber-1) % superBlock->getInodesPerGroup();
-    //cout << local_inode_index << endl;
-
-
-    long long offset = InitialOffset + ((block_group)*group_size) + (local_inode_index * sizeof(tab));
-
-    tab.i_mode = getStreamData(2,offset, file, "Mode", true);
-    tab.i_uid = getStreamData(2,offset+2, file, "Uid", false);
-    tab.i_size = getStreamData(4,offset+4, file, "Size", true);
-    tab.i_atime = getStreamData(4,offset+8, file, "Atime", false);
-    tab.i_ctime = getStreamData(4,offset+12, file, "Ctime", false);
-    tab.i_mtime = getStreamData(4,offset+16, file, "Mtime", false);
-    tab.i_dtime = getStreamData(4,offset+20, file, "Dtime", false);
-    tab.i_gid = getStreamData(2,offset+24, file, "Gid", false);
-    tab.i_links_count = getStreamData(2,offset+26, file, "Links Count", true);
-    tab.i_blocks = getStreamData(4,offset+28, file, "Blocks", true);
-    tab.i_flags = getStreamData(4,offset+32, file, "Flags", false);
-    tab.i_osd1 = getStreamData(4,offset+36, file, "Osd1", false);
-    int add =0;
-    for (int i=0; i<15; i++){
-        tab.i_block[i] = getStreamData(4,offset+40+add, file, "", true);
-        add+=4;
-    }
-    tab.i_generation = getStreamData(4,offset+100, file, "Generation", false);
-    tab.i_file_acl = getStreamData(4,offset+104, file, "File ACL", false);
-    tab.i_dir_acl = getStreamData(4,offset+108, file, "Dir ACL", true);
-    tab.i_faddr = getStreamData(4,offset+112, file, "Faddr", false);
-    tab.i_osd2[12] = getCharFromStream(12,offset+116, file);
-
-}
-
-void VdiFile::getDataBlock(long long BlockNumber, ifstream &file){
-
-    long long offset = bootBlockLocation + BlockNumber * block_size ;
-
-   // cout << "SuperBlock Location" << hex<< superBlockLocation << endl;
-   // cout << hex << offset << endl;
-
-   // cout << endl << "I am in the new one now" << endl;
-
-    tab.i_mode = getStreamData(2,offset, file, "Mode", false);
-    tab.i_uid = getStreamData(2,offset+2, file, "Uid", false);
-    tab.i_size = getStreamData(4,offset+4, file, "Size", true);
-    tab.i_atime = getStreamData(4,offset+8, file, "Atime", false);
-    tab.i_ctime = getStreamData(4,offset+12, file, "Ctime", false);
-    tab.i_mtime = getStreamData(4,offset+16, file, "Mtime", false);
-    tab.i_dtime = getStreamData(4,offset+20, file, "Dtime", false);
-    tab.i_gid = getStreamData(2,offset+24, file, "Gid", false);
-    tab.i_links_count = getStreamData(2,offset+26, file, "Links Count", true);
-    tab.i_blocks = getStreamData(4,offset+28, file, "Blocks", true);
-    tab.i_flags = getStreamData(4,offset+32, file, "Flags", false);
-    tab.i_osd1 = getStreamData(4,offset+36, file, "Osd1", false);
-    int add =0;
-    for (int i=0; i<15; i++){
-        tab.i_block[i] = getStreamData(4,offset+40+add, file, "", true);
-        add+=4;
-    }
-    tab.i_generation = getStreamData(4,offset+100, file, "Generation", false);
-    tab.i_file_acl = getStreamData(4,offset+104, file, "File ACL", false);
-    tab.i_dir_acl = getStreamData(4,offset+108, file, "Dir ACL", true);
-    tab.i_faddr = getStreamData(4,offset+112, file, "Faddr", false);
-    tab.i_osd2[12] = getCharFromStream(12,offset+116, file);
-
-}
-
-void VdiFile::fillRootDir( long long block_num,long long offsetOfStruct,ifstream &file){
-
-    long long offset = bootBlockLocation+(block_size * (block_num))+24+offsetOfStruct; //the "+24" allows us to skip unneeded data
-
-    stringstream ss;
-
-    InodeIn.inode = getStreamData(4,offset, file, "Inode Number", true);
-    InodeIn.rec_len = getStreamData(2,offset+4, file, "Directory Length", true);
-    InodeIn.name_len  = getStreamData(1,offset+6, file, "Name Length", true);
-    InodeIn.file_type = getStreamData(1,offset+7, file, "File Type", true);
-
-    for(int i=0; i<(InodeIn.name_len); i++)
-        ss << (char)file.get();
-
-    string temp;
-    ss >> temp;
-    InodeIn.name = temp;
-
-    cout << "The name of the file is " << InodeIn.name << endl;
-
-    if(InodeIn.file_type !=0){
-            InodeInfo->push_back(InodeIn);
-            fillRootDir(block_num,offsetOfStruct+InodeIn.rec_len,file);
-        }
-
-}

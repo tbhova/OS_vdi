@@ -3,6 +3,7 @@
 
 #include <QObject>
 
+namespace CSCI5806 {
 class VdiManager : public QObject
 {
     Q_OBJECT
@@ -16,5 +17,6 @@ public slots:
 private:
 
 };
+}
 
 #endif // VDIMANAGER_H

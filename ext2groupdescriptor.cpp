@@ -1,10 +1,11 @@
 #include "ext2groupdescriptor.h"
-#include "globalfunctions.h"
+#include "vdifunctions.h"
 #include <iostream>
 #include <iomanip>
 #include <ios>
 #include <QVector>
 using namespace std;
+using namespace CSCI5806;
 
 ext2GroupDescriptor::ext2GroupDescriptor(QObject *parent, int group_count, long long offset, ifstream &file) : QObject(parent)
 {

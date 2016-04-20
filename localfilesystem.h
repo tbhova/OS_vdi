@@ -5,6 +5,8 @@
 #include <QTreeView>
 #include <QFileSystemModel>
 
+namespace CSCI5806 {
+
 class LocalFileSystem : public QObject
 {
     Q_OBJECT
@@ -20,5 +22,6 @@ private:
     QTreeView *tree;
     QFileSystemModel *fileSystem;
 };
+}
 
 #endif // LOCALFILESYSTEM_H

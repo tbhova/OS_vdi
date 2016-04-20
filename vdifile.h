@@ -11,6 +11,7 @@
 #include <vector>
 #include <cstring>
 
+namespace CSCI5806 {
 struct VdiHeader {
 long long headerSize;
 long long imageType;
@@ -64,12 +65,11 @@ class VdiFile : public QObject
 public:
     VdiFile(QObject *parent = 0);
     ~VdiFile();
-
-    void selectVdiPrompt();
     void openFile(QString fileName);
 
 
 public slots:
+    void selectVdiPrompt();
 
 signals:
     void vdiFileSelected(QString fileName);
@@ -99,14 +99,7 @@ private:
     std::vector<bool> *blockBitmap, *inodesBitmap;
     //std::vector optimized bool storage to take 1 bit per boolean value when there are multiple bools
 
-    unsigned int group_size;
-    unsigned int superBlockLocation;
-     unsigned int block_size;
-     unsigned int bootBlockLocation;
-
-
-
-
 };
+}
 
 #endif // VDIFILE_H

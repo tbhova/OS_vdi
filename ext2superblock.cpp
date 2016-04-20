@@ -1,11 +1,12 @@
 #include "ext2superblock.h"
-#include "globalfunctions.h"
+#include "vdifunctions.h"
 #include <iostream>
 #include <iomanip>
 #include <ios>
 #include <cmath>
 
 using namespace std;
+using namespace CSCI5806;
 
 ext2SuperBlock::ext2SuperBlock(QObject *parent, long long startOffset,  ifstream &file) : QObject(parent)
 {
