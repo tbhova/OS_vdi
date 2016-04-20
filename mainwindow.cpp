@@ -25,11 +25,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    localFS = new LocalFileSystem(ui->localFsTreeView, this);
-    vdi = new VdiFile();
-    vdiFS = new VdiFileSystem(ui->vdiFsTreeView, vdi, this);
+    localFS = new LocalFileSystem(ui->localFsTreeView, this); //local FS Model
+    vdiFS = new VdiFileSystem(ui->vdiFsTreeView, this); //VDI FS Model
 
-    connect(vdi, VdiFile::vdiFileSelected, this, onVdiFileChosen);
+    connect(vdiFS, VdiFileSystem::vdiFileSelected, this, onVdiFileChosen); //update GUI text
+    connect(this, MainWindow::browseVDIClicked, vdiFS, VdiFileSystem::onBrowseVDIClicked);
 }
 
 MainWindow::~MainWindow()
@@ -50,5 +50,5 @@ void MainWindow::onVdiFileChosen(QString fileName) {
 
 void MainWindow::on_browseVDIPushButton_clicked()
 {
-    vdi->selectVdiPrompt();
+    emit browseVDIClicked();
 }

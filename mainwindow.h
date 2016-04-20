@@ -5,7 +5,7 @@
 #include <QString>
 #include "localfilesystem.h"
 #include "vdifilesystem.h"
-#include "vdifile.h"
+
 
 
 namespace Ui {
@@ -22,9 +22,10 @@ public:
 
 public slots:
     void onVdiFileChosen(QString fileName);
-
-private slots:
     void on_browseVDIPushButton_clicked();
+
+signals:
+    void browseVDIClicked();
 
 private:
     Ui::MainWindow *ui;

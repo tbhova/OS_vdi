@@ -10,28 +10,31 @@
 using namespace std;
 using namespace CSCI5806;
 
-VdiFileSystem::VdiFileSystem(QTreeView *initialTree, VdiFile *file, QObject *parent) : QAbstractItemModel(parent)
+VdiFileSystem::VdiFileSystem(QTreeView *initialTree, QObject *parent) : QAbstractItemModel(parent)
 {
     tree = initialTree;
     this->setParent(parent);
-    vdi = file;
     rootNode = NULL;
     this->setupModelData();
 
     tree->setModel(this);
+    vdi = new VdiFile();
+
+    //signal passthrough
+    connect(vdi, VdiFile::vdiFileSelected, this, VdiFileSystem::vdiFileSelected);
+    connect(this, VdiFileSystem::onBrowseVDIClicked, vdi, VdiFile::selectVdiPrompt);
 }
 
 VdiFileSystem::~VdiFileSystem() {
     if (rootNode != NULL)
         delete rootNode;
+    delete vdi;
 }
 
 void VdiFileSystem::setupModelData() {
     QList<QVariant> rootData;
     rootData.push_back(tr("Name"));
-    #warning change to
     rootData.push_back(tr("Size"));
-    #warning change to enum
     rootData.push_back(tr("Type"));
     rootData.push_back(tr("Date Modified"));
     //rootData.push_back(QDateTime::currentDateTime().toString(tr("M/d/yyyy h:mm AP")));
@@ -54,7 +57,9 @@ void VdiFileSystem::setupModelData() {
 
     rootData.clear();
     rootData.push_back(tr("TestFile"));
+#warning can make a class and override casting to QString and QVariant methods
     rootData.push_back(tr("File"));
+
     rootData.push_back(FileSizeToString(2050));
     rootData.push_back(QDateTime::fromString(tr("11/26/1989 8:08 AM"), tr("M/d/yyyy h:mm AP")).toString("M/d/yyyy h:mm AP"));
 
@@ -63,7 +68,7 @@ void VdiFileSystem::setupModelData() {
 }
 
 
-//mandantory overloads for gui display
+//mandantory overloads for gui display of file model
 QModelIndex VdiFileSystem::index(int row, int column, const QModelIndex &parent) const {
     //if we have not created an index for this item, return default index
     if (!this->hasIndex(row, column, parent))

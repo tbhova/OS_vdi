@@ -31,12 +31,11 @@ class VdiFile : public QObject
 public:
     VdiFile(QObject *parent = 0);
     ~VdiFile();
-
-    void selectVdiPrompt();
     void openFile(QString fileName);
 
 
 public slots:
+    void selectVdiPrompt();
 
 signals:
     void vdiFileSelected(QString fileName);

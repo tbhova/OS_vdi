@@ -22,6 +22,7 @@
 #include <sstream>
 #include <string>
 #include "vdifunctions.h"
+#include <QDebug>
 
 using namespace std;
 using namespace CSCI5806;
@@ -33,9 +34,9 @@ VdiFile::VdiFile(QObject *parent) : QObject(parent)
     mbr = NULL;
     superBlock = NULL;
     groupDescriptors = NULL;
-    DataBlockBitmap = NULL;
-    blockBitmap = NULL;
-    inodesBitmap = NULL;
+    DataBlockBitmap = new QVector<unsigned char>;
+    blockBitmap = new vector<bool>;
+    inodesBitmap = new vector<bool>;
 }
 
 VdiFile::~VdiFile() {
@@ -61,7 +62,7 @@ VdiFile::~VdiFile() {
 
 void VdiFile::selectVdiPrompt() {
     //Open File
-    QString fileName = QFileDialog::getOpenFileName(NULL, tr("Please open a .vdi file"), "C://", ".VDI File (*.*);;All Files (*.*)");
+    QString fileName = QFileDialog::getOpenFileName(NULL, tr("Please open a .vdi file"), "./", ".VDI File (*.*);;All Files (*.*)");
 
     QMessageBox::information(NULL,tr("FileNameOut"),fileName);
     emit(this->vdiFileSelected(fileName));
@@ -73,18 +74,22 @@ void VdiFile::openFile(QString fileName) {
     if (initialized)
         this->closeAndReset();
 
-    string fileString = fileName.toStdString();
+    qDebug() << QObject::tr("vdi file ") << fileName;
 
-    cout << fileString << endl;
-    char *fileChar = new char[fileString.length() + 1];
-
-    strcpy(fileChar, fileString.c_str());
-
-    input.open(fileChar, ios::in);
+    if (fileName.isEmpty() || fileName.isNull() || !(fileName.toLower()).contains(".vdi")) {
+        QMessageBox::information(NULL,tr("Error"), tr("Please choose a valid vdi file."));
+        return;
+    }
 
 
-    if(!input.is_open())
+    input.open(fileName.toStdString().c_str(), ios::in);
+
+
+
+    if(!input.is_open()) {
         cout << "File not open!" << endl;
+        return;
+    }
     input >> noskipws;
 
     initialized = true;
@@ -148,8 +153,7 @@ void VdiFile::openFile(QString fileName) {
     //DataBlockBitmap = new QVector <unsigned char>;
     // fillDataBlockBitmap(DataBlockBitmap, block_bitmap_address, inode_bitmap_address, input);
     //cout << "This is the adress of block bitmap" << hex<< block_bitmap_address << endl;
-    blockBitmap = new vector<bool>;
-    inodesBitmap = new vector<bool>;
+
     addBitsFromStreamData(blockBitmap, block_size*8, block_bitmap_address, input);
     addBitsFromStreamData(inodesBitmap, block_size*8, inode_bitmap_address, input);
     //cout << dec <<blockBitmap->size() << " " << sizeof(*blockBitmap) << endl;
@@ -163,7 +167,8 @@ void VdiFile::openFile(QString fileName) {
 void VdiFile::closeAndReset() {
     input.close();
     DataBlockBitmap->clear();
-
+    blockBitmap->clear();
+    inodesBitmap->clear();
 }
 
 

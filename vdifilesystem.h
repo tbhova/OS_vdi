@@ -3,6 +3,7 @@
 
 #include <QAbstractItemModel>
 #include <QTreeView>
+#include <QString>
 #include "vdifile.h"
 #include "vdifilesystemtreeitem.h"
 
@@ -11,7 +12,7 @@ class VdiFileSystem : public QAbstractItemModel
 {
     Q_OBJECT
 public:
-    explicit VdiFileSystem(QTreeView *intialTree, VdiFile *file, QObject *parent = 0);
+    explicit VdiFileSystem(QTreeView *intialTree, QObject *parent = 0);
     ~VdiFileSystem();
     void setupModelData();
 
@@ -26,6 +27,9 @@ public:
     virtual int columnCount(const QModelIndex &parent) const Q_DECL_OVERRIDE;
     virtual QVariant data(const QModelIndex &index, int role) const Q_DECL_OVERRIDE;
 
+signals:
+    void vdiFileSelected(QString fileName);
+    void onBrowseVDIClicked();
 
 private:
     QTreeView *tree;
