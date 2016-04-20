@@ -16,12 +16,14 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     localfilesystem.cpp \
     vdimanager.cpp \
-    vdifile.cpp \
     vdifilesystem.cpp \
     vdimap.cpp \
     mbrdata.cpp \
     ext2superblock.cpp \
-    ext2groupdescriptor.cpp
+    ext2groupdescriptor.cpp \
+    vdifunctions.cpp \
+    vdifilesystemtreeitem.cpp \
+    vdifile.cpp
 
 HEADERS  += mainwindow.h \
     localfilesystem.h \
@@ -29,9 +31,10 @@ HEADERS  += mainwindow.h \
     vdifile.h \
     vdifilesystem.h \
     vdimap.h \
-    globalfunctions.h \
     mbrdata.h \
     ext2superblock.h \
-    ext2groupdescriptor.h
+    ext2groupdescriptor.h \
+    vdifunctions.h \
+    vdifilesystemtreeitem.h
 
 FORMS    += mainwindow.ui

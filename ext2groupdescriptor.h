@@ -4,6 +4,8 @@
 #include <fstream>
 #include <QObject>
 
+namespace CSCI5806 {
+
 struct ext2_group_desc
 {
 unsigned int bg_block_bitmap;			 /* Blocks bitmap block */
@@ -34,5 +36,7 @@ private:
     QVector<ext2_group_desc> *groupDescriptors;
 
 };
+
+}
 
 #endif // EXT2GROUPDESCRIPTOR_H
