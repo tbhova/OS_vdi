@@ -11,6 +11,7 @@ using namespace CSCI5806;
 ext2SuperBlock::ext2SuperBlock(QObject *parent, long long startOffset,  ifstream &file) : QObject(parent)
 {
 
+    cout << "The start of the superblock was " << hex << startOffset << endl;
     //All values are read in according to their sizes. These values do not change per super
     //block. The superblock is 1024 bytes in length, but does not use the last 936 bytes
     //for our use.
@@ -78,6 +79,11 @@ int ext2SuperBlock::getBlockSize() {
 int ext2SuperBlock::getBlocksPerGroup() {
     return s_blocks_per_group;
 }
+
+int ext2SuperBlock::getInodesPerGroup() {
+    return s_inodes_per_group;
+}
+
 
 
 
