@@ -6,6 +6,7 @@
 #include <QString>
 #include "vdifile.h"
 #include "vdifilesystemtreeitem.h"
+#include "ext2filesystemmanager.h"
 
 namespace CSCI5806 {
 class VdiFileSystem : public QAbstractItemModel
@@ -31,10 +32,14 @@ signals:
     void vdiFileSelected(QString fileName);
     void onBrowseVDIClicked();
 
+private slots:
+    void fsManagerConstructed(ext2FileSystemManager *fs);
+
 private:
     QTreeView *tree;
     VdiFile *vdi;
     VDIFileSystemTreeItem *rootNode;
+    ext2FileSystemManager *fsManager;
 };
 }
 

@@ -20,9 +20,11 @@ VdiFileSystem::VdiFileSystem(QTreeView *initialTree, QObject *parent) : QAbstrac
     tree->setModel(this);
     vdi = new VdiFile();
 
+    fsManager = NULL;
     //signal passthrough
     connect(vdi, VdiFile::vdiFileSelected, this, VdiFileSystem::vdiFileSelected);
     connect(this, VdiFileSystem::onBrowseVDIClicked, vdi, VdiFile::selectVdiPrompt);
+    connect(vdi, VdiFile::FSManagerConstructed, this, VdiFileSystem::fsManagerConstructed);
 }
 
 VdiFileSystem::~VdiFileSystem() {
@@ -65,6 +67,11 @@ void VdiFileSystem::setupModelData() {
 
     rootNode->child(0)->appendChild(new VDIFileSystemTreeItem(rootData, rootNode->child(0)));
 
+}
+
+void VdiFileSystem::fsManagerConstructed(ext2FileSystemManager *fs) {
+    fsManager = fs;
+#warning need more
 }
 
 

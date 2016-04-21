@@ -57,6 +57,8 @@ VdiFile::~VdiFile() {
         delete blockBitmap;
     if (inodesBitmap != NULL)
         delete inodesBitmap;
+    if (fsManager != NULL)
+        delete fsManager;
 }
 
 
@@ -162,6 +164,8 @@ void VdiFile::openFile(QString fileName) {
     //cout << blockBitmap->max_size() << endl;
     cout << "Bit reading/ converting complete" << endl;
 
+    fsManager = new ext2FileSystemManager(&input, inode_table_address, superBlock, bootBlockLocation, block_size);
+    emit FSManagerConstructed(fsManager);
 
     //The second value of the inode table gives you the root directory. Note that these are 1 based indices
 

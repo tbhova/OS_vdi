@@ -1,16 +1,23 @@
 #include "ext2filesystemmanager.h"
 #include "vdifunctions.h"
+#include <QObject>
+#include <sstream>
+#include <iostream>
 
 using namespace std;
 using namespace CSCI5806;
 
-ext2FileSystemManager::ext2FileSystemManager(ifstream *file, long long inodeAddress, int InodeNumber, ext2SuperBlock super)
+ext2FileSystemManager::ext2FileSystemManager(ifstream *file, long long inodeAddress, ext2SuperBlock *super, unsigned int bootBlock, unsigned int blockSize)
 {
     input = file;
     iNodeTableAddress = inodeAddress;
+    superBlock = super;
+    bootBlockLocation = bootBlock;
+    block_size = blockSize;
     //get root info
     getInodeTableData(2); //root is inode 2
-    //root = new ext2Folder(rootInodeNum);
+    root = new ext2Folder(*tab, 2, QObject::tr("/"));
+    //root->setPath("/");
     addFilesAndFolders(root);
 }
 
@@ -25,7 +32,57 @@ void ext2FileSystemManager::exploreToPath(QString path) {
 }
 
 void ext2FileSystemManager::addFilesAndFolders(ext2Folder *folder) {
-    //use inode, etc to append items to the tree
+    tab = &(folder->getInodeTable());
+    for (int i = 0; i < (tab->i_blocks*(block_size/512)) && i < 12; i++) {
+        if (!fillInFilesFromBlock(folder, i, 0))
+            break;
+    }
+}
+
+bool ext2FileSystemManager::fillInFilesFromBlock(ext2Folder *folder, unsigned int block_num, unsigned long long offsetOfStruct) {
+    while (true) {
+        long long offset = bootBlockLocation+(block_size * (block_num))+24+offsetOfStruct; //the "+24" allows us to skip unneeded data
+
+        stringstream ss;
+
+        InodeIn.inode = getStreamData(4,offset, *input, "Inode Number", true);
+        InodeIn.rec_len = getStreamData(2,offset+4, *input, "Directory Length", true);
+        InodeIn.name_len  = getStreamData(1,offset+6, *input, "Name Length", true);
+        InodeIn.file_type = getStreamData(1,offset+7, *input, "File Type", true);
+
+        for(int i=0; i<(InodeIn.name_len); i++)
+            ss << (char)input->get();
+
+        string temp;
+        ss >> temp;
+        InodeIn.name = temp;
+
+        cout << "The name of the file is " << InodeIn.name << endl;
+
+        offsetOfStruct += InodeIn.rec_len; //increment running count
+        if (InodeIn.file_type !=0 && offsetOfStruct < block_size) {
+            this->addEntry(folder, InodeIn);
+        } else
+            break;
+    }
+
+    if (offsetOfStruct >= block_size) {
+        return false; //we are not done getting files
+    }
+    return true;
+}
+
+void ext2FileSystemManager::addEntry(ext2Folder *folder, Inode_info InodeIn) {
+
+}
+
+bool ext2FileSystemManager::isDirInTable() const {
+
+    return false;
+}
+
+bool ext2FileSystemManager::isFileInTable() const {
+    return false;
 }
 
 void ext2FileSystemManager::getInodeTableData(unsigned int InodeNumber) {
@@ -69,3 +126,4 @@ void ext2FileSystemManager::getInodeTableData(unsigned int InodeNumber) {
     tab->i_osd2[12] = getCharFromStream(12,offset+116, *input);
 
 }
+
