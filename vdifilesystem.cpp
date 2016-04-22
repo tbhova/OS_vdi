@@ -14,8 +14,14 @@ VdiFileSystem::VdiFileSystem(QTreeView *initialTree, QObject *parent) : QAbstrac
 {
     tree = initialTree;
     this->setParent(parent);
-    rootNode = NULL;
-    this->setupModelData();
+    //build model header (root node)
+    QList<QVariant> rootData;
+    rootData.push_back(tr("Name"));
+    rootData.push_back(tr("Size"));
+    rootData.push_back(tr("Type"));
+    rootData.push_back(tr("Date Modified"));
+    //rootData.push_back(QDateTime::currentDateTime().toString(tr("M/d/yyyy h:mm AP")));
+    rootNode = new VDIFileSystemTreeItem(rootData);
 
     tree->setModel(this);
     vdi = new VdiFile();
@@ -25,6 +31,8 @@ VdiFileSystem::VdiFileSystem(QTreeView *initialTree, QObject *parent) : QAbstrac
     connect(vdi, VdiFile::vdiFileSelected, this, VdiFileSystem::vdiFileSelected);
     connect(this, VdiFileSystem::onBrowseVDIClicked, vdi, VdiFile::selectVdiPrompt);
     connect(vdi, VdiFile::FSManagerConstructed, this, VdiFileSystem::fsManagerConstructed);
+
+    connect(tree, QTreeView::expanded, this, VdiFileSystem::folderExpanded);
 }
 
 VdiFileSystem::~VdiFileSystem() {
@@ -33,16 +41,44 @@ VdiFileSystem::~VdiFileSystem() {
     delete vdi;
 }
 
-void VdiFileSystem::setupModelData() {
-    QList<QVariant> rootData;
-    rootData.push_back(tr("Name"));
-    rootData.push_back(tr("Size"));
-    rootData.push_back(tr("Type"));
-    rootData.push_back(tr("Date Modified"));
-    //rootData.push_back(QDateTime::currentDateTime().toString(tr("M/d/yyyy h:mm AP")));
-    rootNode = new VDIFileSystemTreeItem(rootData);
+void VdiFileSystem::setupModelData(ext2FSEntry *extNode, VDIFileSystemTreeItem *guiNode) {
+    QList<QVariant> data;
 
-    rootData.clear();
+    data.push_back(extNode->getName());
+    data.push_back(FileSizeToString(extNode->getInodeTable().i_size));
+    if (extNode->isFolder()) {
+        data.push_back(QObject::tr("Folder"));
+    } else {
+        data.push_back(QObject::tr("File"));
+    }
+
+    data.push_back(QString::number(extNode->getInodeTable().i_mtime));
+
+    guiNode->appendChild(new VDIFileSystemTreeItem(data, guiNode));
+    qDebug() << QObject::tr("append ") << extNode->getName();
+
+    if (extNode->isFolder()) {
+        qDebug() << QObject::tr("this is a folder");
+        ext2Folder* folder = (ext2Folder*)extNode;
+        for (int i = 0; i < guiNode->childCount(); i++) {
+            if (guiNode->child(i)->data(0).toString() == folder->getName()) {
+                qDebug() << QObject::tr("this folder found ") << folder->getName();
+                guiNode = guiNode->child(i);
+                break;
+            }
+        }
+        foreach (ext2Folder *f, *(folder->getFolders()) ) {
+            setupModelData(f, guiNode);
+        }
+        foreach (ext2File *f, *(folder->getFiles()) ) {
+            setupModelData(f, guiNode);
+        }
+    } else return;
+
+
+
+
+    /*rootData.clear();
     rootData.push_back(tr("/"));
     rootData.push_back(tr("root"));
     rootData.push_back(FileSizeToString(900));
@@ -65,15 +101,80 @@ void VdiFileSystem::setupModelData() {
     rootData.push_back(FileSizeToString(2050));
     rootData.push_back(QDateTime::fromString(tr("11/26/1989 8:08 AM"), tr("M/d/yyyy h:mm AP")).toString("M/d/yyyy h:mm AP"));
 
-    rootNode->child(0)->appendChild(new VDIFileSystemTreeItem(rootData, rootNode->child(0)));
+    rootNode->child(0)->appendChild(new VDIFileSystemTreeItem(rootData, rootNode->child(0)));*/
 
 }
 
 void VdiFileSystem::fsManagerConstructed(ext2FileSystemManager *fs) {
+    emit this->layoutAboutToBeChanged();
+    qDebug() << QObject::tr("fsManager Constructed!");
     fsManager = fs;
-#warning need more
+    setupModelData(fs->getRoot(), rootNode);
+    emit this->layoutChanged();
 }
 
+//slot detecting when a folder is expanded for lazy loading
+void VdiFileSystem::folderExpanded(const QModelIndex &index) {
+    emit this->layoutAboutToBeChanged();
+
+    if (!index.isValid()) {
+        qDebug() << QObject::tr("folderExpanded - invalid model index");
+        return;
+    }
+    if (fsManager == NULL) {
+        //can't ask vdi to load more files, since there isn't one yet
+        return;
+    }
+    VDIFileSystemTreeItem *expandedFolder;
+    expandedFolder = static_cast<VDIFileSystemTreeItem*>(index.internalPointer());
+    QString path = "";
+    //path.append(expandedFolder->data(0).toString());
+    VDIFileSystemTreeItem *parent;
+    parent = expandedFolder;
+
+    //build path by walking upn the tree
+    while (parent != rootNode) {
+        path.append("/");
+        path.append(parent->data(0).toString());
+        parent = parent->parentItem();
+    }
+
+    qDebug() << "folder expanded path = " << path;
+    //reverse the path to be the actual path starting from the root
+    QString revPath;
+    int lastSlash = path.lastIndexOf("/");
+    while (lastSlash != -1) {
+        //qDebug() << "lastSlash = " << lastSlash;
+        revPath.append(path.right(path.size()-lastSlash));
+        path.chop(path.size()-lastSlash);
+        lastSlash = path.lastIndexOf("/");
+        //qDebug() << "folder expanded revPath = " << path;
+        //qDebug() << "folder expanded path = " << path;
+    }
+
+    //qDebug() << "folder expanded revPath = " << revPath;
+
+    //remove leading /'s
+    for (int i = 0; i < revPath.length(); i++) {
+        int leadingSlashes = revPath.indexOf("/", i);
+        if (leadingSlashes != i) {
+            revPath.remove(0, i-1); //remove duplicate /'s
+            break;
+        }
+        //i == size-1 is last iteration, and root is being expanded
+        if (i == revPath.size()-1) {
+            revPath.remove(0, i);
+            break;
+        }
+    }
+
+
+    qDebug() << "folder expanded revPath = " << revPath;
+
+    fsManager->exploreToPath(revPath);
+
+    emit this->layoutChanged();
+}
 
 //mandantory overloads for gui display of file model
 QModelIndex VdiFileSystem::index(int row, int column, const QModelIndex &parent) const {
@@ -153,7 +254,6 @@ Qt::ItemFlags VdiFileSystem::flags(const QModelIndex &index) const {
 }
 
 QVariant VdiFileSystem::headerData(int section, Qt::Orientation orientation, int role) const {
-#warning one of these are false, and we have no header
     if(orientation == Qt::Horizontal && role == Qt::DisplayRole)
         return rootNode->data(section);
 

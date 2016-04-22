@@ -36,7 +36,6 @@ MainWindow::~MainWindow()
 {
 #warning double check for memory leaks
     delete ui;
-    delete vdi;
     delete vdiFS;
 }
 

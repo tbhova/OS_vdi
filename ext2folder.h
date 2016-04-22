@@ -15,6 +15,7 @@ public:
 
     QVector<ext2Folder*>* getFolders();
     QVector<ext2File*>* getFiles();
+    virtual bool isFolder();
     /*void setName(QString newName);
     /*void setPath(QString newPath);
     QString getPath() const;*/

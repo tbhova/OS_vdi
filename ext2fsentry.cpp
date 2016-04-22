@@ -33,3 +33,7 @@ void ext2FSEntry::setName(QString newName) {
 QString ext2FSEntry::getName() const {
     return name;
 }
+
+unsigned int ext2FSEntry::getInodeNumber() const {
+    return iNodeNumber;
+}

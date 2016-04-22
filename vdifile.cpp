@@ -125,7 +125,9 @@ void VdiFile::openFile(QString fileName) {
     block_size = superBlock->getBlockSize();
     unsigned int inodes_per_group = superBlock->getInodesPerGroup();
 
-
+    cout << "andy block_size" << block_size << endl;
+    cout << "andy super block size" << superBlock->getBlockSize() << endl;
+    cout << "andy blocksupergroup" << superBlock->getBlocksPerGroup() << endl;
     group_size = block_size*superBlock->getBlocksPerGroup();
     cout << "The total size of this block group is (bytes): " << group_size << endl;
 
@@ -218,12 +220,15 @@ void VdiFile::fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsig
 void VdiFile::getInodeTableData(long long InitialOffset, int InodeNumber, ifstream &file){
 
     unsigned int block_group= (InodeNumber -1) /superBlock->getInodesPerGroup();
-    //cout << block_group << endl;
+    cout << "andy block_group " << block_group << endl;
     unsigned int local_inode_index= (InodeNumber-1) % superBlock->getInodesPerGroup();
-    //cout << local_inode_index << endl;
+    cout << "andy local_inode_index " << local_inode_index << endl;
 
 
     long long offset = InitialOffset + ((block_group)*group_size) + (local_inode_index * sizeof(tab));
+    cout << "andy group_size " << group_size << endl;
+    cout << "andy offset " << offset << endl;
+    cout << "andy sizeof tab " << sizeof(tab) << endl;
 
     tab.i_mode = getStreamData(2,offset, file, "Mode", true);
     tab.i_uid = getStreamData(2,offset+2, file, "Uid", false);
@@ -287,7 +292,11 @@ void VdiFile::getDataBlock(long long BlockNumber, ifstream &file){
 void VdiFile::fillRootDir( long long block_num,long long offsetOfStruct,ifstream &file){
 
     long long offset = bootBlockLocation+(block_size * (block_num))+24+offsetOfStruct; //the "+24" allows us to skip unneeded data
-
+    cout << "andy offset " << offset << endl;
+    cout << bootBlockLocation << endl;
+    cout << block_size << endl;
+    cout << block_num << endl;
+    cout << offsetOfStruct << endl;
     stringstream ss;
 
     InodeIn.inode = getStreamData(4,offset, file, "Inode Number", true);

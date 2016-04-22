@@ -17,6 +17,10 @@ QVector<ext2File*>* ext2Folder::getFiles() {
     return files;
 }
 
+bool ext2Folder::isFolder() {
+    return true;
+}
+
 /*void ext2Folder::setName(QString newName) {
     ext2FSEntry::setName(newName);
     path.chop(path.size() - path.lastIndexOf("/")+1); //remove old folder name

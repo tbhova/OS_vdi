@@ -13,7 +13,7 @@ struct Inode_info {
     unsigned int	inode;		/* Inode number */
     unsigned short	rec_len;		/* Directory entry length */
     unsigned char 	name_len;		/* Name length */
-    unsigned char	file_type;
+    unsigned char	file_type;  //1 is file, 2 is folder
     //QVector <unsigned char>   name;	    /* File name */
     std::string   name;	    /* File name */
 };
@@ -23,6 +23,8 @@ class ext2FileSystemManager
 public:
     ext2FileSystemManager(std::ifstream *file, long long inodeAddress, ext2SuperBlock *super, unsigned int bootBlock, unsigned int blockSize);
 
+    ~ext2FileSystemManager();
+
     void exploreToPath(QString path);
 
     void addFilesAndFolders(ext2Folder *folder);
@@ -30,24 +32,24 @@ public:
     bool fillInFilesFromBlock(ext2Folder *folder, unsigned int block_num, unsigned long long offsetOfStruct);
 
     //used for gui traversal
-    const ext2Folder* getRoot() const;
+    ext2Folder* getRoot() const;
 
     void getInodeTableData(unsigned int inodeNumber);
 
 
 
 private:
-    bool isDirInTable() const;
+    /*bool isDirInTable() const;
 
-    bool isFileInTable() const;
+    bool isFileInTable() const;*/
 
-    void addEntry(ext2Folder *folder, Inode_info InodeIn);
+    void addEntry(ext2Folder *folder, const Inode_info &InodeIn);
 
     ext2Folder *root;
     std::ifstream *input;
     long long iNodeTableAddress;
     ext2SuperBlock *superBlock;
-    InodeTable *tab;
+    InodeTable *tab, *tempTab;
     Inode_info InodeIn;
 
     unsigned int bootBlockLocation, block_size;

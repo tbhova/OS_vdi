@@ -15,7 +15,7 @@ class VdiFileSystem : public QAbstractItemModel
 public:
     explicit VdiFileSystem(QTreeView *intialTree, QObject *parent = 0);
     ~VdiFileSystem();
-    void setupModelData();
+    void setupModelData(ext2FSEntry *extNode, VDIFileSystemTreeItem *guiNode);
 
     //mandantory method overloads for QAbstractItemModel inheritance
     virtual Qt::ItemFlags flags(const QModelIndex &index) const Q_DECL_OVERRIDE;
@@ -34,6 +34,7 @@ signals:
 
 private slots:
     void fsManagerConstructed(ext2FileSystemManager *fs);
+    void folderExpanded(const QModelIndex &index);
 
 private:
     QTreeView *tree;

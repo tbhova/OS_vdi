@@ -8,3 +8,6 @@ ext2File::ext2File(InodeTable tab, unsigned int iNodeNum, QString entryName) : e
 
 }
 
+bool ext2File::isFolder() {
+    return false;
+}

@@ -31,10 +31,11 @@ class ext2FSEntry
 public:
     ext2FSEntry(InodeTable tab, unsigned int iNodeNum, QString entryName);
     InodeTable& getInodeTable();
-    /*bool isFolder();
-    bool isFile();*/
+    virtual bool isFolder() = 0;
+    //bool isFile();
     void setName(QString name);
     QString getName() const;
+    unsigned int getInodeNumber() const;
 
 protected:
     InodeTable table;
