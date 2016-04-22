@@ -22,8 +22,8 @@ bool isFile() {
     return false;
 }*/
 
-InodeTable& ext2FSEntry::getInodeTable() {
-    return table;
+InodeTable* ext2FSEntry::getInodeTable() {
+    return &table;
 }
 
 void ext2FSEntry::setName(QString newName) {

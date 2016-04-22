@@ -25,6 +25,8 @@ public:
 
     ~ext2FileSystemManager();
 
+    ext2Folder* getFolderAtPath(QString path);
+
     void exploreToPath(QString path);
 
     void addFilesAndFolders(ext2Folder *folder);

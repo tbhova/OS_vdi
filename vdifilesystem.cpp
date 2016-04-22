@@ -45,14 +45,14 @@ void VdiFileSystem::setupModelData(ext2FSEntry *extNode, VDIFileSystemTreeItem *
     QList<QVariant> data;
 
     data.push_back(extNode->getName());
-    data.push_back(FileSizeToString(extNode->getInodeTable().i_size));
+    data.push_back(FileSizeToString(extNode->getInodeTable()->i_size));
     if (extNode->isFolder()) {
         data.push_back(QObject::tr("Folder"));
     } else {
         data.push_back(QObject::tr("File"));
     }
 
-    data.push_back(QString::number(extNode->getInodeTable().i_mtime));
+    data.push_back(QString::number(extNode->getInodeTable()->i_mtime));
 
     guiNode->appendChild(new VDIFileSystemTreeItem(data, guiNode));
     qDebug() << QObject::tr("append ") << extNode->getName();
@@ -115,6 +115,7 @@ void VdiFileSystem::fsManagerConstructed(ext2FileSystemManager *fs) {
 
 //slot detecting when a folder is expanded for lazy loading
 void VdiFileSystem::folderExpanded(const QModelIndex &index) {
+    qDebug() << "folder expanded slot";
     emit this->layoutAboutToBeChanged();
 
     if (!index.isValid()) {
@@ -132,7 +133,7 @@ void VdiFileSystem::folderExpanded(const QModelIndex &index) {
     VDIFileSystemTreeItem *parent;
     parent = expandedFolder;
 
-    //build path by walking upn the tree
+    //build path by walking up the tree
     while (parent != rootNode) {
         path.append("/");
         path.append(parent->data(0).toString());
@@ -172,6 +173,23 @@ void VdiFileSystem::folderExpanded(const QModelIndex &index) {
     qDebug() << "folder expanded revPath = " << revPath;
 
     fsManager->exploreToPath(revPath);
+    /*if (rootNode != NULL) {
+        for (int i = rootNode->childCount()-1; i >= 0; i++) {
+            if (rootNode->child(i) != NULL) {
+                delete rootNode->child(i);
+            }
+        }
+    }*/
+    //setupModelData(fsManager->getRoot(), rootNode);
+
+    //traverse fsManagerTree to get expanded folder
+    ext2Folder *fsManagerFolder = fsManager->getFolderAtPath(revPath);
+
+    qDebug() << "fsManagerFolder name " << fsManagerFolder->getName();
+
+    foreach (ext2Folder *f, *(fsManagerFolder->getFolders())) {
+        setupModelData(f, expandedFolder);
+    }
 
     emit this->layoutChanged();
 }

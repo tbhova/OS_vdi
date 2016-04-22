@@ -15,8 +15,10 @@ ext2FileSystemManager::ext2FileSystemManager(ifstream *file, long long inodeAddr
     superBlock = super;
     bootBlockLocation = bootBlock;
     block_size = super->getBlockSize();
-    tab = NULL;
+    //tab = NULL;
+    tab = new InodeTable;
     //get root info
+    qDebug() << "begin construct fsManager";
     getInodeTableData(2); //root is inode 2
     root = new ext2Folder(*tab, 2, QObject::tr("/"));
     //root->setPath("/");
@@ -24,11 +26,10 @@ ext2FileSystemManager::ext2FileSystemManager(ifstream *file, long long inodeAddr
 }
 
 ext2FileSystemManager::~ext2FileSystemManager() {
-
+    delete tab;
 }
 
-void ext2FileSystemManager::exploreToPath(QString path) {
-    //traverse to folder from root using path
+ext2Folder* ext2FileSystemManager::getFolderAtPath(QString path) {
     ext2Folder *current = root;
     path.remove(0, 1); //remove root /
     int firstSlash = path.indexOf("/");
@@ -43,6 +44,28 @@ void ext2FileSystemManager::exploreToPath(QString path) {
         }
         firstSlash = path.indexOf("/");
     }
+    return current;
+}
+
+void ext2FileSystemManager::exploreToPath(QString path) {
+    //traverse to folder from root using path
+    /*ext2Folder *current = root;
+    path.remove(0, 1); //remove root /
+    int firstSlash = path.indexOf("/");
+    while (firstSlash != - 1) {
+        QString folderName = path.left(firstSlash);
+        qDebug() << "explore to path folder name = " << folderName;
+        foreach (ext2Folder *f, *(current->getFolders())) {
+            if (f->getName() == folderName) {
+                current = f;
+                break;
+            }
+        }
+        firstSlash = path.indexOf("/");
+    }*/
+
+    ext2Folder *current = this->getFolderAtPath(path);
+
     qDebug() << "end traverse current = " << current->getName();
     //call addfilesFolders for all folders in the current folder
     foreach (ext2Folder *f, *(current->getFolders())) {
@@ -53,8 +76,10 @@ void ext2FileSystemManager::exploreToPath(QString path) {
 }
 
 void ext2FileSystemManager::addFilesAndFolders(ext2Folder *folder) {
-    tempTab = &(folder->getInodeTable());
-    for (int i = 0; i < (tab->i_blocks*(block_size/512)) && i < 12; i++) {
+    tempTab = folder->getInodeTable();
+    qDebug() << "tempTab->i_blocks " << tempTab->i_blocks;
+    for (int i = 0; i < (tempTab->i_blocks*(block_size/512)) && i < 12; i++) {
+        qDebug() << "add files i_block " << tempTab->i_block[i];
         if (!fillInFilesFromBlock(folder, tempTab->i_block[i], 0))
             break;
     }
@@ -103,6 +128,9 @@ bool ext2FileSystemManager::fillInFilesFromBlock(ext2Folder *folder, unsigned in
 
 void ext2FileSystemManager::addEntry(ext2Folder *folder, const Inode_info &InodeIn) {
     cout << "add entry name  = " << InodeIn.name << endl;
+    cout << "inodeNumber = " << InodeIn.inode << endl;
+    if (InodeIn.name == "..")
+        return;
     switch (InodeIn.file_type) {
     case (1) : //file
         //populate folder inode data in tab
@@ -131,12 +159,13 @@ bool ext2FileSystemManager::isFileInTable() const {
 }*/
 
 void ext2FileSystemManager::getInodeTableData(unsigned int InodeNumber) {
-    if (tab != NULL) {
+    /*if (tab != NULL) {
         delete tab;
         tab = NULL;
-    }
-    tab = new InodeTable;
+    }*/
+    //tab = new InodeTable;
 
+    cout << "InodeNumber = " << InodeNumber << endl;
     cout << "block_size" << block_size << endl;
     cout << "super block size" << superBlock->getBlockSize() << endl;
     cout << "blocksupergroup" << superBlock->getBlocksPerGroup() << endl;
