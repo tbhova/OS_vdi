@@ -188,8 +188,11 @@ void VdiFileSystem::folderExpanded(const QModelIndex &index) {
         for (int i = 0; i < expandedFolder->childCount(); i++) {
             if (f->getName() == expandedFolder->child(i)->data(0).toString()) {
                 qDebug() << "found matching folders in both trees";
-                foreach (ext2Folder *fSub, *(f->getFolders())) {
-                    setupModelData(fSub, expandedFolder->child(i));
+                foreach (ext2Folder *subFolder, *(f->getFolders())) {
+                    setupModelData(subFolder, expandedFolder->child(i));
+                }
+                foreach (ext2File *subFile, *(f->getFiles())) {
+                    setupModelData(subFile, expandedFolder->child(i));
                 }
                 break;
             }
