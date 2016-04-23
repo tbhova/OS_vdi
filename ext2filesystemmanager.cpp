@@ -31,9 +31,11 @@ ext2FileSystemManager::~ext2FileSystemManager() {
 
 ext2Folder* ext2FileSystemManager::getFolderAtPath(QString path) {
     ext2Folder *current = root;
-    path.remove(0, 1); //remove root /
+    path.remove(0, 1); //remove root
     int firstSlash = path.indexOf("/");
-    while (firstSlash != - 1) {
+    firstSlash = (firstSlash == -1) ? path.size() : firstSlash;
+    while (path.size() > 0) {
+        qDebug() << "path: " << path << "1st / " << firstSlash;
         QString folderName = path.left(firstSlash);
         qDebug() << "explore to path folder name = " << folderName;
         foreach (ext2Folder *f, *(current->getFolders())) {
@@ -42,7 +44,9 @@ ext2Folder* ext2FileSystemManager::getFolderAtPath(QString path) {
                 break;
             }
         }
+        path.remove(0, firstSlash+1); //remove folder
         firstSlash = path.indexOf("/");
+        firstSlash = (firstSlash == -1) ? path.size() : firstSlash;
     }
     return current;
 }
