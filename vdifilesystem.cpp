@@ -118,7 +118,6 @@ void VdiFileSystem::folderExpanded(const QModelIndex &index) {
 #warning return early if children already have children
 
     qDebug() << "folder expanded slot";
-    emit this->layoutAboutToBeChanged();
 
     if (!index.isValid()) {
         qDebug() << QObject::tr("folderExpanded - invalid model index");
@@ -174,7 +173,10 @@ void VdiFileSystem::folderExpanded(const QModelIndex &index) {
 
     qDebug() << "folder expanded revPath = " << revPath;
 
-    fsManager->exploreToPath(revPath);
+    if (!fsManager->exploreToPath(revPath))
+        return; //folder already explored
+
+    emit this->layoutAboutToBeChanged();
     //setupModelData(fsManager->getRoot(), rootNode);
 
     //traverse fsManagerTree to get expanded folder

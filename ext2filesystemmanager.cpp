@@ -15,18 +15,16 @@ ext2FileSystemManager::ext2FileSystemManager(ifstream *file, long long inodeAddr
     superBlock = super;
     bootBlockLocation = bootBlock;
     block_size = super->getBlockSize();
-    //tab = NULL;
-    tab = new InodeTable;
     //get root info
     qDebug() << "begin construct fsManager";
     getInodeTableData(2); //root is inode 2
-    root = new ext2Folder(*tab, 2, QObject::tr("/"));
+    root = new ext2Folder(tab, 2, QObject::tr("/"));
     //root->setPath("/");
     addFilesAndFolders(root);
 }
 
 ext2FileSystemManager::~ext2FileSystemManager() {
-    delete tab;
+    //delete tab;
 }
 
 ext2Folder* ext2FileSystemManager::getFolderAtPath(QString path) {
@@ -51,24 +49,18 @@ ext2Folder* ext2FileSystemManager::getFolderAtPath(QString path) {
     return current;
 }
 
-void ext2FileSystemManager::exploreToPath(QString path) {
-    //traverse to folder from root using path
-    /*ext2Folder *current = root;
-    path.remove(0, 1); //remove root /
-    int firstSlash = path.indexOf("/");
-    while (firstSlash != - 1) {
-        QString folderName = path.left(firstSlash);
-        qDebug() << "explore to path folder name = " << folderName;
-        foreach (ext2Folder *f, *(current->getFolders())) {
-            if (f->getName() == folderName) {
-                current = f;
-                break;
-            }
-        }
-        firstSlash = path.indexOf("/");
-    }*/
-
+bool ext2FileSystemManager::exploreToPath(QString path) {
     ext2Folder *current = this->getFolderAtPath(path);
+
+
+    //determine whether we should return early
+    foreach (ext2Folder *f, *(current->getFolders())) {
+        if (f->getFolders()->size() != 0 || f->getFiles()->size() != 0) {
+            //we have already explored this folder, no need to reexplore
+            qDebug() << "folder " << f->getName() << " already explored.";
+            return false;
+        }
+    }
 
     qDebug() << "end traverse current = " << current->getName();
     //call addfilesFolders for all folders in the current folder
@@ -77,6 +69,8 @@ void ext2FileSystemManager::exploreToPath(QString path) {
         this->getInodeTableData(f->getInodeNumber());
         this->addFilesAndFolders(f);
     }
+
+    return true;
 }
 
 void ext2FileSystemManager::addFilesAndFolders(ext2Folder *folder) {
@@ -140,14 +134,14 @@ void ext2FileSystemManager::addEntry(ext2Folder *folder, const Inode_info &Inode
         //populate folder inode data in tab
         this->getInodeTableData(InodeIn.inode);
         //add new file to current folder
-        folder->getFiles()->push_back(new ext2File(*tab, InodeIn.inode, QObject::tr(InodeIn.name.c_str())));
+        folder->getFiles()->push_back(new ext2File(tab, InodeIn.inode, QObject::tr(InodeIn.name.c_str())));
         break;
 
     case(2): //folder
         //populate new folder inode data in tab
         this->getInodeTableData(InodeIn.inode);
         //add new folder to our current folder
-        folder->getFolders()->push_back(new ext2Folder(*tab, InodeIn.inode, QObject::tr(InodeIn.name.c_str())));
+        folder->getFolders()->push_back(new ext2Folder(tab, InodeIn.inode, QObject::tr(InodeIn.name.c_str())));
         break;
     }
 }
@@ -180,35 +174,35 @@ void ext2FileSystemManager::getInodeTableData(unsigned int InodeNumber) {
     cout << "local_inode_index " << local_inode_index << endl;
 
     long long group_size = superBlock->getBlockSize()*superBlock->getBlocksPerGroup();
-    long long offset = iNodeTableAddress + ((block_group)*group_size) + (local_inode_index * sizeof(*tab));
+    long long offset = iNodeTableAddress + ((block_group)*group_size) + (local_inode_index * sizeof(tab));
     cout << "group_size " << group_size << endl;
     cout << "offset " << offset << endl;
-    cout << "sizeof tab " << sizeof(*tab) << endl;
+    cout << "sizeof tab " << sizeof(tab) << endl;
 
-    tab->i_mode = getStreamData(2,offset, *input, "Mode", true);
-    tab->i_uid = getStreamData(2,offset+2, *input, "Uid", false);
-    tab->i_size = getStreamData(4,offset+4, *input, "Size", true);
-    tab->i_atime = getStreamData(4,offset+8, *input, "Atime", false);
-    tab->i_ctime = getStreamData(4,offset+12, *input, "Ctime", false);
-    tab->i_mtime = getStreamData(4,offset+16, *input, "Mtime", false);
-    tab->i_dtime = getStreamData(4,offset+20, *input, "Dtime", false);
-    tab->i_gid = getStreamData(2,offset+24, *input, "Gid", false);
-    tab->i_links_count = getStreamData(2,offset+26, *input, "Links Count", true);
-    tab->i_blocks = getStreamData(4,offset+28, *input, "Blocks", true);
-    tab->i_flags = getStreamData(4,offset+32, *input, "Flags", false);
-    tab->i_osd1 = getStreamData(4,offset+36, *input, "Osd1", false);
+    tab.i_mode = getStreamData(2,offset, *input, "Mode", true);
+    tab.i_uid = getStreamData(2,offset+2, *input, "Uid", false);
+    tab.i_size = getStreamData(4,offset+4, *input, "Size", true);
+    tab.i_atime = getStreamData(4,offset+8, *input, "Atime", false);
+    tab.i_ctime = getStreamData(4,offset+12, *input, "Ctime", false);
+    tab.i_mtime = getStreamData(4,offset+16, *input, "Mtime", false);
+    tab.i_dtime = getStreamData(4,offset+20, *input, "Dtime", false);
+    tab.i_gid = getStreamData(2,offset+24, *input, "Gid", false);
+    tab.i_links_count = getStreamData(2,offset+26, *input, "Links Count", true);
+    tab.i_blocks = getStreamData(4,offset+28, *input, "Blocks", true);
+    tab.i_flags = getStreamData(4,offset+32, *input, "Flags", false);
+    tab.i_osd1 = getStreamData(4,offset+36, *input, "Osd1", false);
     int add =0;
     for (int i=0; i<15; i++){
-        tab->i_block[i] = getStreamData(4,offset+40+add, *input, "i_block", true);
+        tab.i_block[i] = getStreamData(4,offset+40+add, *input, "i_block", true);
         add+=4;
     }
-    tab->i_generation = getStreamData(4,offset+100, *input, "Generation", false);
-    tab->i_file_acl = getStreamData(4,offset+104, *input, "File ACL", false);
-    tab->i_dir_acl = getStreamData(4,offset+108, *input, "Dir ACL", true);
-    tab->i_faddr = getStreamData(4,offset+112, *input, "Faddr", false);
+    tab.i_generation = getStreamData(4,offset+100, *input, "Generation", false);
+    tab.i_file_acl = getStreamData(4,offset+104, *input, "File ACL", false);
+    tab.i_dir_acl = getStreamData(4,offset+108, *input, "Dir ACL", true);
+    tab.i_faddr = getStreamData(4,offset+112, *input, "Faddr", false);
 
 #warning this probably doesnt work
-    tab->i_osd2[12] = getCharFromStream(12,offset+116, *input);
+    tab.i_osd2[12] = getCharFromStream(12,offset+116, *input);
 
 }
 

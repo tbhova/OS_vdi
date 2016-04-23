@@ -27,7 +27,7 @@ public:
 
     ext2Folder* getFolderAtPath(QString path);
 
-    void exploreToPath(QString path);
+    bool exploreToPath(QString path);
 
     void addFilesAndFolders(ext2Folder *folder);
 
@@ -51,7 +51,7 @@ private:
     std::ifstream *input;
     long long iNodeTableAddress;
     ext2SuperBlock *superBlock;
-    InodeTable *tab, *tempTab;
+    InodeTable tab, *tempTab;
     Inode_info InodeIn;
 
     unsigned int bootBlockLocation, block_size;
