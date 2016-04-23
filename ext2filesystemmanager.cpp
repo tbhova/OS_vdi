@@ -74,6 +74,7 @@ bool ext2FileSystemManager::exploreToPath(QString path) {
 }
 
 void ext2FileSystemManager::addFilesAndFolders(ext2Folder *folder) {
+    cout << "add files and folders - folderName = " << folder->getName().toStdString() << endl;
     tempTab = folder->getInodeTable();
     qDebug() << "tempTab->i_blocks " << tempTab->i_blocks;
     for (int i = 0; i < (tempTab->i_blocks*(block_size/512)) && i < 12; i++) {
@@ -88,6 +89,7 @@ void ext2FileSystemManager::addFilesAndFolders(ext2Folder *folder) {
 bool ext2FileSystemManager::fillInFilesFromBlock(ext2Folder *folder, unsigned int block_num, unsigned long long offsetOfStruct) {
     while (true) {
         long long offset = bootBlockLocation+(block_size * (block_num))+24+offsetOfStruct; //the "+24" allows us to skip unneeded data
+        cout << "fill in files from block - folderName = " << folder->getName().toStdString() << endl;
         cout << hex << "offset " << offset << endl;
         cout << bootBlockLocation << endl;
         cout << block_size << endl;
@@ -114,7 +116,7 @@ bool ext2FileSystemManager::fillInFilesFromBlock(ext2Folder *folder, unsigned in
             this->addEntry(folder, InodeIn);
         } else
             break;
-        if (offsetOfStruct > block_size)
+        if (offsetOfStruct >= block_size)
             break;
     }
 
@@ -125,23 +127,37 @@ bool ext2FileSystemManager::fillInFilesFromBlock(ext2Folder *folder, unsigned in
 }
 
 void ext2FileSystemManager::addEntry(ext2Folder *folder, const Inode_info &InodeIn) {
+    cout << "add entry - folderName = " << folder->getName().toStdString() << endl;
     cout << "add entry name  = " << InodeIn.name << endl;
     cout << "inodeNumber = " << InodeIn.inode << endl;
-    if (InodeIn.name == "..")
+    if (InodeIn.name == ".." || InodeIn.name == ".")
         return;
+    ext2File *newFile;
+    ext2Folder *newFolder;
     switch (InodeIn.file_type) {
     case (1) : //file
         //populate folder inode data in tab
         this->getInodeTableData(InodeIn.inode);
         //add new file to current folder
-        folder->getFiles()->push_back(new ext2File(tab, InodeIn.inode, QObject::tr(InodeIn.name.c_str())));
+        newFile = new ext2File(tab, InodeIn.inode, QObject::tr(InodeIn.name.c_str()));
+        if (folder->getFiles()->contains(newFile)) {
+            qDebug() << "file already in folder";
+        } else {
+            folder->getFiles()->push_back(newFile);
+            cout << "add file " << newFile->getName().toStdString() << " to folder " << folder->getName().toStdString() << endl;
+        }
         break;
-
-    case(2): //folder
+    case (2): //folder
         //populate new folder inode data in tab
         this->getInodeTableData(InodeIn.inode);
         //add new folder to our current folder
-        folder->getFolders()->push_back(new ext2Folder(tab, InodeIn.inode, QObject::tr(InodeIn.name.c_str())));
+        newFolder = new ext2Folder(tab, InodeIn.inode, QObject::tr(InodeIn.name.c_str()));
+        if (folder->getFolders()->contains(newFolder)) {
+            qDebug() << "folder already in folder";
+        } else {
+            folder->getFolders()->append(newFolder);
+            cout << "add folder " << newFolder->getName().toStdString() << " to folder " << folder->getName().toStdString() << endl;
+        }
         break;
     }
 }
