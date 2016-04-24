@@ -23,6 +23,7 @@ public:
     QVariant data(int column) const;
     int row() const;
     VDIFileSystemTreeItem* parentItem();
+
 private:
     QList<VDIFileSystemTreeItem*> childItems;
     QList<QVariant> itemData;

@@ -29,13 +29,17 @@ struct InodeTable {
 class ext2FSEntry
 {
 public:
-    ext2FSEntry(InodeTable tab, QString entryName);
+    ext2FSEntry(InodeTable tab, unsigned int iNodeNum, QString entryName);
+    InodeTable* getInodeTable();
+    virtual bool isFolder() = 0;
+    //bool isFile();
+    void setName(QString name);
+    QString getName() const;
+    unsigned int getInodeNumber() const;
 
-//protected:
-    bool isFolder();
-    bool isFile();
-
+protected:
     InodeTable table;
+    unsigned int iNodeNumber;
     QString name;
 };
 

@@ -10,6 +10,7 @@
 #include <fstream>
 #include <vector>
 #include <cstring>
+#include "ext2filesystemmanager.h"
 
 namespace CSCI5806 {
 struct VdiHeader {
@@ -24,37 +25,6 @@ long long blocksInHDD;
 long long blocksAllocatedSize;
 long long UUIDofVDI;
 long long UUIDofSNAP;
-};
-
-struct InodeTable {
-    unsigned short i_mode;
-    unsigned short i_uid;
-    unsigned int i_size;
-    unsigned int i_atime;
-    unsigned int i_ctime;
-    unsigned int i_mtime;
-    unsigned int i_dtime;
-    unsigned short i_gid;
-    unsigned short i_links_count;
-    unsigned int i_blocks;
-    unsigned int i_flags;
-    unsigned int i_osd1;
-    unsigned int i_block[15];
-    unsigned int i_generation;
-    unsigned int i_file_acl;
-    unsigned int i_dir_acl;
-    unsigned int i_faddr;
-    unsigned char i_osd2[12];
-
-};
-
-struct Inode_info {
-    unsigned int	inode;		/* Inode number */
-    unsigned short	rec_len;		/* Directory entry length */
-    unsigned char 	name_len;		/* Name length */
-    unsigned char	file_type;
-    //QVector <unsigned char>   name;	    /* File name */
-    std::string   name;	    /* File name */
 };
 
 
@@ -73,6 +43,7 @@ public slots:
 
 signals:
     void vdiFileSelected(QString fileName);
+    void FSManagerConstructed(ext2FileSystemManager *fs);
 
 private:
     void closeAndReset();
@@ -95,6 +66,7 @@ private:
     Inode_info InodeIn;
     QVector<unsigned char> *DataBlockBitmap;
     QVector <Inode_info> *InodeInfo;
+    ext2FileSystemManager *fsManager;
 
     std::vector<bool> *blockBitmap, *inodesBitmap;
     //std::vector optimized bool storage to take 1 bit per boolean value when there are multiple bools

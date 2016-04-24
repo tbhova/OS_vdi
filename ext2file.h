@@ -10,8 +10,8 @@ namespace CSCI5806 {
 class ext2File : public ext2FSEntry
 {
 public:
-    ext2File(InodeTable tab, QString entryName);
-
+    ext2File(InodeTable tab, unsigned int iNodeNum, QString entryName);
+    virtual bool isFolder();
 private:
 };
 
