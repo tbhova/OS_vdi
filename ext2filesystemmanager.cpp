@@ -12,6 +12,7 @@ ext2FileSystemManager::ext2FileSystemManager(ifstream *file, long long inodeAddr
 {
     input = file;
     iNodeTableAddress = inodeAddress;
+    cout << "iNodeTableAddress " << inodeAddress << endl;
     superBlock = super;
     bootBlockLocation = bootBlock;
     block_size = super->getBlockSize();
@@ -76,7 +77,7 @@ bool ext2FileSystemManager::exploreToPath(QString path) {
 void ext2FileSystemManager::addFilesAndFolders(ext2Folder *folder) {
     cout << "add files and folders - folderName = " << folder->getName().toStdString() << endl;
     tempTab = folder->getInodeTable();
-    qDebug() << "tempTab->i_blocks " << tempTab->i_blocks;
+    cout << "tempTab->i_blocks " << tempTab->i_blocks << endl;
     for (int i = 0; i < (tempTab->i_blocks*(block_size/512)) && i < 12; i++) {
         qDebug() << "add files i_block " << tempTab->i_block[i];
         if (!fillInFilesFromBlock(folder, tempTab->i_block[i], 0))
@@ -91,7 +92,7 @@ bool ext2FileSystemManager::fillInFilesFromBlock(ext2Folder *folder, unsigned in
         long long offset = bootBlockLocation+(block_size * (block_num))+24+offsetOfStruct; //the "+24" allows us to skip unneeded data
         cout << "fill in files from block - folderName = " << folder->getName().toStdString() << endl;
         cout << hex << "offset " << offset << endl;
-        cout << bootBlockLocation << endl;
+        cout << dec << bootBlockLocation << endl;
         cout << block_size << endl;
         cout << block_num << endl;
         cout << offsetOfStruct << endl;
@@ -179,7 +180,7 @@ void ext2FileSystemManager::getInodeTableData(unsigned int InodeNumber) {
     }*/
     //tab = new InodeTable;
 
-    cout << "InodeNumber = " << InodeNumber << endl;
+    cout << "InodeNumber = " << dec << InodeNumber << endl;
     cout << "block_size" << block_size << endl;
     cout << "super block size" << superBlock->getBlockSize() << endl;
     cout << "blocksupergroup" << superBlock->getBlocksPerGroup() << endl;
@@ -192,8 +193,9 @@ void ext2FileSystemManager::getInodeTableData(unsigned int InodeNumber) {
     long long group_size = superBlock->getBlockSize()*superBlock->getBlocksPerGroup();
     long long offset = iNodeTableAddress + ((block_group)*group_size) + (local_inode_index * sizeof(tab));
     cout << "group_size " << group_size << endl;
-    cout << "offset " << offset << endl;
-    cout << "sizeof tab " << sizeof(tab) << endl;
+    cout << "offset " << hex << offset << endl;
+    cout << "sizeof tab " << dec << sizeof(tab) << endl;
+    cout << "inodetableaddress " << iNodeTableAddress << endl;
 
     tab.i_mode = getStreamData(2,offset, *input, "Mode", true);
     tab.i_uid = getStreamData(2,offset+2, *input, "Uid", false);
@@ -217,7 +219,7 @@ void ext2FileSystemManager::getInodeTableData(unsigned int InodeNumber) {
     tab.i_dir_acl = getStreamData(4,offset+108, *input, "Dir ACL", true);
     tab.i_faddr = getStreamData(4,offset+112, *input, "Faddr", false);
 
-#warning this probably doesnt work
+
     tab.i_osd2[12] = getCharFromStream(12,offset+116, *input);
 
 }
