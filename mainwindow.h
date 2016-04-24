@@ -31,7 +31,7 @@ private:
     Ui::MainWindow *ui;
     CSCI5806::LocalFileSystem *localFS;
     CSCI5806::VdiFileSystem *vdiFS;
-    CSCI5806::VdiFile *vdi;
+    //CSCI5806::VdiFile *vdi;
 };
 
 

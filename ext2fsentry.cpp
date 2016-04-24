@@ -3,12 +3,14 @@
 using namespace std;
 using namespace CSCI5806;
 
-ext2FSEntry::ext2FSEntry(InodeTable tab, QString entryName)
+ext2FSEntry::ext2FSEntry(InodeTable tab, unsigned int iNodeNum, QString entryName)
 {
     table = tab;
+    iNodeNumber = iNodeNum;
     name = entryName;
 }
 
+/*
 #warning
 bool isFolder() {
     //get
@@ -18,4 +20,20 @@ bool isFolder() {
 #warning
 bool isFile() {
     return false;
+}*/
+
+InodeTable* ext2FSEntry::getInodeTable() {
+    return &table;
+}
+
+void ext2FSEntry::setName(QString newName) {
+    name = newName;
+}
+
+QString ext2FSEntry::getName() const {
+    return name;
+}
+
+unsigned int ext2FSEntry::getInodeNumber() const {
+    return iNodeNumber;
 }

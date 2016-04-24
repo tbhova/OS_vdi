@@ -39,8 +39,14 @@ unsigned long long convertEndian(unsigned char C[], int size, bool littleEndian)
     total=chars.toULongLong(&ok,16);
 
     //cout << total <<endl;
-    if(!ok)
+    if(!ok) {
         cout << "Unable to convert String"<< endl;
+
+        /*cout << "lets crash this boat" << endl;
+        int *i = NULL;
+        i++;
+        (*i)++;*/
+    }
 
     return total;
 
@@ -64,6 +70,8 @@ unsigned long long getStreamData(int size, long long seek_to, ifstream &input, s
     }
     unsigned long long size_of_part;
     size_of_part=convertEndian(data, size, littleEndian);
+
+
     if (output) {
         cout <<"Size of "<< name << ":" << dec << size_of_part << endl;
         cout << endl;

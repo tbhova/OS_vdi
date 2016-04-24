@@ -11,15 +11,19 @@ namespace CSCI5806 {
 class ext2Folder : public ext2FSEntry
 {
 public:
-    ext2Folder(InodeTable tab, QString entryName);
+    ext2Folder(InodeTable tab, unsigned int iNodeNum, QString entryName);
 
     QVector<ext2Folder*>* getFolders();
     QVector<ext2File*>* getFiles();
+    virtual bool isFolder();
+    /*void setName(QString newName);
+    /*void setPath(QString newPath);
+    QString getPath() const;*/
 
 private:
     QVector<ext2Folder*> *folders;
     QVector<ext2File*> *files;
-    QString path;
+    //QString path;
 };
 }
 
