@@ -40,6 +40,8 @@ public:
 
 public slots:
     void selectVdiPrompt();
+    void transferToLocalFS(QString sourcePath, QString destPath);
+    void transferToVDI(QString sourcePath, QString destPath);
 
 signals:
     void vdiFileSelected(QString fileName);

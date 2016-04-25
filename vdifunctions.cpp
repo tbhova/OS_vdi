@@ -133,12 +133,12 @@ unsigned char getCharFromStream(int size, long long seek_to, ifstream &input){
 
 }
 
-QString FileSizeToString(unsigned long long size) {
+QString FileSizeToString(unsigned int size) {
     QString ret = "";
     if (size == 0)
         return ret;
 
-    int divisions = 0, tempSize = size;
+    unsigned int divisions = 0, tempSize = size;
 
     while(tempSize > 0) {
         tempSize /= 1024;

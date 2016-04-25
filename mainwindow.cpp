@@ -30,6 +30,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(vdiFS, VdiFileSystem::vdiFileSelected, this, onVdiFileChosen); //update GUI text
     connect(this, MainWindow::browseVDIClicked, vdiFS, VdiFileSystem::onBrowseVDIClicked);
+    connect(this, MainWindow::transferToLocalFS, vdiFS, VdiFileSystem::transferToLocalFS);
+    connect(this, MainWindow::transferToVDI, vdiFS, VdiFileSystem::transferToVDI);
 
 /*
     QMessageBox WELCOME_BOX(this);
@@ -94,4 +96,21 @@ void MainWindow::onVdiFileChosen(QString fileName) {
 void MainWindow::on_browseVDIPushButton_clicked()
 {
     emit browseVDIClicked();
+}
+
+void MainWindow::on_copyToLocalFsButton_clicked()
+{
+    //validate selected file in vdi
+
+    //validate selected folder in local FS
+
+    //emit signal with the 2 paths
+    emit this->transferToLocalFS(tr(""), tr(""));
+}
+
+void MainWindow::on_copyToVdiPushButton_clicked()
+{
+    QMessageBox::information(this,tr("Funny right?"), tr("Did you really expect this feature to work?"));
+
+    emit this->transferToVDI(tr(""), tr(""));
 }
