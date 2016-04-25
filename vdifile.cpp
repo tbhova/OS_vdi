@@ -96,21 +96,24 @@ void VdiFile::openFile(QString fileName) {
 
     initialized = true;
 
-    header.headerSize = getStreamData((int)4,(long long)72, input);
-    header.imageType = getStreamData(4,76, input);
-    header.offsetBlocksSize= getStreamData(4,340,input);
-    header.offsetDataSize = getStreamData(4, 344, input);
-    header.sectorSize = getStreamData(4, 360, input );
-    header.diskSize = getStreamData (8, 368, input);
-    header.blockSize = getStreamData (4, 376, input);
-    header.blocksInHDD = getStreamData(4, 384, input );
-    header.blocksAllocatedSize = getStreamData (4, 388, input);
-    header.UUIDofVDI = getStreamData (16, 392, input);
-    header.UUIDofSNAP = getStreamData(16, 408, input);
+    header.headerSize = getStreamData((int)4,(long long)72, input,"",true,false,false);
+    header.imageType = getStreamData(4,76, input,"",true,false,false);
+    header.offsetBlocksSize= getStreamData(4,340,input,"",true,false,false);
+    header.offsetDataSize = getStreamData(4, 344, input,"",true,false,false);
+    header.sectorSize = getStreamData(4, 360, input ,"",true,false,false);
+    header.diskSize = getStreamData (8, 368, input,"",true,false,false);
+    header.blockSize = getStreamData (4, 376, input,"",true,false,false);
+    header.blocksInHDD = getStreamData(4, 384, input ,"",true,false,false);
+    header.blocksAllocatedSize = getStreamData (4, 388, input,"",true,false,false);
+    header.UUIDofVDI = getStreamData (16, 392, input,"",true,false,false);
+    header.UUIDofSNAP = getStreamData(16, 408, input,"",true,false,false);
 
-
+    globalHeader.offsetDataSize = header.offsetDataSize;
+    globalHeader.blockSize = header.blockSize;
+    globalHeader.blocksInHDD = header.blocksInHDD;
 
     map = new VdiMap (this, header.offsetBlocksSize, header.offsetBlocksSize + 4 *header.blocksInHDD, input);
+    globalMap = map;
     mbr = new mbrData (this, header.offsetDataSize, input);
 
 

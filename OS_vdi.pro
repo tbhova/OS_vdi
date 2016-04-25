@@ -46,3 +46,6 @@ HEADERS  += mainwindow.h \
     ext2fsentry.h
 
 FORMS    += mainwindow.ui
+
+RESOURCES += \
+    images.qrc

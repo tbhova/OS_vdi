@@ -30,6 +30,50 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(vdiFS, VdiFileSystem::vdiFileSelected, this, onVdiFileChosen); //update GUI text
     connect(this, MainWindow::browseVDIClicked, vdiFS, VdiFileSystem::onBrowseVDIClicked);
+
+/*
+    QMessageBox WELCOME_BOX(this);
+
+    WELCOME_BOX.setIconPixmap(QPixmap(":/images/Kramer_pic.PNG"));
+    WELCOME_BOX.setButtonText(1,"Go to the filesystem GUI");
+    QFont newFont("Courier", 12, QFont::Bold, false);
+    WELCOME_BOX.setWindowTitle("VDI File Transfer - Morgan, Hovanec");
+    WELCOME_BOX.setFont(newFont);
+    WELCOME_BOX.setInformativeText("                   WELCOME! \n \n \n"
+                                   "Thank you for choosing the Morgan/Hovanec VDI File Transfer System \n\n"
+                                   "This program was built for YSU CSCI 5806: Operating Systems \n \n"
+                                   "Instructor: Dr. Robert Kramer \n"
+                                   "          - rwkramer@ysu.edu \n\n"
+                                   "Students: Andrew Morgan \n"
+                                   "          - asmorgan@student.ysu.edu \n \n"
+                                   "          Tyler Hovanec \n"
+                                   "          - tbhovanec@student.ysu.edu \n \n\n\n\n ");
+    WELCOME_BOX.informativeText();
+    WELCOME_BOX.setDetailedText("                   WELCOME! \n \n \n"
+                                "Thank you for choosing the Morgan/Hovanec VDI File Transfer System \n\n"
+                                "This program was built for YSU CSCI 5806: Operating Systems \n \n"
+                                "Instructor: Dr. Robert Kramer \n"
+                                "          - rwkramer@ysu.edu \n\n"
+                                "Students: Andrew Morgan \n"
+                                "          - asmorgan@student.ysu.edu \n \n"
+                                "          Tyler Hovanec \n"
+                                "          - tbhovanec@student.ysu.edu \n \n\n\n\n "
+                                "More Information About Course:\n"
+                                "   CSCI 5806: Operating Systems \n"
+                                "   Department of Computer Science Information Systems\n"
+                                "   Youngstown State University\n"
+                                "   1 University Plaza\n"
+                                "   Youngstown, OH 44555\n"
+                                "Built in QT for Windows using MinGW Compiler\n\n\n"
+                                "Objective: \n\n"
+                                "   - Read in Virtualbox VDI File containing an EXT2 Filesytem\n"
+                                "   - Read and Write files into and out of the VDI files\n"
+                                "   - Be able to update tables and bitmaps without causing system error\n");
+    WELCOME_BOX.setParent(this);
+
+    WELCOME_BOX.exec();
+*/
+
 }
 
 MainWindow::~MainWindow()
