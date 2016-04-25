@@ -6,6 +6,7 @@
 #include "ext2file.h"
 #include <fstream>
 #include "ext2superblock.h"
+#include "ext2groupdescriptor.h"
 
 namespace CSCI5806 {
 
@@ -21,7 +22,7 @@ struct Inode_info {
 class ext2FileSystemManager
 {
 public:
-    ext2FileSystemManager(std::ifstream *file, long long inodeAddress, ext2SuperBlock *super, unsigned int bootBlock, unsigned int blockSize);
+    ext2FileSystemManager(std::ifstream *file, ext2GroupDescriptor *group, ext2SuperBlock *super, unsigned int bootBlock, unsigned int blockSize);
 
     ~ext2FileSystemManager();
 
@@ -49,12 +50,12 @@ private:
 
     ext2Folder *root;
     std::ifstream *input;
-    long long iNodeTableAddress;
     ext2SuperBlock *superBlock;
+    ext2GroupDescriptor *groupDescriptor;
     InodeTable tab, *tempTab;
     Inode_info InodeIn;
 
-    unsigned int bootBlockLocation, block_size;
+    unsigned int bootBlockAddress, block_size;
 };
 }
 
