@@ -115,7 +115,7 @@ void MainWindow::on_copyToLocalFsButton_clicked()
         }
     }
     if (fsEntry == NULL) {
-        QMessageBox::information(this, tr("Error"), tr("Please choose a file to copy, folder copying is not yet supported."));
+        QMessageBox::information(this, tr("Error"), tr("Please choose a VDI file to copy, folder copying is not yet supported."));
         return;
     }
 
@@ -138,17 +138,63 @@ void MainWindow::on_copyToLocalFsButton_clicked()
     }
 
     if (!found) {
-        QMessageBox::information(this, tr("Error"), tr("Please choose a destination folder to copy to."));
+        QMessageBox::information(this, tr("Error"), tr("Please choose a local folder to copy VDI file to."));
         return;
     }
 
-    //emit signal with the 2 paths
+    //emit signal with the ext2File and the destination folder
     emit this->transferToLocalFS(static_cast<ext2File*>(fsEntry), &dir);
 }
 
 void MainWindow::on_copyToVdiPushButton_clicked()
 {
-    QMessageBox::information(this,tr("Funny right?"), tr("Did you really expect this feature to work?"));
+    //validate selected file in vdi
+    bool found = false;
+    QModelIndexList list = ui->vdiFsTreeView->selectionModel()->selectedIndexes();
+    int row = -1;
+    ext2FSEntry* fsEntry = NULL;
+    foreach (QModelIndex index, list) {
+        if (index.row() != row && index.column() == 0) {
+            fsEntry = vdiFS->getExt2Entry(index);
+            if (!fsEntry->isFolder()) {
+                QModelIndex parent = vdiFS->parent(index); //get file's parent (folder)
+                fsEntry = vdiFS->getExt2Entry(parent);
+                if (fsEntry->isFolder()) {
+                    found = true;
+                }
+            } else {
+                break;
+                found = true;
+            }
+        }
+    }
+    if (!found) {
+        QMessageBox::information(this, tr("Error"), tr("Please choose a VDI folder to copy to."));
+        return;
+    }
 
-    emit this->transferToVDI(tr(""), tr(""));
+    //validate selected file in local FS
+    found = false;
+    QFileInfo file;
+    list = ui->localFsTreeView->selectionModel()->selectedIndexes();
+    row = -1;
+    QFileSystemModel *model = localFS->getFS();
+    foreach (QModelIndex index, list) {
+        if (index.row() != row && index.column() == 0) {
+            file = model->fileInfo(index);
+            if (!model->isDir(index)) {
+                found = true;
+            }
+        }
+    }
+
+    if (!found) {
+        QMessageBox::information(this, tr("Error"), tr("Please choose a local file to copy to the VDI."));
+        return;
+    }
+
+    //emit signal with the ext2File and the destination folder
+
+    QMessageBox::information(this,tr("Funny right?"), tr("Did you really expect this feature to work?"));
+    emit this->transferToVDI(static_cast<ext2Folder*>(fsEntry), &file);
 }
