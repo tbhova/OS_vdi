@@ -7,6 +7,7 @@
 #include "vdifilesystem.h"
 #include "ext2file.h"
 #include <QDir>
+#include <QFile>
 
 
 
@@ -29,7 +30,7 @@ public slots:
 signals:
     void browseVDIClicked();
     void transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir);
-    void transferToVDI(QString sourcePath, QString destDir);
+    void transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFile);
 
 private slots:
     void on_copyToLocalFsButton_clicked();

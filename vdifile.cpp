@@ -192,6 +192,6 @@ void VdiFile::transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir) {
     qDebug() << "source file " << sourceFile->getName() << " destination directory " << destDir->absolutePath();
 }
 
-void VdiFile::transferToVDI(QString sourcePath, QString destPath) {
-
+void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFile) {
+    qDebug() << "destination folder on VDI " << VDIFolder->getName() << " source file local FS " << sourceFile->absoluteFilePath();
 }
