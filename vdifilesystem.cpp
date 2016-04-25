@@ -6,6 +6,10 @@
 #include <QString>
 #include <QDebug>
 #include "vdifunctions.h"
+#include "linuxstat.h"
+
+//so we can omit the long stuff for readability
+#define lsl
 
 using namespace std;
 using namespace CSCI5806;
@@ -20,7 +24,12 @@ VdiFileSystem::VdiFileSystem(QTreeView *initialTree, QObject *parent) : QAbstrac
     rootData.push_back(tr("Size"));
     rootData.push_back(tr("Type"));
     rootData.push_back(tr("Date Modified"));
-    //rootData.push_back(QDateTime::currentDateTime().toString(tr("M/d/yyyy h:mm AP")));
+#ifdef  lsl
+    rootData.push_back(tr("Hard Links"));
+    rootData.push_back(tr("Owner"));
+    rootData.push_back(tr("Group"));
+    rootData.push_back(tr("Permissions"));
+#endif
     rootNode = new VDIFileSystemTreeItem(rootData, NULL, NULL);
 
     tree->setModel(this);
@@ -56,6 +65,16 @@ void VdiFileSystem::setupModelData(ext2FSEntry *extNode, VDIFileSystemTreeItem *
     QDateTime time;
     time.setTime_t(extNode->getInodeTable()->i_mtime);
     data.push_back(time.toString(QObject::tr("M/d/yyyy h:mm AP")));
+
+#ifdef lsl
+    data.push_back(QString::number(extNode->getInodeTable()->i_links_count));
+    data.push_back(QString::number(extNode->getInodeTable()->i_uid));
+    data.push_back(QString::number(extNode->getInodeTable()->i_gid));
+    QString permissions = "";
+
+
+    data.push_back(permissions);
+#endif
 
     guiNode->appendChild(new VDIFileSystemTreeItem(data, guiNode, extNode));
     qDebug() << QObject::tr("append ") << extNode->getName();

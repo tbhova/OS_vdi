@@ -43,7 +43,8 @@ HEADERS  += mainwindow.h \
     ext2folder.h \
     ext2file.h \
     ext2filesystemmanager.h \
-    ext2fsentry.h
+    ext2fsentry.h \
+    linuxstat.h
 
 FORMS    += mainwindow.ui
 
