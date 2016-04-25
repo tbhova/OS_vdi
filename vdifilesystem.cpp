@@ -21,7 +21,7 @@ VdiFileSystem::VdiFileSystem(QTreeView *initialTree, QObject *parent) : QAbstrac
     rootData.push_back(tr("Type"));
     rootData.push_back(tr("Date Modified"));
     //rootData.push_back(QDateTime::currentDateTime().toString(tr("M/d/yyyy h:mm AP")));
-    rootNode = new VDIFileSystemTreeItem(rootData);
+    rootNode = new VDIFileSystemTreeItem(rootData, NULL, NULL);
 
     tree->setModel(this);
     vdi = new VdiFile();
@@ -56,7 +56,7 @@ void VdiFileSystem::setupModelData(ext2FSEntry *extNode, VDIFileSystemTreeItem *
 
     data.push_back(QString::number(extNode->getInodeTable()->i_mtime));
 
-    guiNode->appendChild(new VDIFileSystemTreeItem(data, guiNode));
+    guiNode->appendChild(new VDIFileSystemTreeItem(data, guiNode, extNode));
     qDebug() << QObject::tr("append ") << extNode->getName();
 
     if (extNode->isFolder()) {
@@ -204,6 +204,20 @@ void VdiFileSystem::folderExpanded(const QModelIndex &index) {
     }
 
     emit this->layoutChanged();
+}
+
+ext2FSEntry* VdiFileSystem::getExt2Entry(const QModelIndex &index) const {
+    VDIFileSystemTreeItem *item;
+
+    //invalid input, invalid return
+    if(index.column() > 0)
+        return 0;
+
+    if(!index.isValid())
+        return NULL;
+    else
+        item = static_cast<VDIFileSystemTreeItem*>(index.internalPointer());
+    return item->getExt2Entry();
 }
 
 //mandantory overloads for gui display of file model

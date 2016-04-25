@@ -15,6 +15,7 @@
 #include <fstream>
 #include <cmath>
 #include <sstream>
+#include <QDebug>
 
 using namespace std;
 using namespace CSCI5806;
@@ -101,11 +102,48 @@ void MainWindow::on_browseVDIPushButton_clicked()
 void MainWindow::on_copyToLocalFsButton_clicked()
 {
     //validate selected file in vdi
+    QModelIndexList list = ui->vdiFsTreeView->selectionModel()->selectedIndexes();
+    int row = -1;
+    ext2FSEntry* fsEntry = NULL;
+    foreach (QModelIndex index, list) {
+        if (index.row() != row && index.column() == 0) {
+            fsEntry = vdiFS->getExt2Entry(index);
+            if (fsEntry->isFolder()) {
+                fsEntry = NULL;
+            } else
+                break;
+        }
+    }
+    if (fsEntry == NULL) {
+        QMessageBox::information(this, tr("Error"), tr("Please choose a file to copy, folder copying is not yet supported."));
+        return;
+    }
 
     //validate selected folder in local FS
+    bool found = false;
+    QDir dir;
+    list = ui->localFsTreeView->selectionModel()->selectedIndexes();
+    row = -1;
+    QFileSystemModel *model = localFS->getFS();
+    foreach (QModelIndex index, list) {
+        if (index.row() != row && index.column() == 0) {
+            QFileInfo info = model->fileInfo(index);
+            found = true;
+            if (model->isDir(index)) {
+                dir = QDir(info.absoluteFilePath());
+            } else {
+                dir = info.absoluteDir();
+            }
+        }
+    }
+
+    if (!found) {
+        QMessageBox::information(this, tr("Error"), tr("Please choose a destination folder to copy to."));
+        return;
+    }
 
     //emit signal with the 2 paths
-    emit this->transferToLocalFS(tr(""), tr(""));
+    emit this->transferToLocalFS(static_cast<ext2File*>(fsEntry), &dir);
 }
 
 void MainWindow::on_copyToVdiPushButton_clicked()

@@ -1,15 +1,21 @@
 #include "vdifilesystemtreeitem.h"
 #include <QDebug>
 
+
 using namespace CSCI5806;
 
-VDIFileSystemTreeItem::VDIFileSystemTreeItem(const QList<QVariant> &data, VDIFileSystemTreeItem *parent) {
+VDIFileSystemTreeItem::VDIFileSystemTreeItem(const QList<QVariant> &data, VDIFileSystemTreeItem *parent, ext2FSEntry *fsPointer) {
     m_parentItem = parent;
     itemData = data;
+    fsNode = fsPointer;
 }
 
 VDIFileSystemTreeItem::~VDIFileSystemTreeItem() {
     qDeleteAll(childItems); //delete tree - call delete root on tree
+}
+
+ext2FSEntry* VDIFileSystemTreeItem::getExt2Entry() const {
+    return fsNode;
 }
 
 void VDIFileSystemTreeItem::appendChild(VDIFileSystemTreeItem *child) {

@@ -188,8 +188,8 @@ void VdiFile::fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsig
     }   
 }
 
-void VdiFile::transferToLocalFS(QString sourcePath, QString destPath) {
-
+void VdiFile::transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir) {
+    qDebug() << "source file " << sourceFile->getName() << " destination directory " << destDir->absolutePath();
 }
 
 void VdiFile::transferToVDI(QString sourcePath, QString destPath) {

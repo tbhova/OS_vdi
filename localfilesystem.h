@@ -13,6 +13,7 @@ class LocalFileSystem : public QObject
 public:
     explicit LocalFileSystem(QTreeView *initialTree, QObject *parent = 0);
     ~LocalFileSystem();
+    QFileSystemModel* getFS();
 signals:
 
 public slots:

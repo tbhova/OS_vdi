@@ -3,16 +3,14 @@
 
 #include <QList>
 #include <QVariant>
-
-//node entry in vdi file system tree view
-//mostly borrowed code from QT's online examples
+#include "ext2fsentry.h"
 
 namespace CSCI5806 {
 
 class VDIFileSystemTreeItem
 {
 public:
-    explicit VDIFileSystemTreeItem(const QList<QVariant> &data, VDIFileSystemTreeItem *parent = 0);
+    explicit VDIFileSystemTreeItem(const QList<QVariant> &data, VDIFileSystemTreeItem *parent, ext2FSEntry *fsPointer);
     ~VDIFileSystemTreeItem();
 
     void appendChild(VDIFileSystemTreeItem *child);
@@ -23,11 +21,13 @@ public:
     QVariant data(int column) const;
     int row() const;
     VDIFileSystemTreeItem* parentItem();
+    ext2FSEntry* getExt2Entry() const;
 
 private:
     QList<VDIFileSystemTreeItem*> childItems;
     QList<QVariant> itemData;
     VDIFileSystemTreeItem *m_parentItem;
+    ext2FSEntry *fsNode;
 };
 }
 

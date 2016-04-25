@@ -7,6 +7,7 @@
 #include "vdifile.h"
 #include "vdifilesystemtreeitem.h"
 #include "ext2filesystemmanager.h"
+#include "ext2fsentry.h"
 
 namespace CSCI5806 {
 class VdiFileSystem : public QAbstractItemModel
@@ -16,6 +17,7 @@ public:
     explicit VdiFileSystem(QTreeView *intialTree, QObject *parent = 0);
     ~VdiFileSystem();
     void setupModelData(ext2FSEntry *extNode, VDIFileSystemTreeItem *guiNode);
+    ext2FSEntry* getExt2Entry(const QModelIndex &index) const;
 
     //mandantory method overloads for QAbstractItemModel inheritance
     virtual Qt::ItemFlags flags(const QModelIndex &index) const Q_DECL_OVERRIDE;
@@ -31,7 +33,7 @@ public:
 signals:
     void vdiFileSelected(QString fileName);
     void onBrowseVDIClicked();
-    void transferToLocalFS(QString sourcePath, QString destPath);
+    void transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir);
     void transferToVDI(QString sourcePath, QString destPath);
 
 private slots:
