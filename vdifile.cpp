@@ -190,6 +190,30 @@ void VdiFile::fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsig
 
 void VdiFile::transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir) {
     qDebug() << "source file " << sourceFile->getName() << " destination directory " << destDir->absolutePath();
+    OutputFileIntoLocalFS.open( "C:\\Users\\Andy\\Desktop\\TrialFor1K.txt", ios::out);
+          if(OutputFileIntoLocalFS.is_open()){
+              cout << "File is open for writing..." << endl;
+          }
+
+      /*
+          //QDir myDirectory("");
+         // myDirectory.setCurrent;
+
+
+          // USE THIS TO REPLACE THE THINGS IN OUR PATH!!
+          //mystring.replace("/","\\\\");
+          QFile localFile("C:/Users/Andy/Desktop/sf-book.txt");
+          if (!localFile.open(QIODevice::WriteOnly)) {
+              std::cerr << "Cannot open file for writing: "
+                        << qPrintable(localFile.errorString()) << std::endl;
+              return;
+          }
+
+          QTextStream out(&localFile);
+          //out << "Thomas M. Disch: " << 334 << endl;
+  */
+          loadLocalFile(33867,73, input, OutputFileIntoLocalFS);
+          cout << "We got here" << endl;
 }
 
 void VdiFile::transferToVDI(QString sourcePath, QString destPath) {
