@@ -34,6 +34,7 @@ VdiFile::VdiFile(QObject *parent) : QObject(parent)
     mbr = NULL;
     superBlock = NULL;
     groupDescriptors = NULL;
+    fsManager = NULL;
     DataBlockBitmap = new QVector<unsigned char>;
     blockBitmap = new vector<bool>;
     inodesBitmap = new vector<bool>;
@@ -185,4 +186,12 @@ void VdiFile::fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsig
     for (unsigned int i=block_bitmap_address; i <inode_bitmap_address; i++){
          DataBlockBitmap->push_back(getCharFromStream(1,i,input));
     }   
+}
+
+void VdiFile::transferToLocalFS(QString sourcePath, QString destPath) {
+
+}
+
+void VdiFile::transferToVDI(QString sourcePath, QString destPath) {
+
 }
