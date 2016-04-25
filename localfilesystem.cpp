@@ -20,3 +20,7 @@ LocalFileSystem::~LocalFileSystem() {
 void LocalFileSystem::onRootPathChanged(QString newRootPath) {
     fileSystem->setRootPath(newRootPath);
 }
+
+QFileSystemModel* LocalFileSystem::getFS() {
+    return fileSystem;
+}
