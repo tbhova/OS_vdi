@@ -11,6 +11,7 @@
 #include <vector>
 #include <cstring>
 #include "ext2filesystemmanager.h"
+#include <QDir>
 
 namespace CSCI5806 {
 struct VdiHeader {
@@ -40,7 +41,7 @@ public:
 
 public slots:
     void selectVdiPrompt();
-    void transferToLocalFS(QString sourcePath, QString destPath);
+    void transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir);
     void transferToVDI(QString sourcePath, QString destPath);
 
 signals:
