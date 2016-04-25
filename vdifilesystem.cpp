@@ -53,8 +53,9 @@ void VdiFileSystem::setupModelData(ext2FSEntry *extNode, VDIFileSystemTreeItem *
     } else {
         data.push_back(QObject::tr("File"));
     }
-
-    data.push_back(QString::number(extNode->getInodeTable()->i_mtime));
+    QDateTime time;
+    time.setTime_t(extNode->getInodeTable()->i_mtime);
+    data.push_back(time.toString(QObject::tr("M/d/yyyy h:mm AP")));
 
     guiNode->appendChild(new VDIFileSystemTreeItem(data, guiNode, extNode));
     qDebug() << QObject::tr("append ") << extNode->getName();
