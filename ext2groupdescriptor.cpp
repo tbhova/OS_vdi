@@ -28,19 +28,19 @@ ext2GroupDescriptor::ext2GroupDescriptor(QObject *parent, int group_count, long 
 
 }
 
-int ext2GroupDescriptor::getBlockBitmap(int block) {
-    cout << "Block Bitmap Location (block#): " <<dec << groupDescriptors->at(0).bg_block_bitmap << endl;
-    return groupDescriptors->at(0).bg_block_bitmap;
+int ext2GroupDescriptor::getBlockBitmap(int group) {
+    cout << "Block Bitmap Location (block#): " <<dec << groupDescriptors->at(group).bg_block_bitmap << endl;
+    return groupDescriptors->at(group).bg_block_bitmap;
 }
 
-int ext2GroupDescriptor::getInodeBitmap(int block) {
-    cout << "Inode Bitmap Location (block#): " <<dec << groupDescriptors->at(0).bg_inode_bitmap << endl;
-    return groupDescriptors->at(0).bg_inode_bitmap;
+int ext2GroupDescriptor::getInodeBitmap(int group) {
+    cout << "Inode Bitmap Location (block#): " <<dec << groupDescriptors->at(group).bg_inode_bitmap << endl;
+    return groupDescriptors->at(group).bg_inode_bitmap;
 }
 
-int ext2GroupDescriptor::getInodeTable(int block) {
-    cout << "InodeTable Location (block#): " << dec << groupDescriptors->at(0).bg_inode_table << endl;
-    return groupDescriptors->at(0).bg_inode_table;
+int ext2GroupDescriptor::getInodeTable(int group) {
+    cout << "InodeTable Location (block#): " << dec << groupDescriptors->at(group).bg_inode_table << endl;
+    return groupDescriptors->at(group).bg_inode_table;
 }
 
 
