@@ -58,7 +58,7 @@ private:
     mbrData *mbr;
     ext2SuperBlock *superBlock;
     std::ifstream input;
-    //QVector<ext2GroupDescriptor*> *groupDescriptors;
+    std::ofstream InputFileIntoLocalFS;
     ext2GroupDescriptor *groupDescriptors;
     VdiHeader header;
     InodeTable tab;

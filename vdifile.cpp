@@ -172,6 +172,36 @@ void VdiFile::openFile(QString fileName) {
 
     fsManager = new ext2FileSystemManager(&input, groupDescriptors, superBlock, bootBlockLocation, block_size);
     emit FSManagerConstructed(fsManager);
+
+/*
+    const char* path= "c:\\Users\\Andy\\Desktop\\AndyAndHova.txt";
+    InputFileIntoLocalFS.open( path , ios::out);
+    cout << "I got hereerererereer" << endl;
+    if(InputFileIntoLocalFS.is_open()){
+        cout << "it is open" << endl;
+    }
+
+    InputFileIntoLocalFS << "Here we are playa" << endl;
+*/
+    //QDir myDirectory("");
+   // myDirectory.setCurrent;
+    QFile file("C:/Users/Andy/Desktop/sf-book.txt");
+    if (!file.open(QIODevice::WriteOnly)) {
+        std::cerr << "Cannot open file for writing: "
+                  << qPrintable(file.errorString()) << std::endl;
+        return;
+    }
+
+    QTextStream pout(&file);
+    pout << "Thomas M. Disch: " << 334 << endl;
+
+    QTextStream out(stdout);
+
+    out << "Current path:" << QDir::currentPath() << endl;
+    out << "Home path:" << QDir::homePath() << endl;
+    out << "Temporary path:" << QDir::tempPath() << endl;
+    out << "Rooth path:" << QDir::rootPath() << endl;
+
 }
 
 void VdiFile::closeAndReset() {
