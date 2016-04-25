@@ -13,6 +13,10 @@ using namespace std;
 
 namespace CSCI5806 {
 
+VdiMap *globalMap;
+VdiHeaderGlobal globalHeader;
+
+
 //convert byte data to integers
 unsigned long long convertEndian(unsigned char C[], int size, bool littleEndian){
 
@@ -54,11 +58,22 @@ unsigned long long convertEndian(unsigned char C[], int size, bool littleEndian)
 
 //get data from Stream
 //long long getStreamData(int size, long long seek_to, std::ifstream &input, std::string name = "", bool output = true);
-unsigned long long getStreamData(int size, long long seek_to, ifstream &input, string name, bool output, bool littleEndian){
+unsigned long long getStreamData(int size, long long seek_to, ifstream &input, string name, bool output, bool littleEndian, bool afterVDIMap){
 
 
     unsigned char data[size];
     input.clear();
+
+    //VDI translation to other blocks
+    if(afterVDIMap){
+        unsigned int blockNumBeforeMap = (seek_to - globalHeader.offsetDataSize)/globalHeader.blockSize;
+        unsigned int actualBlock = globalMap->getMappedLocation(blockNumBeforeMap);
+            //cout << "block before map: " << dec << blockNumBeforeMap << "  Block after map: " << dec << actualBlock << endl;
+        long long inBlockOffset = seek_to -(globalHeader.offsetDataSize + blockNumBeforeMap * globalHeader.blockSize);
+        seek_to = globalHeader.offsetDataSize + actualBlock * globalHeader.blockSize + inBlockOffset;
+            //cout << "My seek to: " <<dec << my_seek_to << "   Their seek to: "<< dec << seek_to << "    " <<endl;
+      }
+
     input.seekg(seek_to);
 
     for (int i=0; i<size;i++){
