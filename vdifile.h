@@ -52,13 +52,15 @@ private:
     void getHeaderValues();
     //In globalfunctions.h//unsigned char getCharFromStream(int size, long long seek_to, std::ifstream &input);
     void fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsigned int block_bitmap_address,unsigned int inode_bitmap_address,std::ifstream& input);
+    void loadLocalFile(int inodeIndexNum, long long size, std::ifstream& input, std::ofstream& localFile );
+
 
     QFile *vdi; //whatever filetype we intend to use
     VdiMap *map;
     mbrData *mbr;
     ext2SuperBlock *superBlock;
     std::ifstream input;
-    std::ofstream InputFileIntoLocalFS;
+    std::ofstream OutputFileIntoLocalFS;
     ext2GroupDescriptor *groupDescriptors;
     VdiHeader header;
     InodeTable tab;

@@ -173,34 +173,7 @@ void VdiFile::openFile(QString fileName) {
     fsManager = new ext2FileSystemManager(&input, groupDescriptors, superBlock, bootBlockLocation, block_size);
     emit FSManagerConstructed(fsManager);
 
-/*
-    const char* path= "c:\\Users\\Andy\\Desktop\\AndyAndHova.txt";
-    InputFileIntoLocalFS.open( path , ios::out);
-    cout << "I got hereerererereer" << endl;
-    if(InputFileIntoLocalFS.is_open()){
-        cout << "it is open" << endl;
-    }
-
-    InputFileIntoLocalFS << "Here we are playa" << endl;
-*/
-    //QDir myDirectory("");
-   // myDirectory.setCurrent;
-    QFile file("C:/Users/Andy/Desktop/sf-book.txt");
-    if (!file.open(QIODevice::WriteOnly)) {
-        std::cerr << "Cannot open file for writing: "
-                  << qPrintable(file.errorString()) << std::endl;
-        return;
-    }
-
-    QTextStream pout(&file);
-    pout << "Thomas M. Disch: " << 334 << endl;
-
-    QTextStream out(stdout);
-
-    out << "Current path:" << QDir::currentPath() << endl;
-    out << "Home path:" << QDir::homePath() << endl;
-    out << "Temporary path:" << QDir::tempPath() << endl;
-    out << "Rooth path:" << QDir::rootPath() << endl;
+    transferToLocalFS(0,0);
 
 }
 
@@ -220,8 +193,69 @@ void VdiFile::fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsig
 
 void VdiFile::transferToLocalFS(QString sourcePath, QString destPath) {
 
+        OutputFileIntoLocalFS.open( "C:\\Users\\Andy\\Desktop\\TrialFor1K.txt", ios::out);
+        if(OutputFileIntoLocalFS.is_open()){
+            cout << "File is open for writing..." << endl;
+        }
+
+    /*
+        //QDir myDirectory("");
+       // myDirectory.setCurrent;
+
+
+        // USE THIS TO REPLACE THE THINGS IN OUR PATH!!
+        //mystring.replace("/","\\\\");
+        QFile localFile("C:/Users/Andy/Desktop/sf-book.txt");
+        if (!localFile.open(QIODevice::WriteOnly)) {
+            std::cerr << "Cannot open file for writing: "
+                      << qPrintable(localFile.errorString()) << std::endl;
+            return;
+        }
+
+        QTextStream out(&localFile);
+        //out << "Thomas M. Disch: " << 334 << endl;
+*/
+        loadLocalFile(33867,73, input, OutputFileIntoLocalFS);
+        cout << "We got here" << endl;
 }
 
 void VdiFile::transferToVDI(QString sourcePath, QString destPath) {
+
+}
+
+void VdiFile::loadLocalFile(int inodeIndexNum, long long size, ifstream& input , ofstream& localFile){
+
+    //Get Iblock(inodeIndexNum)
+    int block_num = inodeIndexNum; //I just did this for now
+    unsigned long long offset = bootBlockLocation+(block_size * (block_num));
+    if((size - block_size) >0){
+        for(int i=0; i<block_size; i++){
+            input.seekg(offset+i);
+            localFile << (char)input.get();
+            input.clear();
+            cout << "Looping in here: " << i << endl;
+            }
+        size=size-block_size;
+        }
+    else{
+        for (int i=0; i<size; i++){
+            input.seekg(offset+i);
+            localFile << (char) input.get();
+            input.clear();
+        }
+        size =0;
+    }
+
+    inodeIndexNum++;
+
+    if(size!=0){
+            loadLocalFile(inodeIndexNum, size, input, localFile);
+            cout << "We got into here" << endl;
+        }
+
+
+
+
+cout << "hello" << endl;
 
 }
