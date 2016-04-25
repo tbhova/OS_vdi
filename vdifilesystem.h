@@ -31,6 +31,8 @@ public:
 signals:
     void vdiFileSelected(QString fileName);
     void onBrowseVDIClicked();
+    void transferToLocalFS(QString sourcePath, QString destPath);
+    void transferToVDI(QString sourcePath, QString destPath);
 
 private slots:
     void fsManagerConstructed(ext2FileSystemManager *fs);

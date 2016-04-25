@@ -26,6 +26,13 @@ public slots:
 
 signals:
     void browseVDIClicked();
+    void transferToLocalFS(QString sourcePath, QString destPath);
+    void transferToVDI(QString sourcePath, QString destPath);
+
+private slots:
+    void on_copyToLocalFsButton_clicked();
+
+    void on_copyToVdiPushButton_clicked();
 
 private:
     Ui::MainWindow *ui;
