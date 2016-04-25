@@ -51,6 +51,9 @@ ext2SuperBlock::ext2SuperBlock(QObject *parent, long long startOffset,  ifstream
 
     /* calculate number of block groups on the disk */
     group_count = 1 + ((s_blocks_count-1) / s_blocks_per_group);
+    unsigned int altGroup_count = 1 + ((s_inodes_count-1) / s_inodes_per_group);
+    if (group_count != altGroup_count)
+        cout << "Bad! calculated group count does not match for both methods" << endl;
 
     block_size = 1024*pow (2,s_log_block_size);
     cout << "The block size for the file system is: " << block_size << endl;

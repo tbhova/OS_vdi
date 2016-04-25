@@ -50,9 +50,6 @@ private:
     void getHeaderValues();
     //In globalfunctions.h//unsigned char getCharFromStream(int size, long long seek_to, std::ifstream &input);
     void fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsigned int block_bitmap_address,unsigned int inode_bitmap_address,std::ifstream& input);
-    void getInodeTableData(long long beginningOfFirstInodeTable, int InodeNumber, std::ifstream &file);
-    void getDataBlock(long long BlockNumber, std::ifstream &file);
-    void fillRootDir(long long block_num,long long offsetOfStruct, std::ifstream &file);
 
     QFile *vdi; //whatever filetype we intend to use
     VdiMap *map;
@@ -71,7 +68,7 @@ private:
     std::vector<bool> *blockBitmap, *inodesBitmap;
     //std::vector optimized bool storage to take 1 bit per boolean value when there are multiple bools
 
-    unsigned int bootBlockLocation, superBlockLocation, block_size, group_size;
+    unsigned long long bootBlockLocation, superBlockLocation, block_size, group_size;
 };
 }
 

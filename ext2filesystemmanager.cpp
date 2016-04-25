@@ -8,13 +8,14 @@
 using namespace std;
 using namespace CSCI5806;
 
-ext2FileSystemManager::ext2FileSystemManager(ifstream *file, long long inodeAddress, ext2SuperBlock *super, unsigned int bootBlock, unsigned int blockSize)
+ext2FileSystemManager::ext2FileSystemManager(ifstream *file, ext2GroupDescriptor *group, ext2SuperBlock *super, unsigned int bootBlock, unsigned int blockSize)
 {
     input = file;
-    iNodeTableAddress = inodeAddress;
-    cout << "iNodeTableAddress " << inodeAddress << endl;
+    groupDescriptor = group;
+    //cout << "iNodeTableAddress " << inodeAddress << endl;
+    cout << "bootBlockAddress " << bootBlockAddress << endl;
     superBlock = super;
-    bootBlockLocation = bootBlock;
+    bootBlockAddress = bootBlock;
     block_size = super->getBlockSize();
     //get root info
     qDebug() << "begin construct fsManager";
@@ -80,19 +81,19 @@ void ext2FileSystemManager::addFilesAndFolders(ext2Folder *folder) {
     cout << "tempTab->i_blocks " << tempTab->i_blocks << endl;
     for (int i = 0; i < (tempTab->i_blocks*(block_size/512)) && i < 12; i++) {
         qDebug() << "add files i_block " << tempTab->i_block[i];
-        if (!fillInFilesFromBlock(folder, tempTab->i_block[i], 0))
+        if (!fillInFilesFromBlock(folder, tempTab->i_block[i], 24))
             break;
     }
-    for (int i = 0; i < 14; i++)
+    for (int i = 0; i < 15; i++)
         cout << dec << "dir i_block " << i << " " << tempTab->i_block[i] << endl;
 }
 
 bool ext2FileSystemManager::fillInFilesFromBlock(ext2Folder *folder, unsigned int block_num, unsigned long long offsetOfStruct) {
     while (true) {
-        long long offset = bootBlockLocation+(block_size * (block_num))+24+offsetOfStruct; //the "+24" allows us to skip unneeded data
+        long long offset = bootBlockAddress+(block_size * (block_num))+offsetOfStruct; //the "+24" allows us to skip unneeded data
         cout << "fill in files from block - folderName = " << folder->getName().toStdString() << endl;
         cout << hex << "offset " << offset << endl;
-        cout << dec << bootBlockLocation << endl;
+        cout << dec << bootBlockAddress << endl;
         cout << block_size << endl;
         cout << block_num << endl;
         cout << offsetOfStruct << endl;
@@ -105,6 +106,7 @@ bool ext2FileSystemManager::fillInFilesFromBlock(ext2Folder *folder, unsigned in
 
         for(int i=0; i<(InodeIn.name_len); i++)
             ss << (char)input->get();
+        input->clear();
 
         string temp;
         ss >> temp;
@@ -113,7 +115,7 @@ bool ext2FileSystemManager::fillInFilesFromBlock(ext2Folder *folder, unsigned in
         cout << dec << "The name of the file is " << InodeIn.name << endl;
 
         offsetOfStruct += InodeIn.rec_len; //increment running count
-        if (InodeIn.file_type !=0) {
+        if (InodeIn.file_type == 1 || InodeIn.file_type == 2) {
             this->addEntry(folder, InodeIn);
         } else
             break;
@@ -191,11 +193,13 @@ void ext2FileSystemManager::getInodeTableData(unsigned int InodeNumber) {
     cout << "local_inode_index " << local_inode_index << endl;
 
     long long group_size = superBlock->getBlockSize()*superBlock->getBlocksPerGroup();
-    long long offset = iNodeTableAddress + ((block_group)*group_size) + (local_inode_index * sizeof(tab));
+    //long long offset = iNodeTableAddress + ((block_group)*group_size) + (local_inode_index * sizeof(tab));
+    long long offset = bootBlockAddress + block_size*groupDescriptor->getInodeTable(block_group) + (local_inode_index * sizeof(tab));
     cout << "group_size " << group_size << endl;
     cout << "offset " << hex << offset << endl;
     cout << "sizeof tab " << dec << sizeof(tab) << endl;
-    cout << "inodetableaddress " << iNodeTableAddress << endl;
+    //cout << "inodetableaddress " << iNodeTableAddress << endl;
+    cout << "bootBlockAddress " << bootBlockAddress << endl;
 
     tab.i_mode = getStreamData(2,offset, *input, "Mode", true);
     tab.i_uid = getStreamData(2,offset+2, *input, "Uid", false);
