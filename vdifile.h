@@ -76,12 +76,17 @@ private:
     QVector <unsigned int> *DoublyIndirectPointers;
     QVector <unsigned int> *TriplyIndirectPointers;
     ext2FileSystemManager *fsManager;
+    std::ofstream OutputFileIntoLocalFS;
+    std::fstream InputFileIntoVdiFS;
+    std::ofstream trialToDekstop;
+
+
 
     //std::vector optimized bool storage to take 1 bit per boolean value when there are multiple bools
     std::vector<bool> *blockBitmap, *inodesBitmap;
 
 
-    unsigned long long bootBlockLocation, superBlockLocation, block_size, group_size;
+    unsigned long long bootBlockLocation, superBlockLocation, block_size, group_size,FileSizeForProgressBar,OffsetForProgressBar;
 };
 }
 
