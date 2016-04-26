@@ -189,7 +189,7 @@ void VdiFile::transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir) {
     sourceFile->getInodeTable()->i_block[0];
     string directory = destDir->absolutePath().toStdString();
     string absoluteDir = sourceFile->getName().toStdString();
-    OutputFileIntoLocalFS.open(directory +"/" + absoluteDir , ios::out|ios::binary);
+    OutputFileIntoLocalFS.open((directory +"/" + absoluteDir).c_str() , ios::out|ios::binary);
     if(OutputFileIntoLocalFS.is_open()){
        cout << "File is open for writing..." << endl;
        }
@@ -242,6 +242,7 @@ void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFi
 
     //allocate direct block pointers
 }
+
 void VdiFile::loadLocalFile(InodeTable* InodeTab, unsigned int size, unsigned int inodeIndexNum, ifstream& input , ofstream& localFile){
     cout << "The size of this field is " << size << " bytes" << endl;
     cout << "Inode index num" << inodeIndexNum << endl;
