@@ -59,12 +59,12 @@ private:
     unsigned long long doublyIndirectPointersValues(unsigned long long blockNumberOfDoublyIndirect, std::ifstream& input, std::ofstream& localFile, unsigned long long size);
     unsigned long long triplyIndirectPointersValues(unsigned long long blockNumberOfTriplyIndirect, std::ifstream& input, std::ofstream& localFile, unsigned long long size);
 
-
+    QFile *vdi; //whatever filetype we intend to use
     VdiMap *map;
     mbrData *mbr;
     ext2SuperBlock *superBlock;
     std::ifstream input;
-    std::ofstream OutputFileIntoLocalFS;
+    //QVector<ext2GroupDescriptor*> *groupDescriptors;
     ext2GroupDescriptor *groupDescriptors;
     VdiHeader header;
     InodeTable tab;
