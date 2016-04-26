@@ -23,6 +23,7 @@
 #include <string>
 #include "vdifunctions.h"
 #include <QDebug>
+#include <ios>
 
 using namespace std;
 using namespace CSCI5806;
@@ -38,6 +39,7 @@ VdiFile::VdiFile(QObject *parent) : QObject(parent)
     DataBlockBitmap = new QVector<unsigned char>;
     blockBitmap = new vector<bool>;
     inodesBitmap = new vector<bool>;
+    SinglyIndirectPointers = new QVector <unsigned int>;
 }
 
 VdiFile::~VdiFile() {
@@ -189,13 +191,22 @@ void VdiFile::fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsig
 }
 
 void VdiFile::transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir) {
-    /*qDebug() << "source file " << sourceFile->getName() << " destination directory " << destDir->absolutePath();
-    OutputFileIntoLocalFS.open( "C:\\Users\\Andy\\Desktop\\TrialFor1K.txt", ios::out);
+    qDebug() << "source file " << sourceFile->getName() << " destination directory " << destDir->absolutePath();
+    sourceFile->getInodeTable()->i_block[0];
+    string directory = destDir->absolutePath().toStdString();
+    string absoluteDir = sourceFile->getName().toStdString();
+    OutputFileIntoLocalFS.open(directory +"/" + absoluteDir , ios::out|ios::binary);
     if(OutputFileIntoLocalFS.is_open()){
       cout << "File is open for writing..." << endl;
+    } else {
+        cout << "error unable to open output file" << endl;
+        return;
     }
-
-    /*
+    //qDebug() << "The size we have to work with is" <<  sourceFile->getInodeTable()->i_size << "  and the block num is " << sourceFile->getInodeTable()->i_block[0] << endl;
+    //cout << "Location of first indirect block " << sourceFile->getInodeTable()->i_block[12] << endl;
+    loadLocalFile(sourceFile->getInodeTable(),sourceFile->getInodeTable()->i_size,0, input, OutputFileIntoLocalFS);
+    OutputFileIntoLocalFS.close();
+/*
     //QDir myDirectory("");
     // myDirectory.setCurrent;
 
@@ -211,48 +222,109 @@ void VdiFile::transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir) {
 
     QTextStream out(&localFile);
     //out << "Thomas M. Disch: " << 334 << endl;
+
     */
-    /*loadLocalFile(33867,73, input, OutputFileIntoLocalFS);
-    cout << "We got here" << endl;*/
 }
 
 void VdiFile::transferToVDI(QString sourcePath, QString destPath) {
 
 }
 
-void VdiFile::loadLocalFile(int inodeIndexNum, long long size, ifstream& input , ofstream& localFile){
-
-    //Get Iblock(inodeIndexNum)
-    int block_num = inodeIndexNum; //I just did this for now
-    unsigned long long offset = bootBlockLocation+(block_size * (block_num));
-    if((size - block_size) >0){
-        for(int i=0; i<block_size; i++){
-            input.seekg(offset+i);
-            localFile << (char)input.get();
-            input.clear();
-            cout << "Looping in here: " << i << endl;
+void VdiFile::loadLocalFile(InodeTable* InodeTab, unsigned int size, unsigned int inodeIndexNum, ifstream& input , ofstream& localFile){
+    cout << "The size of this field is " << size << " bytes" << endl;
+    cout << "Inode index num" << inodeIndexNum << endl;
+    if (inodeIndexNum <12){
+        int block_num = InodeTab->i_block[inodeIndexNum];
+        unsigned long long offset = bootBlockLocation+(block_size * (block_num));
+        cout << "Our current offset is " << offset << endl;
+        //cout << "Size "<< size << "  block size " << block_size << " differ" << (size-block_size) << endl;
+        if(size >block_size){
+            for(int i=0; i<block_size; i++){
+                //input.seekg(offset+i);
+                localFile << (char)getStreamData(1,offset +i,input,"",false);
+                //input.clear();
+                //cout << "Looping in here: " << i << endl;
+                }
+            size=size-block_size;
+            //cout << "We are out of the loop right now" << endl;
             }
-        size=size-block_size;
-        }
-    else{
-        for (int i=0; i<size; i++){
-            input.seekg(offset+i);
-            localFile << (char) input.get();
-            input.clear();
-        }
-        size =0;
+        else{
+
+            for (int i=0; i<size; i++){
+                //input.seekg(offset+i);
+                localFile << (char)getStreamData(1,offset +i,input,"",false);
+                //input.clear();
+                }
+            size =0;
+            }
+        cout << "We got in the direct with Inode Index num" << inodeIndexNum << endl;
+    }
+    else if (inodeIndexNum ==12)    {
+        cout << "We in da singly indirect" << endl;
+        #warning remember to change this value from 12
+        size = singlyIndirectPointersValues(InodeTab->i_block[inodeIndexNum],input,localFile,size);
     }
 
     inodeIndexNum++;
-
+    cout << "The size before the if was" <<size<< endl;
     if(size!=0){
-            loadLocalFile(inodeIndexNum, size, input, localFile);
-            cout << "We got into here" << endl;
+        cout << "We got into here" << endl;
+        loadLocalFile(InodeTab, size, inodeIndexNum, input, localFile);
+    }
+    else
+        return;
+ //qDebug() << "End of File Writing" << endl;
+
+}
+unsigned int VdiFile::singlyIndirectPointersValues(unsigned int blockNumberOfSinglyIndirect, ifstream& input, ofstream& localFile, unsigned int size){
+    unsigned int offset = bootBlockLocation+(block_size * (blockNumberOfSinglyIndirect));
+    // we know that each entry is 4 bytes long due to what we used for inode reading in ext2
+    //cout << "The offset we got for you" << hex << offset << endl;
+    //cout << "Before the for loop" << endl;
+    //cout << getStreamData(4,offset,input,"",false) << endl;
+    SinglyIndirectPointers->clear();
+    for(int i=0; i<block_size; i=i+4){ //4 is the number of bytes in each entry
+        SinglyIndirectPointers->push_back(getStreamData(4,offset+i,input,"",false));
+        cout << SinglyIndirectPointers->back() << endl;
+        if(SinglyIndirectPointers->back() == 0)
+            break;
+    }
+    //cout << "Done with for loop" << endl;
+    unsigned int iterator=0;
+    while(SinglyIndirectPointers->at(iterator) !=0 && size>0){
+        offset = bootBlockLocation+(block_size * (SinglyIndirectPointers->at(iterator)));
+        if(size > block_size){
+            cout << "We got into the if " << endl;
+            cout << "Our Current size is "<< size << endl;
+            for(int i=0; i<block_size; i++){
+                //input.seekg(offset+i);
+                localFile << (char)getStreamData(1,offset +i,input,"",false);
+                //input.clear();
+                //cout << "Looping in here: " << i << endl;
+            }
+            size= size-block_size;
+            //cout << "We are out of the loop right now" << endl;
+        } else {
+            cout << "We got into the else " << endl;
+            cout << "Our Current size is "<< size << endl;
+            for (int i=0; i<size; i++){
+                //input.seekg(offset+i);
+                localFile << (char)getStreamData(1,offset +i,input,"",false);
+                //input.clear();
+            }
+            size =0;
         }
 
+        iterator ++;
+        cout << "Singly Indirect..." << endl;
+        if(size == 0) break;
+ }
 
 
 
-cout << "hello" << endl;
 
+
+    //cout << "The size we returned was" << size<< endl;
+    return size;
+    // end of singly indirect
 }

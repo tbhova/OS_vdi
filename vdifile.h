@@ -53,8 +53,8 @@ private:
     void getHeaderValues();
     //In globalfunctions.h//unsigned char getCharFromStream(int size, long long seek_to, std::ifstream &input);
     void fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsigned int block_bitmap_address,unsigned int inode_bitmap_address,std::ifstream& input);
-    void loadLocalFile(int inodeIndexNum, long long size, std::ifstream& input, std::ofstream& localFile );
-
+    void loadLocalFile(InodeTable* InodeTab,unsigned int size,unsigned int inodeIndexSize, std::ifstream& input, std::ofstream& localFile );
+    unsigned int singlyIndirectPointersValues(unsigned int blockNumberOfSinglyIndirect, std::ifstream& input, std::ofstream& localFile, unsigned int size);
 
     QFile *vdi; //whatever filetype we intend to use
     VdiMap *map;
@@ -68,6 +68,7 @@ private:
     Inode_info InodeIn;
     QVector<unsigned char> *DataBlockBitmap;
     QVector <Inode_info> *InodeInfo;
+    QVector <unsigned int> *SinglyIndirectPointers;
     ext2FileSystemManager *fsManager;
 
     std::vector<bool> *blockBitmap, *inodesBitmap;

@@ -133,6 +133,7 @@ void MainWindow::on_copyToLocalFsButton_clicked()
                 dir = QDir(info.absoluteFilePath());
             } else {
                 dir = info.absoluteDir();
+
             }
         }
     }

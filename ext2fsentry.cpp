@@ -37,3 +37,5 @@ QString ext2FSEntry::getName() const {
 unsigned int ext2FSEntry::getInodeNumber() const {
     return iNodeNumber;
 }
+
+
