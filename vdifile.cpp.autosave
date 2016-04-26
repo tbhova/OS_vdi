@@ -209,7 +209,7 @@ void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFi
     //open file,check to make sure its open
     string sourceDir = sourceFile->absoluteFilePath().toStdString();
     InputFileIntoVdiFS.open(sourceDir.c_str(), ios::in|ios::binary|ios::ate);
-    trialToDekstop.open("/Users/Andy/Desktop/trial.txt", ios::in|ios::out|ios::binary|ios::app);
+    trialToDekstop.open("/Users/Andy/Desktop/trial.txt", ios::in|ios::out|ios::binary);
     if (InputFileIntoVdiFS.is_open()){
         cout <<  "File is open and is ready to go" << endl;
         }

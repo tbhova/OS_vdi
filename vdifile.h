@@ -76,6 +76,8 @@ private:
     QVector <unsigned int> *TriplyIndirectPointers;
     ext2FileSystemManager *fsManager;
     std::ofstream OutputFileIntoLocalFS;
+    std::fstream InputFileIntoVdiFS;
+    std::ofstream trialToDekstop;
 
 
 
@@ -83,7 +85,7 @@ private:
     std::vector<bool> *blockBitmap, *inodesBitmap;
 
 
-    unsigned long long bootBlockLocation, superBlockLocation, block_size, group_size,FileSizeForProgressBar;
+    unsigned long long bootBlockLocation, superBlockLocation, block_size, group_size,FileSizeForProgressBar,OffsetForProgressBar;
 };
 }
 
