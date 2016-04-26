@@ -355,10 +355,7 @@ unsigned long long VdiFile::singlyIndirectPointersValues(unsigned long long bloc
         //cout << "Singly Indirect..." << endl;
         if(size == 0) break;
 
-        if(lastSize - OffsetForProgressBar > size){
-            emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
-            lastSize = size;
-            }
+        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
  }
 
 

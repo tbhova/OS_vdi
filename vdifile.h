@@ -65,7 +65,6 @@ private:
     ext2SuperBlock *superBlock;
     std::ifstream input;
     std::ofstream OutputFileIntoLocalFS;
-    //QVector<ext2GroupDescriptor*> *groupDescriptors;
     ext2GroupDescriptor *groupDescriptors;
     VdiHeader header;
     InodeTable tab;
@@ -76,7 +75,6 @@ private:
     QVector <unsigned int> *DoublyIndirectPointers;
     QVector <unsigned int> *TriplyIndirectPointers;
     ext2FileSystemManager *fsManager;
-    std::ofstream OutputFileIntoLocalFS;
     std::fstream InputFileIntoVdiFS;
     std::ofstream trialToDekstop;
 
