@@ -64,6 +64,7 @@ private:
     mbrData *mbr;
     ext2SuperBlock *superBlock;
     std::ifstream input;
+    std::ofstream OutputFileIntoLocalFS;
     //QVector<ext2GroupDescriptor*> *groupDescriptors;
     ext2GroupDescriptor *groupDescriptors;
     VdiHeader header;
