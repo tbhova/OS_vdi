@@ -54,17 +54,26 @@ private:
     void getHeaderValues();
     //In globalfunctions.h//unsigned char getCharFromStream(int size, long long seek_to, std::ifstream &input);
     void fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsigned int block_bitmap_address,unsigned int inode_bitmap_address,std::ifstream& input);
+    void loadLocalFile(InodeTable* InodeTab,unsigned int size,unsigned int inodeIndexSize, std::ifstream& input, std::ofstream& localFile );
+    unsigned long long singlyIndirectPointersValues(unsigned long long blockNumberOfSinglyIndirect, std::ifstream& input, std::ofstream& localFile, unsigned long long size);
+    unsigned long long doublyIndirectPointersValues(unsigned long long blockNumberOfDoublyIndirect, std::ifstream& input, std::ofstream& localFile, unsigned long long size);
+    unsigned long long triplyIndirectPointersValues(unsigned long long blockNumberOfTriplyIndirect, std::ifstream& input, std::ofstream& localFile, unsigned long long size);
 
+    QFile *vdi; //whatever filetype we intend to use
     VdiMap *map;
     mbrData *mbr;
     ext2SuperBlock *superBlock;
     std::ifstream input;
+    //QVector<ext2GroupDescriptor*> *groupDescriptors;
     ext2GroupDescriptor *groupDescriptors;
     VdiHeader header;
     InodeTable tab;
     Inode_info InodeIn;
     QVector<unsigned char> *DataBlockBitmap;
     QVector <Inode_info> *InodeInfo;
+    QVector <unsigned int> *SinglyIndirectPointers;
+    QVector <unsigned int> *DoublyIndirectPointers;
+    QVector <unsigned int> *TriplyIndirectPointers;
     ext2FileSystemManager *fsManager;
 
     //std::vector optimized bool storage to take 1 bit per boolean value when there are multiple bools
