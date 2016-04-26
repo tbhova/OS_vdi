@@ -99,18 +99,16 @@ bool ext2FileSystemManager::fillInFilesFromBlock(ext2Folder *folder, unsigned in
         cout << offsetOfStruct << endl;
         stringstream ss;
 
-        InodeIn.inode = getStreamData(4,offset, *input, "Inode Number", true);
-        InodeIn.rec_len = getStreamData(2,offset+4, *input, "Directory Length", true);
-        InodeIn.name_len  = getStreamData(1,offset+6, *input, "Name Length", true);
-        InodeIn.file_type = getStreamData(1,offset+7, *input, "File Type", true);
+        InodeIn.inode = getStreamData(4, offset, *input, "Inode Number", true);
+        InodeIn.rec_len = getStreamData(2, offset+4, *input, "Directory Length", true);
+        InodeIn.name_len  = getStreamData(1, offset+6, *input, "Name Length", true);
+        InodeIn.file_type = getStreamData(1, offset+7, *input, "File Type", true);
 
         for(int i=0; i<(InodeIn.name_len); i++)
             ss << (char)input->get();
         input->clear();
 
-        string temp;
-        ss >> temp;
-        InodeIn.name = temp;
+        ss >> InodeIn.name;
 
         cout << dec << "The name of the file is " << InodeIn.name << endl;
 

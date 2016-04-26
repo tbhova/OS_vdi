@@ -35,6 +35,7 @@ public:
     void setName(QString name);
     QString getName() const;
     unsigned int getInodeNumber() const;
+    virtual bool operator==(const ext2FSEntry &other) const;
 
 protected:
     InodeTable table;
