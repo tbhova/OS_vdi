@@ -75,60 +75,60 @@ void VdiFileSystem::setupModelData(ext2FSEntry *extNode, VDIFileSystemTreeItem *
     data.push_back(QString::number(extNode->getInodeTable()->i_gid));
 
     unsigned short mode = extNode->getInodeTable()->i_mode;
-    if ((mode & S_IRWXU) > 0) {
+    if ((mode & S_IRWXU) == S_IRWXU) {
         permissions.append("rwx");
     } else {
-        if (mode & S_IRUSR > 0) {
+        if ((mode & S_IRUSR) > 0) {
             permissions.append("r");
         } else {
             permissions.append("-");
         }
-        if (mode & S_IWUSR > 0) {
+        if ((mode & S_IWUSR) > 0) {
             permissions.append("w");
         } else {
             permissions.append("-");
         }
-        if (mode & S_IXUSR > 0) {
+        if ((mode & S_IXUSR) > 0) {
             permissions.append("x");
         } else {
             permissions.append("-");
         }
     }
 
-    if ((mode & S_IRWXG) > 0) {
+    if ((mode & S_IRWXG) == S_IRWXG) {
         permissions.append("rwx");
     } else {
-        if (mode & S_IRGRP > 0) {
+        if ((mode & S_IRGRP) > 0) {
             permissions.append("r");
         } else {
             permissions.append("-");
         }
-        if (mode & S_IWGRP > 0) {
+        if ((mode & S_IWGRP) > 0) {
             permissions.append("w");
         } else {
             permissions.append("-");
         }
-        if (mode & S_IXGRP > 0) {
+        if ((mode & S_IXGRP) > 0) {
             permissions.append("x");
         } else {
             permissions.append("-");
         }
     }
 
-    if ((mode & S_IRWXO) > 0) {
+    if ((mode & S_IRWXO) == S_IRWXO) {
         permissions.append("rwx");
     } else {
-        if (mode & S_IROTH > 0) {
+        if ((mode & S_IROTH) > 0) {
             permissions.append("r");
         } else {
             permissions.append("-");
         }
-        if (mode & S_IWOTH > 0) {
+        if ((mode & S_IWOTH) > 0) {
             permissions.append("w");
         } else {
             permissions.append("-");
         }
-        if (mode & S_IXOTH > 0) {
+        if ((mode & S_IXOTH) > 0) {
             permissions.append("x");
         } else {
             permissions.append("-");
