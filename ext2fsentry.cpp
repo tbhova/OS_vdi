@@ -42,9 +42,11 @@ bool ext2FSEntry::operator==(const ext2FSEntry &other) const {
         cout << "iBlocks do not match" << endl;
         return false;
     }
-    for (int i = 0; i < 15; i++)
-        if (t1.i_block[i] != t2.i_block[i])
+    for (int i = 0; i < 15; i++) {
+        if (t1.i_block[i] != t2.i_block[i]) {
             cout << "block pointers do not match" << endl;
             return false;
+        }
+    }
     return true;
 }

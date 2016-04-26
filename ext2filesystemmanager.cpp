@@ -56,13 +56,13 @@ bool ext2FileSystemManager::exploreToPath(QString path) {
 
 
     //determine whether we should return early
-    foreach (ext2Folder *f, *(current->getFolders())) {
+    /*foreach (ext2Folder *f, *(current->getFolders())) {
         if (f->getFolders()->size() != 0 || f->getFiles()->size() != 0) {
             //we have already explored this folder, no need to reexplore
             qDebug() << "folder " << f->getName() << " already explored.";
             return false;
         }
-    }
+    }*/
 
     qDebug() << "end traverse current = " << current->getName();
     //call addfilesFolders for all folders in the current folder
@@ -135,15 +135,21 @@ void ext2FileSystemManager::addEntry(ext2Folder *folder, const Inode_info &Inode
         return;
     ext2File *newFile;
     ext2Folder *newFolder;
+    bool exists = false;
     switch (InodeIn.file_type) {
     case (1) : //file
         //populate folder inode data in tab
         this->getInodeTableData(InodeIn.inode);
         //add new file to current folder
         newFile = new ext2File(tab, InodeIn.inode, QObject::tr(InodeIn.name.c_str()));
-        if (folder->getFiles()->contains(newFile)) {
-            qDebug() << "file already in folder";
-        } else {
+        foreach (ext2File *f, *folder->getFiles()) {
+            if (*f == *newFile) {
+                exists = true;
+                qDebug() << "file already in folder";
+                break;
+            }
+        }
+        if (!exists) {
             folder->getFiles()->push_back(newFile);
             cout << "add file " << newFile->getName().toStdString() << " to folder " << folder->getName().toStdString() << endl;
         }
@@ -153,9 +159,14 @@ void ext2FileSystemManager::addEntry(ext2Folder *folder, const Inode_info &Inode
         this->getInodeTableData(InodeIn.inode);
         //add new folder to our current folder
         newFolder = new ext2Folder(tab, InodeIn.inode, QObject::tr(InodeIn.name.c_str()));
-        if (folder->getFolders()->contains(newFolder)) {
-            qDebug() << "folder already in folder";
-        } else {
+        foreach (ext2Folder *f, *folder->getFolders()) {
+            if (*f == *newFolder) {
+                exists = true;
+                qDebug() << "folder already in folder";
+                break;
+            }
+        }
+        if (!exists) {
             folder->getFolders()->append(newFolder);
             cout << "add folder " << newFolder->getName().toStdString() << " to folder " << folder->getName().toStdString() << endl;
         }

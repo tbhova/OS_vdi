@@ -204,51 +204,6 @@ void VdiFile::transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir) {
     OutputFileIntoLocalFS.close();
 }
 
-void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFile) {
-    qDebug() << "destination folder on VDI " << VDIFolder->getName() << " source file local FS " << sourceFile->absoluteFilePath();
-    //open file,check to make sure its open
-    string sourceDir = sourceFile->absoluteFilePath().toStdString();
-    InputFileIntoVdiFS.open(sourceDir.c_str(), ios::in|ios::binary|ios::ate);
-    trialToDekstop.open("/Users/Andy/Desktop/trial.txt", ios::in|ios::out|ios::binary);
-    if (InputFileIntoVdiFS.is_open()){
-        cout <<  "File is open and is ready to go" << endl;
-        }
-    InputFileIntoVdiFS.seekg(1);
-    trialToDekstop.seekp(32|ios::beg);
-    for(int i=0; i< 32; i++){
-        const char a = InputFileIntoVdiFS.get();
-        trialToDekstop << a;
-        }
-
-
-    //for(int i=0; i<5; i++)
-    //trialToDekstop << InputFileIntoVdiFS.get();
-
-    trialToDekstop.close();
-    InputFileIntoVdiFS.close();
-    //Find size of the file
-    cout << "The size of that file was " << InputFileIntoVdiFS.tellg() << endl;
-
-    //get folder table
-    InodeTable *tab = VDIFolder->getInodeTable();
-
-    //get folder inode number
-    unsigned int inodeNum = VDIFolder->getInodeNumber();
-
-    if (this->fsManager == NULL) {
-        return;
-    }
-    //get folder inode offset in disk
-    long long folderInodeOffset = fsManager->getInodeOffset(inodeNum);
-
-    //write file inode to table (all block pointers 0 (NULL))
-
-    //allocate direct block pointers
-
-    //close the file you are writing from
-    InputFileIntoVdiFS.close();
-}
-
 void VdiFile::loadLocalFile(InodeTable* InodeTab, unsigned int size, unsigned int inodeIndexNum, ifstream& input , ofstream& localFile){
     cout << "The size of this field is " << size << " bytes" << endl;
     cout << "Inode index num" << inodeIndexNum << endl;
@@ -419,4 +374,49 @@ unsigned long long VdiFile::triplyIndirectPointersValues(unsigned long long bloc
 
 
 // end of doublyindirect
+}
+
+void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFile) {
+    qDebug() << "destination folder on VDI " << VDIFolder->getName() << " source file local FS " << sourceFile->absoluteFilePath();
+    //open file,check to make sure its open
+    string sourceDir = sourceFile->absoluteFilePath().toStdString();
+    InputFileIntoVdiFS.open(sourceDir.c_str(), ios::in|ios::binary|ios::ate);
+    trialToDekstop.open("/Users/Andy/Desktop/trial.txt", ios::in|ios::out|ios::binary);
+    if (InputFileIntoVdiFS.is_open()){
+        cout <<  "File is open and is ready to go" << endl;
+        }
+    InputFileIntoVdiFS.seekg(1);
+    trialToDekstop.seekp(32|ios::beg);
+    for(int i=0; i< 32; i++){
+        const char a = InputFileIntoVdiFS.get();
+        trialToDekstop << a;
+        }
+
+
+    //for(int i=0; i<5; i++)
+    //trialToDekstop << InputFileIntoVdiFS.get();
+
+    trialToDekstop.close();
+    InputFileIntoVdiFS.close();
+    //Find size of the file
+    cout << "The size of that file was " << InputFileIntoVdiFS.tellg() << endl;
+
+    //get folder table
+    InodeTable *tab = VDIFolder->getInodeTable();
+
+    //get folder inode number
+    unsigned int inodeNum = VDIFolder->getInodeNumber();
+
+    if (this->fsManager == NULL) {
+        return;
+    }
+    //get folder inode offset in disk
+    long long folderInodeOffset = fsManager->getInodeOffset(inodeNum);
+
+    //write file inode to table (all block pointers 0 (NULL))
+
+    //allocate direct block pointers
+
+    //close the file you are writing from
+    InputFileIntoVdiFS.close();
 }
