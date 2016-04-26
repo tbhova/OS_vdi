@@ -221,8 +221,26 @@ void VdiFile::transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir) {
     */
 }
 
-void VdiFile::transferToVDI(QString sourcePath, QString destPath) {
+void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFile) {
+    qDebug() << "destination folder on VDI " << VDIFolder->getName() << " source file local FS " << sourceFile->absoluteFilePath();
 
+    emit progressUpdate(100);
+
+    //get folder table
+    InodeTable *tab = VDIFolder->getInodeTable();
+
+    //get folder inode number
+    unsigned int inodeNum = VDIFolder->getInodeNumber();
+
+    if (this->fsManager == NULL) {
+        return;
+    }
+    //get folder inode offset in disk
+    long long folderInodeOffset = fsManager->getInodeOffset(inodeNum);
+
+    //write file inode to table (all block pointers 0 (NULL))
+
+    //allocate direct block pointers
 }
 void VdiFile::loadLocalFile(InodeTable* InodeTab, unsigned int size, unsigned int inodeIndexNum, ifstream& input , ofstream& localFile){
     cout << "The size of this field is " << size << " bytes" << endl;
