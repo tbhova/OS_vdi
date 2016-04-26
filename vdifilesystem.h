@@ -35,6 +35,7 @@ signals:
     void onBrowseVDIClicked();
     void transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir);
     void transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFile);
+    void progressUpdate(int value);
 
 private slots:
     void fsManagerConstructed(ext2FileSystemManager *fs);

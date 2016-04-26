@@ -188,6 +188,8 @@ void VdiFile::transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir) {
 void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFile) {
     qDebug() << "destination folder on VDI " << VDIFolder->getName() << " source file local FS " << sourceFile->absoluteFilePath();
 
+    emit progressUpdate(100);
+
     //get folder table
     InodeTable *tab = VDIFolder->getInodeTable();
 

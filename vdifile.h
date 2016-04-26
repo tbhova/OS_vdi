@@ -47,6 +47,7 @@ public slots:
 signals:
     void vdiFileSelected(QString fileName);
     void FSManagerConstructed(ext2FileSystemManager *fs);
+    void progressUpdate(int value);
 
 private:
     void closeAndReset();

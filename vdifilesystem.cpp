@@ -44,6 +44,7 @@ VdiFileSystem::VdiFileSystem(QTreeView *initialTree, QObject *parent) : QAbstrac
     connect(tree, QTreeView::expanded, this, VdiFileSystem::folderExpanded);
     connect(this, VdiFileSystem::transferToLocalFS, vdi, VdiFile::transferToLocalFS);
     connect(this, VdiFileSystem::transferToVDI, vdi, VdiFile::transferToVDI);
+    connect(vdi, VdiFile::progressUpdate, this, VdiFileSystem::progressUpdate);
 }
 
 VdiFileSystem::~VdiFileSystem() {

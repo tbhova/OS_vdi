@@ -16,6 +16,7 @@
 #include <cmath>
 #include <sstream>
 #include <QDebug>
+#include <QTimer>
 
 using namespace std;
 using namespace CSCI5806;
@@ -29,10 +30,23 @@ MainWindow::MainWindow(QWidget *parent) :
     localFS = new LocalFileSystem(ui->localFsTreeView, this); //local FS Model
     vdiFS = new VdiFileSystem(ui->vdiFsTreeView, this); //VDI FS Model
 
+    progressLabel = new QLabel(tr("Progress: "));
+    progress = new QProgressBar();
+    progress->setMinimum(0);
+    progress->setMaximum(100);
+
+    ui->statusBar->addWidget(progressLabel);
+    ui->statusBar->addWidget(progress);
+    progress->setVisible(false);
+    progressLabel->setVisible(false);
+
     connect(vdiFS, VdiFileSystem::vdiFileSelected, this, onVdiFileChosen); //update GUI text
     connect(this, MainWindow::browseVDIClicked, vdiFS, VdiFileSystem::onBrowseVDIClicked);
     connect(this, MainWindow::transferToLocalFS, vdiFS, VdiFileSystem::transferToLocalFS);
     connect(this, MainWindow::transferToVDI, vdiFS, VdiFileSystem::transferToVDI);
+
+    connect(vdiFS, VdiFileSystem::progressUpdate, progress, QProgressBar::setValue);
+    connect(vdiFS, VdiFileSystem::progressUpdate, this, MainWindow::processProgressUpdate);
 
 /*
     QMessageBox WELCOME_BOX(this);
@@ -79,11 +93,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow() {
 #warning double check for memory leaks
     delete ui;
     delete vdiFS;
+    delete localFS;
+    delete progressLabel;
+    delete progress;
 }
 
 void MainWindow::onVdiFileChosen(QString fileName) {
@@ -143,6 +159,9 @@ void MainWindow::on_copyToLocalFsButton_clicked()
     }
 
     //emit signal with the ext2File and the destination folder
+    progressLabel->setVisible(true);
+    progress->setVisible(true);
+    progress->setValue(0);
     emit this->transferToLocalFS(static_cast<ext2File*>(fsEntry), &dir);
 }
 
@@ -163,8 +182,8 @@ void MainWindow::on_copyToVdiPushButton_clicked()
                     found = true;
                 }
             } else {
-                break;
                 found = true;
+                break;
             }
         }
     }
@@ -196,5 +215,22 @@ void MainWindow::on_copyToVdiPushButton_clicked()
     //emit signal with the ext2File and the destination folder
 
     QMessageBox::information(this,tr("Funny right?"), tr("Did you really expect this feature to work?"));
+    progressLabel->setVisible(true);
+    progress->setVisible(true);
+    progress->setValue(0);
     emit this->transferToVDI(static_cast<ext2Folder*>(fsEntry), &file);
+}
+
+void MainWindow::processProgressUpdate(int value) {
+
+    if (value == 100) {
+        qDebug() << "keep it 100 ";
+        QTimer::singleShot(8000, this, SLOT(hideStatusBar()));
+    }
+}
+
+void MainWindow::hideStatusBar() {
+    qDebug() << "hide status";
+    this->progress->setVisible(false);
+    this->progressLabel->setVisible(false);
 }
