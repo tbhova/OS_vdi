@@ -224,13 +224,11 @@ void MainWindow::on_copyToVdiPushButton_clicked()
 void MainWindow::processProgressUpdate(int value) {
 
     if (value == 100) {
-        qDebug() << "keep it 100 ";
         QTimer::singleShot(8000, this, SLOT(hideStatusBar()));
     }
 }
 
 void MainWindow::hideStatusBar() {
-    qDebug() << "hide status";
     this->progress->setVisible(false);
     this->progressLabel->setVisible(false);
 }
