@@ -10,18 +10,6 @@ ext2FSEntry::ext2FSEntry(InodeTable tab, unsigned int iNodeNum, QString entryNam
     name = entryName;
 }
 
-/*
-#warning
-bool isFolder() {
-    //get
-    return false;
-}
-
-#warning
-bool isFile() {
-    return false;
-}*/
-
 InodeTable* ext2FSEntry::getInodeTable() {
     return &table;
 }

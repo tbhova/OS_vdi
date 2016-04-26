@@ -15,7 +15,6 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     localfilesystem.cpp \
-    vdimanager.cpp \
     vdifilesystem.cpp \
     vdimap.cpp \
     mbrdata.cpp \
@@ -31,7 +30,6 @@ SOURCES += main.cpp\
 
 HEADERS  += mainwindow.h \
     localfilesystem.h \
-    vdimanager.h \
     vdifile.h \
     vdifilesystem.h \
     vdimap.h \

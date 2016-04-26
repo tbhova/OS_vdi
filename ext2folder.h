@@ -1,7 +1,6 @@
 #ifndef EXT2FOLDER_H
 #define EXT2FOLDER_H
 
-//#include <QObject>
 #include <QString>
 #include <QVector>
 #include "ext2file.h"
@@ -16,14 +15,10 @@ public:
     QVector<ext2Folder*>* getFolders();
     QVector<ext2File*>* getFiles();
     virtual bool isFolder();
-    /*void setName(QString newName);
-    /*void setPath(QString newPath);
-    QString getPath() const;*/
 
 private:
     QVector<ext2Folder*> *folders;
     QVector<ext2File*> *files;
-    //QString path;
 };
 }
 

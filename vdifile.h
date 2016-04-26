@@ -47,6 +47,7 @@ public slots:
 signals:
     void vdiFileSelected(QString fileName);
     void FSManagerConstructed(ext2FileSystemManager *fs);
+    void progressUpdate(int value);
 
 private:
     void closeAndReset();
@@ -54,12 +55,10 @@ private:
     //In globalfunctions.h//unsigned char getCharFromStream(int size, long long seek_to, std::ifstream &input);
     void fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsigned int block_bitmap_address,unsigned int inode_bitmap_address,std::ifstream& input);
 
-    QFile *vdi; //whatever filetype we intend to use
     VdiMap *map;
     mbrData *mbr;
     ext2SuperBlock *superBlock;
     std::ifstream input;
-    //QVector<ext2GroupDescriptor*> *groupDescriptors;
     ext2GroupDescriptor *groupDescriptors;
     VdiHeader header;
     InodeTable tab;
@@ -68,8 +67,9 @@ private:
     QVector <Inode_info> *InodeInfo;
     ext2FileSystemManager *fsManager;
 
-    std::vector<bool> *blockBitmap, *inodesBitmap;
     //std::vector optimized bool storage to take 1 bit per boolean value when there are multiple bools
+    std::vector<bool> *blockBitmap, *inodesBitmap;
+
 
     unsigned long long bootBlockLocation, superBlockLocation, block_size, group_size;
 };

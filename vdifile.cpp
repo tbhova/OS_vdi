@@ -29,7 +29,6 @@ using namespace CSCI5806;
 
 VdiFile::VdiFile(QObject *parent) : QObject(parent)
 {
-    vdi = new QFile();
     map = NULL;
     mbr = NULL;
     superBlock = NULL;
@@ -42,8 +41,6 @@ VdiFile::VdiFile(QObject *parent) : QObject(parent)
 
 VdiFile::~VdiFile() {
 #warning delete everything allocated with new
-
-    delete vdi;
     if (map != NULL)
         delete map;
     if (mbr != NULL)
@@ -84,10 +81,7 @@ void VdiFile::openFile(QString fileName) {
         return;
     }
 
-
-    input.open(fileName.toStdString().c_str(), ios::binary);
-
-
+    input.open(fileName.toStdString().c_str(), ios::in | ios::out | ios::binary); //read and write to the vdi, ignore special char, all binary
 
     if(!input.is_open()) {
         cout << "File not open!" << endl;
@@ -127,7 +121,6 @@ void VdiFile::openFile(QString fileName) {
 
     unsigned int group_count = superBlock->getGroupCount();
     block_size = superBlock->getBlockSize();
-    unsigned int inodes_per_group = superBlock->getInodesPerGroup();
 
     cout << "andy block_size" << block_size << endl;
     cout << "andy super block size" << superBlock->getBlockSize() << endl;
@@ -170,7 +163,7 @@ void VdiFile::openFile(QString fileName) {
     //cout << blockBitmap->max_size() << endl;
     cout << "Bit reading/ converting complete" << endl;
 
-    fsManager = new ext2FileSystemManager(&input, groupDescriptors, superBlock, bootBlockLocation, block_size);
+    fsManager = new ext2FileSystemManager(&input, groupDescriptors, superBlock, bootBlockLocation);
     emit FSManagerConstructed(fsManager);
 }
 
@@ -194,4 +187,22 @@ void VdiFile::transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir) {
 
 void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFile) {
     qDebug() << "destination folder on VDI " << VDIFolder->getName() << " source file local FS " << sourceFile->absoluteFilePath();
+
+    emit progressUpdate(100);
+
+    //get folder table
+    InodeTable *tab = VDIFolder->getInodeTable();
+
+    //get folder inode number
+    unsigned int inodeNum = VDIFolder->getInodeNumber();
+
+    if (this->fsManager == NULL) {
+        return;
+    }
+    //get folder inode offset in disk
+    long long folderInodeOffset = fsManager->getInodeOffset(inodeNum);
+
+    //write file inode to table (all block pointers 0 (NULL))
+
+    //allocate direct block pointers
 }

@@ -11,7 +11,7 @@ VDIFileSystemTreeItem::VDIFileSystemTreeItem(const QList<QVariant> &data, VDIFil
 }
 
 VDIFileSystemTreeItem::~VDIFileSystemTreeItem() {
-    qDeleteAll(childItems); //delete tree - call delete root on tree
+    qDeleteAll(childItems); //delete tree - call delete root on tree - deletes recursively
 }
 
 ext2FSEntry* VDIFileSystemTreeItem::getExt2Entry() const {
@@ -27,8 +27,6 @@ VDIFileSystemTreeItem* VDIFileSystemTreeItem::child(int row) {
 }
 
 int VDIFileSystemTreeItem::childCount() const {
-#warning this is where lazy loading can happen
-    //if childItems.count is 0, we can check with the vdi file if there are any entries in that directory
     return childItems.count();
 }
 
@@ -43,7 +41,6 @@ QVariant VDIFileSystemTreeItem::data(int column) const {
 int VDIFileSystemTreeItem::row() const {
     if (m_parentItem) {
         return m_parentItem->childItems.indexOf(const_cast<VDIFileSystemTreeItem*>(this));
-        //qDebug() << "item row " << r;
     }
     return 0; //root node
 }

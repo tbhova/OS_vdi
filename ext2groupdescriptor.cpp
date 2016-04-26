@@ -23,9 +23,6 @@ ext2GroupDescriptor::ext2GroupDescriptor(QObject *parent, int group_count, long 
 
        groupDescriptors->push_back(blockGroup);
     }
-
-
-
 }
 
 int ext2GroupDescriptor::getBlockBitmap(int group) {

@@ -8,6 +8,9 @@
 #include "ext2file.h"
 #include <QDir>
 #include <QFile>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QProgressBar>
 
 
 
@@ -34,14 +37,18 @@ signals:
 
 private slots:
     void on_copyToLocalFsButton_clicked();
-
     void on_copyToVdiPushButton_clicked();
+    void processProgressUpdate(int value);
+    void hideStatusBar();
 
 private:
     Ui::MainWindow *ui;
+    QLabel *progressLabel;
+    QProgressBar *progress;
+
     CSCI5806::LocalFileSystem *localFS;
     CSCI5806::VdiFileSystem *vdiFS;
-    //CSCI5806::VdiFile *vdi;
+
 };
 
 
