@@ -222,7 +222,7 @@ void MainWindow::on_copyToVdiPushButton_clicked()
 }
 
 void MainWindow::processProgressUpdate(int value) {
-
+    qDebug() << "value " << value;
     if (value == 100) {
         QTimer::singleShot(8000, this, SLOT(hideStatusBar()));
     }

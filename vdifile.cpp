@@ -23,6 +23,7 @@
 #include <string>
 #include "vdifunctions.h"
 #include <QDebug>
+#include <ios>
 
 using namespace std;
 using namespace CSCI5806;
@@ -189,7 +190,7 @@ void VdiFile::transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir) {
     sourceFile->getInodeTable()->i_block[0];
     string directory = destDir->absolutePath().toStdString();
     string absoluteDir = sourceFile->getName().toStdString();
-    OutputFileIntoLocalFS.open(directory +"/" + absoluteDir , ios::out|ios::binary);
+    OutputFileIntoLocalFS.open((directory +"/" + absoluteDir).c_str() , ios::out|ios::binary);
     if(OutputFileIntoLocalFS.is_open()){
        cout << "File is open for writing..." << endl;
        }
@@ -197,28 +198,9 @@ void VdiFile::transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir) {
         cout << "error unable to open output file" << endl;
         return;
         }
-    //qDebug() << "The size we have to work with is" <<  sourceFile->getInodeTable()->i_size << "  and the block num is " << sourceFile->getInodeTable()->i_block[0] << endl;
-    //cout << "Location of first indirect block " << sourceFile->getInodeTable()->i_block[12] << endl;
+    FileSizeForProgressBar = sourceFile->getInodeTable()->i_size;
     loadLocalFile(sourceFile->getInodeTable(),sourceFile->getInodeTable()->i_size,0, input, OutputFileIntoLocalFS);
     OutputFileIntoLocalFS.close();
-/*
-    //QDir myDirectory("");
-    // myDirectory.setCurrent;
-
-
-    // USE THIS TO REPLACE THE THINGS IN OUR PATH!!
-    //mystring.replace("/","\\\\");
-    QFile localFile("C:/Users/Andy/Desktop/sf-book.txt");
-    if (!localFile.open(QIODevice::WriteOnly)) {
-      std::cerr << "Cannot open file for writing: "
-                << qPrintable(localFile.errorString()) << std::endl;
-      return;
-    }
-
-    QTextStream out(&localFile);
-    //out << "Thomas M. Disch: " << 334 << endl;
-
-    */
 }
 
 void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFile) {
@@ -258,6 +240,7 @@ void VdiFile::loadLocalFile(InodeTable* InodeTab, unsigned int size, unsigned in
                 //cout << "Looping in here: " << i << endl;
                 }
             size=size-block_size;
+            emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
             //cout << "We are out of the loop right now" << endl;
             }
         else{
@@ -268,20 +251,24 @@ void VdiFile::loadLocalFile(InodeTable* InodeTab, unsigned int size, unsigned in
                 //input.clear();
                 }
             size =0;
+            emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
             }
-        cout << "We got in the direct with Inode Index num" << inodeIndexNum << endl;
+        cout << "We are in the direct with Inode Index num" << inodeIndexNum << endl;
     }
     else if (inodeIndexNum ==12)    {
         qDebug() << "Entering Singly Indirect..." << endl;
         size = singlyIndirectPointersValues(InodeTab->i_block[inodeIndexNum],input,localFile,size);
+        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
         }
     else if (inodeIndexNum ==13)    {
         qDebug() << "Entering Doubly Indirect..." << endl;
         size = doublyIndirectPointersValues(InodeTab->i_block[inodeIndexNum],input,localFile,size);
+        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
         }
     else if (inodeIndexNum ==14)    {
         qDebug() << "Entering Triply Indirect..." << endl;
         size = triplyIndirectPointersValues(InodeTab->i_block[inodeIndexNum],input,localFile,size);
+        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
         }
 
     inodeIndexNum++;
@@ -290,9 +277,10 @@ void VdiFile::loadLocalFile(InodeTable* InodeTab, unsigned int size, unsigned in
         cout << "We got into here" << endl;
         loadLocalFile(InodeTab, size, inodeIndexNum, input, localFile);
     }
-    else
+    else{
+        emit progressUpdate (100);
         return;
- //qDebug() << "End of File Writing" << endl;
+        }
 
 }
 unsigned long long VdiFile::singlyIndirectPointersValues(unsigned long long blockNumberOfSinglyIndirect, ifstream& input, ofstream& localFile, unsigned long long size){
@@ -322,6 +310,7 @@ unsigned long long VdiFile::singlyIndirectPointersValues(unsigned long long bloc
                 //cout << "Looping in here: " << i << endl;
             }
             size= size-block_size;
+            emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
             //cout << "We are out of the loop right now" << endl;
         } else {
             //cout << "We got into the else " << endl;
@@ -332,6 +321,7 @@ unsigned long long VdiFile::singlyIndirectPointersValues(unsigned long long bloc
                 //input.clear();
             }
             size =0;
+            emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
         }
 
         iterator ++;
@@ -364,6 +354,7 @@ unsigned long long VdiFile::doublyIndirectPointersValues(unsigned long long bloc
     while(doublyIterator < DoublyIndirectPointers->size() && DoublyIndirectPointers->at(doublyIterator) !=0 && size>0){
         //offset = bootBlockLocation+(block_size * (DoublyIndirectPointers->at(doublyIterator)));
         size = singlyIndirectPointersValues(DoublyIndirectPointers->at(doublyIterator),input,localFile,size);
+        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
         doublyIterator++;
         qDebug() << "Doubly Indirect..." << endl;
         if(size == 0) break;
@@ -390,6 +381,7 @@ unsigned long long VdiFile::triplyIndirectPointersValues(unsigned long long bloc
     while(triplyIterator < TriplyIndirectPointers->size() && TriplyIndirectPointers->at(triplyIterator) !=0 && size>0){
         //offset = bootBlockLocation+(block_size * (DoublyIndirectPointers->at(doublyIterator)));
         size = doublyIndirectPointersValues(TriplyIndirectPointers->at(triplyIterator),input,localFile,size);
+        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
         triplyIterator++;
         qDebug() << "Triply Indirect..." << endl;
         if(size == 0) break;
