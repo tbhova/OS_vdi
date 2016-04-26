@@ -6,6 +6,10 @@
 #include <QString>
 #include <QDebug>
 #include "vdifunctions.h"
+#include "linuxstat.h"
+
+//so we can omit the long stuff for readability
+#define lsl
 
 using namespace std;
 using namespace CSCI5806;
@@ -20,7 +24,12 @@ VdiFileSystem::VdiFileSystem(QTreeView *initialTree, QObject *parent) : QAbstrac
     rootData.push_back(tr("Size"));
     rootData.push_back(tr("Type"));
     rootData.push_back(tr("Date Modified"));
-    //rootData.push_back(QDateTime::currentDateTime().toString(tr("M/d/yyyy h:mm AP")));
+#ifdef  lsl
+    rootData.push_back(tr("Hard Links"));
+    rootData.push_back(tr("Owner"));
+    rootData.push_back(tr("Group"));
+    rootData.push_back(tr("Permissions"));
+#endif
     rootNode = new VDIFileSystemTreeItem(rootData, NULL, NULL);
 
     tree->setModel(this);
@@ -45,16 +54,89 @@ VdiFileSystem::~VdiFileSystem() {
 
 void VdiFileSystem::setupModelData(ext2FSEntry *extNode, VDIFileSystemTreeItem *guiNode) {
     QList<QVariant> data;
+    QString permissions = "";
 
     data.push_back(extNode->getName());
     data.push_back(FileSizeToString(extNode->getInodeTable()->i_size));
     if (extNode->isFolder()) {
         data.push_back(QObject::tr("Folder"));
+        permissions.append("d");
     } else {
         data.push_back(QObject::tr("File"));
+        permissions.append("-");
+    }
+    QDateTime time;
+    time.setTime_t(extNode->getInodeTable()->i_mtime);
+    data.push_back(time.toString(QObject::tr("M/d/yyyy h:mm AP")));
+
+#ifdef lsl
+    data.push_back(QString::number(extNode->getInodeTable()->i_links_count));
+    data.push_back(QString::number(extNode->getInodeTable()->i_uid));
+    data.push_back(QString::number(extNode->getInodeTable()->i_gid));
+
+    unsigned short mode = extNode->getInodeTable()->i_mode;
+    if ((mode & S_IRWXU) == S_IRWXU) {
+        permissions.append("rwx");
+    } else {
+        if ((mode & S_IRUSR) > 0) {
+            permissions.append("r");
+        } else {
+            permissions.append("-");
+        }
+        if ((mode & S_IWUSR) > 0) {
+            permissions.append("w");
+        } else {
+            permissions.append("-");
+        }
+        if ((mode & S_IXUSR) > 0) {
+            permissions.append("x");
+        } else {
+            permissions.append("-");
+        }
     }
 
-    data.push_back(QString::number(extNode->getInodeTable()->i_mtime));
+    if ((mode & S_IRWXG) == S_IRWXG) {
+        permissions.append("rwx");
+    } else {
+        if ((mode & S_IRGRP) > 0) {
+            permissions.append("r");
+        } else {
+            permissions.append("-");
+        }
+        if ((mode & S_IWGRP) > 0) {
+            permissions.append("w");
+        } else {
+            permissions.append("-");
+        }
+        if ((mode & S_IXGRP) > 0) {
+            permissions.append("x");
+        } else {
+            permissions.append("-");
+        }
+    }
+
+    if ((mode & S_IRWXO) == S_IRWXO) {
+        permissions.append("rwx");
+    } else {
+        if ((mode & S_IROTH) > 0) {
+            permissions.append("r");
+        } else {
+            permissions.append("-");
+        }
+        if ((mode & S_IWOTH) > 0) {
+            permissions.append("w");
+        } else {
+            permissions.append("-");
+        }
+        if ((mode & S_IXOTH) > 0) {
+            permissions.append("x");
+        } else {
+            permissions.append("-");
+        }
+    }
+
+    data.push_back(permissions);
+#endif
 
     guiNode->appendChild(new VDIFileSystemTreeItem(data, guiNode, extNode));
     qDebug() << QObject::tr("append ") << extNode->getName();
