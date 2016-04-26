@@ -388,5 +388,5 @@ unsigned long long VdiFile::triplyIndirectPointersValues(unsigned long long bloc
     return size;
 
 
-// end of doublyindirect
+// end of triplyindirect
 }

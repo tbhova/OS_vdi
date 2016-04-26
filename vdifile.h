@@ -54,9 +54,9 @@ private:
     //In globalfunctions.h//unsigned char getCharFromStream(int size, long long seek_to, std::ifstream &input);
     void fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsigned int block_bitmap_address,unsigned int inode_bitmap_address,std::ifstream& input);
     void loadLocalFile(InodeTable* InodeTab,unsigned int size,unsigned int inodeIndexSize, std::ifstream& input, std::ofstream& localFile );
-    unsigned int singlyIndirectPointersValues(unsigned int blockNumberOfSinglyIndirect, std::ifstream& input, std::ofstream& localFile, unsigned int size);
-    unsigned int doublyIndirectPointersValues(unsigned int blockNumberOfDoublyIndirect, std::ifstream& input, std::ofstream& localFile, unsigned int size);
-
+    unsigned long long singlyIndirectPointersValues(unsigned long long blockNumberOfSinglyIndirect, std::ifstream& input, std::ofstream& localFile, unsigned long long size);
+    unsigned long long doublyIndirectPointersValues(unsigned long long blockNumberOfDoublyIndirect, std::ifstream& input, std::ofstream& localFile, unsigned long long size);
+    unsigned long long triplyIndirectPointersValues(unsigned long long blockNumberOfTriplyIndirect, std::ifstream& input, std::ofstream& localFile, unsigned long long size);
 
 
     QFile *vdi; //whatever filetype we intend to use
@@ -73,6 +73,7 @@ private:
     QVector <Inode_info> *InodeInfo;
     QVector <unsigned int> *SinglyIndirectPointers;
     QVector <unsigned int> *DoublyIndirectPointers;
+    QVector <unsigned int> *TriplyIndirectPointers;
     ext2FileSystemManager *fsManager;
 
     std::vector<bool> *blockBitmap, *inodesBitmap;
