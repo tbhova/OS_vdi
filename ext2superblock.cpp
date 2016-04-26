@@ -68,11 +68,9 @@ int ext2SuperBlock::getGroupCount() {
 
 int ext2SuperBlock::getGroupDescriptorBlockNumber() {
     if(block_size == 1024){
-        int a =2;
-        return a;}
+        return 2;}
     else
         return 1;
-
 }
 
 int ext2SuperBlock::getBlockSize() {

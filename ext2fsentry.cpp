@@ -10,18 +10,6 @@ ext2FSEntry::ext2FSEntry(InodeTable tab, unsigned int iNodeNum, QString entryNam
     name = entryName;
 }
 
-/*
-#warning
-bool isFolder() {
-    //get
-    return false;
-}
-
-#warning
-bool isFile() {
-    return false;
-}*/
-
 InodeTable* ext2FSEntry::getInodeTable() {
     return &table;
 }
@@ -38,4 +26,16 @@ unsigned int ext2FSEntry::getInodeNumber() const {
     return iNodeNumber;
 }
 
-
+bool ext2FSEntry::operator==(const ext2FSEntry &other) const {
+    if (name != other.name)
+        return false;
+    if (iNodeNumber != other.iNodeNumber)
+        return false;
+    InodeTable t1 = table, t2 = other.table;
+    if (t1.i_blocks != t2.i_blocks)
+        return false;
+    for (int i = 0; i < 15; i++)
+        if (t1.i_block[i] != t2.i_block[i])
+            return false;
+    return true;
+}

@@ -23,14 +23,12 @@
 #include <string>
 #include "vdifunctions.h"
 #include <QDebug>
-#include <ios>
 
 using namespace std;
 using namespace CSCI5806;
 
 VdiFile::VdiFile(QObject *parent) : QObject(parent)
 {
-    vdi = new QFile();
     map = NULL;
     mbr = NULL;
     superBlock = NULL;
@@ -46,8 +44,6 @@ VdiFile::VdiFile(QObject *parent) : QObject(parent)
 
 VdiFile::~VdiFile() {
 #warning delete everything allocated with new
-
-    delete vdi;
     if (map != NULL)
         delete map;
     if (mbr != NULL)
@@ -88,10 +84,7 @@ void VdiFile::openFile(QString fileName) {
         return;
     }
 
-
-    input.open(fileName.toStdString().c_str(), ios::binary);
-
-
+    input.open(fileName.toStdString().c_str(), ios::in | ios::out | ios::binary); //read and write to the vdi, ignore special char, all binary
 
     if(!input.is_open()) {
         cout << "File not open!" << endl;
@@ -131,7 +124,6 @@ void VdiFile::openFile(QString fileName) {
 
     unsigned int group_count = superBlock->getGroupCount();
     block_size = superBlock->getBlockSize();
-    unsigned int inodes_per_group = superBlock->getInodesPerGroup();
 
     cout << "andy block_size" << block_size << endl;
     cout << "andy super block size" << superBlock->getBlockSize() << endl;
@@ -174,7 +166,7 @@ void VdiFile::openFile(QString fileName) {
     //cout << blockBitmap->max_size() << endl;
     cout << "Bit reading/ converting complete" << endl;
 
-    fsManager = new ext2FileSystemManager(&input, groupDescriptors, superBlock, bootBlockLocation, block_size);
+    fsManager = new ext2FileSystemManager(&input, groupDescriptors, superBlock, bootBlockLocation);
     emit FSManagerConstructed(fsManager);
 }
 

@@ -57,7 +57,6 @@ unsigned long long convertEndian(unsigned char C[], int size, bool littleEndian)
 }
 
 //get data from Stream
-//long long getStreamData(int size, long long seek_to, std::ifstream &input, std::string name = "", bool output = true);
 unsigned long long getStreamData(int size, long long seek_to, ifstream &input, string name, bool output, bool littleEndian, bool afterVDIMap){
     unsigned char data[size];
     input.clear();
@@ -145,7 +144,7 @@ QString FileSizeToString(unsigned int size) {
         divisions++;
     }
     tempSize = size;
-    for (int i = 0; i < divisions-1; i++) {
+    for (unsigned int i = 0; i < divisions-1; i++) {
         tempSize /= 1024;
     }
     ret += QString::number(tempSize);

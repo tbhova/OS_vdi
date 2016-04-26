@@ -7,6 +7,10 @@
 #include "vdifilesystem.h"
 #include "ext2file.h"
 #include <QDir>
+#include <QFile>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QProgressBar>
 
 
 
@@ -29,18 +33,22 @@ public slots:
 signals:
     void browseVDIClicked();
     void transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir);
-    void transferToVDI(QString sourcePath, QString destDir);
+    void transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFile);
 
 private slots:
     void on_copyToLocalFsButton_clicked();
-
     void on_copyToVdiPushButton_clicked();
+    void processProgressUpdate(int value);
+    void hideStatusBar();
 
 private:
     Ui::MainWindow *ui;
+    QLabel *progressLabel;
+    QProgressBar *progress;
+
     CSCI5806::LocalFileSystem *localFS;
     CSCI5806::VdiFileSystem *vdiFS;
-    //CSCI5806::VdiFile *vdi;
+
 };
 
 

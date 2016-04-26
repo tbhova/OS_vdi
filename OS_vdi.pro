@@ -15,7 +15,6 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     localfilesystem.cpp \
-    vdimanager.cpp \
     vdifilesystem.cpp \
     vdimap.cpp \
     mbrdata.cpp \
@@ -31,7 +30,6 @@ SOURCES += main.cpp\
 
 HEADERS  += mainwindow.h \
     localfilesystem.h \
-    vdimanager.h \
     vdifile.h \
     vdifilesystem.h \
     vdimap.h \
@@ -43,7 +41,8 @@ HEADERS  += mainwindow.h \
     ext2folder.h \
     ext2file.h \
     ext2filesystemmanager.h \
-    ext2fsentry.h
+    ext2fsentry.h \
+    linuxstat.h
 
 FORMS    += mainwindow.ui
 

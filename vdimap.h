@@ -17,7 +17,7 @@ signals:
 public slots:
 
 private:
-    QVector < unsigned int >*map; //dyanmic array of char for the map
+    QVector<unsigned int> *map; //dynamic array of char for the map
 };
 }
 

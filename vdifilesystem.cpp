@@ -6,6 +6,10 @@
 #include <QString>
 #include <QDebug>
 #include "vdifunctions.h"
+#include "linuxstat.h"
+
+//so we can omit the long stuff for readability
+#define lsl
 
 using namespace std;
 using namespace CSCI5806;
@@ -20,7 +24,12 @@ VdiFileSystem::VdiFileSystem(QTreeView *initialTree, QObject *parent) : QAbstrac
     rootData.push_back(tr("Size"));
     rootData.push_back(tr("Type"));
     rootData.push_back(tr("Date Modified"));
-    //rootData.push_back(QDateTime::currentDateTime().toString(tr("M/d/yyyy h:mm AP")));
+#ifdef  lsl
+    rootData.push_back(tr("Hard Links"));
+    rootData.push_back(tr("Owner"));
+    rootData.push_back(tr("Group"));
+    rootData.push_back(tr("Permissions"));
+#endif
     rootNode = new VDIFileSystemTreeItem(rootData, NULL, NULL);
 
     tree->setModel(this);
@@ -35,6 +44,7 @@ VdiFileSystem::VdiFileSystem(QTreeView *initialTree, QObject *parent) : QAbstrac
     connect(tree, QTreeView::expanded, this, VdiFileSystem::folderExpanded);
     connect(this, VdiFileSystem::transferToLocalFS, vdi, VdiFile::transferToLocalFS);
     connect(this, VdiFileSystem::transferToVDI, vdi, VdiFile::transferToVDI);
+    connect(vdi, VdiFile::progressUpdate, this, VdiFileSystem::progressUpdate);
 }
 
 VdiFileSystem::~VdiFileSystem() {
@@ -45,16 +55,89 @@ VdiFileSystem::~VdiFileSystem() {
 
 void VdiFileSystem::setupModelData(ext2FSEntry *extNode, VDIFileSystemTreeItem *guiNode) {
     QList<QVariant> data;
+    QString permissions = "";
 
     data.push_back(extNode->getName());
     data.push_back(FileSizeToString(extNode->getInodeTable()->i_size));
     if (extNode->isFolder()) {
         data.push_back(QObject::tr("Folder"));
+        permissions.append("d");
     } else {
         data.push_back(QObject::tr("File"));
+        permissions.append("-");
+    }
+    QDateTime time;
+    time.setTime_t(extNode->getInodeTable()->i_mtime);
+    data.push_back(time.toString(QObject::tr("M/d/yyyy h:mm AP")));
+
+#ifdef lsl
+    data.push_back(QString::number(extNode->getInodeTable()->i_links_count));
+    data.push_back(QString::number(extNode->getInodeTable()->i_uid));
+    data.push_back(QString::number(extNode->getInodeTable()->i_gid));
+
+    unsigned short mode = extNode->getInodeTable()->i_mode;
+    if ((mode & S_IRWXU) == S_IRWXU) {
+        permissions.append("rwx");
+    } else {
+        if ((mode & S_IRUSR) > 0) {
+            permissions.append("r");
+        } else {
+            permissions.append("-");
+        }
+        if ((mode & S_IWUSR) > 0) {
+            permissions.append("w");
+        } else {
+            permissions.append("-");
+        }
+        if ((mode & S_IXUSR) > 0) {
+            permissions.append("x");
+        } else {
+            permissions.append("-");
+        }
     }
 
-    data.push_back(QString::number(extNode->getInodeTable()->i_mtime));
+    if ((mode & S_IRWXG) == S_IRWXG) {
+        permissions.append("rwx");
+    } else {
+        if ((mode & S_IRGRP) > 0) {
+            permissions.append("r");
+        } else {
+            permissions.append("-");
+        }
+        if ((mode & S_IWGRP) > 0) {
+            permissions.append("w");
+        } else {
+            permissions.append("-");
+        }
+        if ((mode & S_IXGRP) > 0) {
+            permissions.append("x");
+        } else {
+            permissions.append("-");
+        }
+    }
+
+    if ((mode & S_IRWXO) == S_IRWXO) {
+        permissions.append("rwx");
+    } else {
+        if ((mode & S_IROTH) > 0) {
+            permissions.append("r");
+        } else {
+            permissions.append("-");
+        }
+        if ((mode & S_IWOTH) > 0) {
+            permissions.append("w");
+        } else {
+            permissions.append("-");
+        }
+        if ((mode & S_IXOTH) > 0) {
+            permissions.append("x");
+        } else {
+            permissions.append("-");
+        }
+    }
+
+    data.push_back(permissions);
+#endif
 
     guiNode->appendChild(new VDIFileSystemTreeItem(data, guiNode, extNode));
     qDebug() << QObject::tr("append ") << extNode->getName();
@@ -117,12 +200,10 @@ void VdiFileSystem::fsManagerConstructed(ext2FileSystemManager *fs) {
 
 //slot detecting when a folder is expanded for lazy loading
 void VdiFileSystem::folderExpanded(const QModelIndex &index) {
-#warning return early if children already have children
-
-    qDebug() << "folder expanded slot";
+//    qDebug() << "folder expanded slot";
 
     if (!index.isValid()) {
-        qDebug() << QObject::tr("folderExpanded - invalid model index");
+//        qDebug() << QObject::tr("folderExpanded - invalid model index");
         return;
     }
     if (fsManager == NULL) {
@@ -143,7 +224,7 @@ void VdiFileSystem::folderExpanded(const QModelIndex &index) {
         parent = parent->parentItem();
     }
 
-    qDebug() << "folder expanded path = " << path;
+//    qDebug() << "folder expanded path = " << path;
     //reverse the path to be the actual path starting from the root
     QString revPath;
     int lastSlash = path.lastIndexOf("/");
@@ -173,7 +254,7 @@ void VdiFileSystem::folderExpanded(const QModelIndex &index) {
     }
 
 
-    qDebug() << "folder expanded revPath = " << revPath;
+    //qDebug() << "folder expanded revPath = " << revPath;
 
     if (!fsManager->exploreToPath(revPath))
         return; //folder already explored
@@ -184,14 +265,14 @@ void VdiFileSystem::folderExpanded(const QModelIndex &index) {
     //traverse fsManagerTree to get expanded folder
     ext2Folder *fsManagerFolder = fsManager->getFolderAtPath(revPath);
 
-    qDebug() << "fsManagerFolder name " << fsManagerFolder->getName();
-    qDebug() << "expanded folder name " << expandedFolder->data(0).toString();
+    //qDebug() << "fsManagerFolder name " << fsManagerFolder->getName();
+    //qDebug() << "expanded folder name " << expandedFolder->data(0).toString();
 
     foreach (ext2Folder *f, *(fsManagerFolder->getFolders())) {
-        qDebug() << "fsManager sub Folder name " << f->getName();
+        //qDebug() << "fsManager sub Folder name " << f->getName();
         for (int i = 0; i < expandedFolder->childCount(); i++) {
             if (f->getName() == expandedFolder->child(i)->data(0).toString()) {
-                qDebug() << "found matching folders in both trees";
+                //qDebug() << "found matching folders in both trees";
                 foreach (ext2Folder *subFolder, *(f->getFolders())) {
                     setupModelData(subFolder, expandedFolder->child(i));
                 }
@@ -305,7 +386,6 @@ QVariant VdiFileSystem::headerData(int section, Qt::Orientation orientation, int
 }
 
 bool VdiFileSystem::hasChildren(const QModelIndex &parent) const {
-#warning lazy loading here, determine whether parent is expanded
     bool ret = (rowCount(parent) > 0) && (columnCount(parent) > 0);
     return ret;
 }

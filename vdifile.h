@@ -42,11 +42,12 @@ public:
 public slots:
     void selectVdiPrompt();
     void transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir);
-    void transferToVDI(QString sourcePath, QString destPath);
+    void transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFile);
 
 signals:
     void vdiFileSelected(QString fileName);
     void FSManagerConstructed(ext2FileSystemManager *fs);
+    void progressUpdate(int value);
 
 private:
     void closeAndReset();
@@ -59,7 +60,6 @@ private:
     unsigned long long triplyIndirectPointersValues(unsigned long long blockNumberOfTriplyIndirect, std::ifstream& input, std::ofstream& localFile, unsigned long long size);
 
 
-    QFile *vdi; //whatever filetype we intend to use
     VdiMap *map;
     mbrData *mbr;
     ext2SuperBlock *superBlock;
@@ -76,8 +76,9 @@ private:
     QVector <unsigned int> *TriplyIndirectPointers;
     ext2FileSystemManager *fsManager;
 
-    std::vector<bool> *blockBitmap, *inodesBitmap;
     //std::vector optimized bool storage to take 1 bit per boolean value when there are multiple bools
+    std::vector<bool> *blockBitmap, *inodesBitmap;
+
 
     unsigned long long bootBlockLocation, superBlockLocation, block_size, group_size;
 };
