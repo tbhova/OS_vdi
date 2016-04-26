@@ -40,6 +40,7 @@ VdiFile::VdiFile(QObject *parent) : QObject(parent)
     blockBitmap = new vector<bool>;
     inodesBitmap = new vector<bool>;
     SinglyIndirectPointers = new QVector <unsigned int>;
+    DoublyIndirectPointers = new QVector <unsigned int>;
 }
 
 VdiFile::~VdiFile() {
@@ -197,11 +198,12 @@ void VdiFile::transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir) {
     string absoluteDir = sourceFile->getName().toStdString();
     OutputFileIntoLocalFS.open(directory +"/" + absoluteDir , ios::out|ios::binary);
     if(OutputFileIntoLocalFS.is_open()){
-      cout << "File is open for writing..." << endl;
-    } else {
+       cout << "File is open for writing..." << endl;
+       }
+    else {
         cout << "error unable to open output file" << endl;
         return;
-    }
+        }
     //qDebug() << "The size we have to work with is" <<  sourceFile->getInodeTable()->i_size << "  and the block num is " << sourceFile->getInodeTable()->i_block[0] << endl;
     //cout << "Location of first indirect block " << sourceFile->getInodeTable()->i_block[12] << endl;
     loadLocalFile(sourceFile->getInodeTable(),sourceFile->getInodeTable()->i_size,0, input, OutputFileIntoLocalFS);
@@ -229,7 +231,6 @@ void VdiFile::transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir) {
 void VdiFile::transferToVDI(QString sourcePath, QString destPath) {
 
 }
-
 void VdiFile::loadLocalFile(InodeTable* InodeTab, unsigned int size, unsigned int inodeIndexNum, ifstream& input , ofstream& localFile){
     cout << "The size of this field is " << size << " bytes" << endl;
     cout << "Inode index num" << inodeIndexNum << endl;
@@ -260,9 +261,13 @@ void VdiFile::loadLocalFile(InodeTable* InodeTab, unsigned int size, unsigned in
         cout << "We got in the direct with Inode Index num" << inodeIndexNum << endl;
     }
     else if (inodeIndexNum ==12)    {
-        cout << "We in da singly indirect" << endl;
-        #warning remember to change this value from 12
+        qDebug() << "Entering Singly Indirect..." << endl;
         size = singlyIndirectPointersValues(InodeTab->i_block[inodeIndexNum],input,localFile,size);
+    }
+    else if (inodeIndexNum ==13)    {
+        qDebug() << "Entering Doubly Indirect..." << endl;
+        size = doublyIndirectPointersValues(InodeTab->i_block[inodeIndexNum],input,localFile,size);
+        return;
     }
 
     inodeIndexNum++;
@@ -270,6 +275,7 @@ void VdiFile::loadLocalFile(InodeTable* InodeTab, unsigned int size, unsigned in
     if(size!=0){
         cout << "We got into here" << endl;
         loadLocalFile(InodeTab, size, inodeIndexNum, input, localFile);
+
     }
     else
         return;
@@ -289,9 +295,9 @@ unsigned int VdiFile::singlyIndirectPointersValues(unsigned int blockNumberOfSin
         if(SinglyIndirectPointers->back() == 0)
             break;
     }
-    //cout << "Done with for loop" << endl;
+    cout << "The size of the Vector is now: " << SinglyIndirectPointers->size() << endl;
     unsigned int iterator=0;
-    while(SinglyIndirectPointers->at(iterator) !=0 && size>0){
+    while(iterator < SinglyIndirectPointers->size() && size>0 && SinglyIndirectPointers->at(iterator) !=0){
         offset = bootBlockLocation+(block_size * (SinglyIndirectPointers->at(iterator)));
         if(size > block_size){
             cout << "We got into the if " << endl;
@@ -324,7 +330,35 @@ unsigned int VdiFile::singlyIndirectPointersValues(unsigned int blockNumberOfSin
 
 
 
-    //cout << "The size we returned was" << size<< endl;
+    cout << "The size we returned was" << size<< endl;
     return size;
     // end of singly indirect
 }
+
+
+unsigned int VdiFile::doublyIndirectPointersValues(unsigned int blockNumberOfDoublyIndirect, ifstream& input, ofstream& localFile, unsigned int size){
+    unsigned int offsetStartDoublyIndirect = bootBlockLocation+(block_size * (blockNumberOfDoublyIndirect));
+    // we know that each entry is 4 bytes long due to what we used for inode reading in ext
+    DoublyIndirectPointers->clear();
+    for(int i=0; i<block_size; i=i+4){ //4 is the number of bytes in each entry
+        DoublyIndirectPointers->push_back(getStreamData(4,offsetStartDoublyIndirect+i,input,"",false));
+        cout << DoublyIndirectPointers->back() << endl;
+        if(DoublyIndirectPointers->back() == 0)
+            break;
+    }
+    //cout << "Done with for loop" << endl;
+    unsigned int doublyIterator=0;
+    while(doublyIterator < DoublyIndirectPointers->size() && DoublyIndirectPointers->at(doublyIterator) !=0 && size>0){
+        //offset = bootBlockLocation+(block_size * (DoublyIndirectPointers->at(doublyIterator)));
+        size = singlyIndirectPointersValues(DoublyIndirectPointers->at(doublyIterator),input,localFile,size);
+        doublyIterator++;
+        qDebug() << "Doubly Indirect..." << endl;
+        if(size == 0) break;
+
+
+    return size;
+    // end of doublyindirect
+}
+
+
+

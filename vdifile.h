@@ -55,6 +55,9 @@ private:
     void fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsigned int block_bitmap_address,unsigned int inode_bitmap_address,std::ifstream& input);
     void loadLocalFile(InodeTable* InodeTab,unsigned int size,unsigned int inodeIndexSize, std::ifstream& input, std::ofstream& localFile );
     unsigned int singlyIndirectPointersValues(unsigned int blockNumberOfSinglyIndirect, std::ifstream& input, std::ofstream& localFile, unsigned int size);
+    unsigned int doublyIndirectPointersValues(unsigned int blockNumberOfDoublyIndirect, std::ifstream& input, std::ofstream& localFile, unsigned int size);
+
+
 
     QFile *vdi; //whatever filetype we intend to use
     VdiMap *map;
@@ -69,6 +72,7 @@ private:
     QVector<unsigned char> *DataBlockBitmap;
     QVector <Inode_info> *InodeInfo;
     QVector <unsigned int> *SinglyIndirectPointers;
+    QVector <unsigned int> *DoublyIndirectPointers;
     ext2FileSystemManager *fsManager;
 
     std::vector<bool> *blockBitmap, *inodesBitmap;
