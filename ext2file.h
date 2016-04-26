@@ -1,7 +1,6 @@
 #ifndef EXT2FILE_H
 #define EXT2FILE_H
 
-//#include <QObject>
 #include <QString>
 #include "ext2fsentry.h"
 

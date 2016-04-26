@@ -199,12 +199,10 @@ void VdiFileSystem::fsManagerConstructed(ext2FileSystemManager *fs) {
 
 //slot detecting when a folder is expanded for lazy loading
 void VdiFileSystem::folderExpanded(const QModelIndex &index) {
-#warning return early if children already have children
-
-    qDebug() << "folder expanded slot";
+//    qDebug() << "folder expanded slot";
 
     if (!index.isValid()) {
-        qDebug() << QObject::tr("folderExpanded - invalid model index");
+//        qDebug() << QObject::tr("folderExpanded - invalid model index");
         return;
     }
     if (fsManager == NULL) {
@@ -225,7 +223,7 @@ void VdiFileSystem::folderExpanded(const QModelIndex &index) {
         parent = parent->parentItem();
     }
 
-    qDebug() << "folder expanded path = " << path;
+//    qDebug() << "folder expanded path = " << path;
     //reverse the path to be the actual path starting from the root
     QString revPath;
     int lastSlash = path.lastIndexOf("/");
@@ -255,7 +253,7 @@ void VdiFileSystem::folderExpanded(const QModelIndex &index) {
     }
 
 
-    qDebug() << "folder expanded revPath = " << revPath;
+    //qDebug() << "folder expanded revPath = " << revPath;
 
     if (!fsManager->exploreToPath(revPath))
         return; //folder already explored
@@ -266,14 +264,14 @@ void VdiFileSystem::folderExpanded(const QModelIndex &index) {
     //traverse fsManagerTree to get expanded folder
     ext2Folder *fsManagerFolder = fsManager->getFolderAtPath(revPath);
 
-    qDebug() << "fsManagerFolder name " << fsManagerFolder->getName();
-    qDebug() << "expanded folder name " << expandedFolder->data(0).toString();
+    //qDebug() << "fsManagerFolder name " << fsManagerFolder->getName();
+    //qDebug() << "expanded folder name " << expandedFolder->data(0).toString();
 
     foreach (ext2Folder *f, *(fsManagerFolder->getFolders())) {
-        qDebug() << "fsManager sub Folder name " << f->getName();
+        //qDebug() << "fsManager sub Folder name " << f->getName();
         for (int i = 0; i < expandedFolder->childCount(); i++) {
             if (f->getName() == expandedFolder->child(i)->data(0).toString()) {
-                qDebug() << "found matching folders in both trees";
+                //qDebug() << "found matching folders in both trees";
                 foreach (ext2Folder *subFolder, *(f->getFolders())) {
                     setupModelData(subFolder, expandedFolder->child(i));
                 }
@@ -387,7 +385,6 @@ QVariant VdiFileSystem::headerData(int section, Qt::Orientation orientation, int
 }
 
 bool VdiFileSystem::hasChildren(const QModelIndex &parent) const {
-#warning lazy loading here, determine whether parent is expanded
     bool ret = (rowCount(parent) > 0) && (columnCount(parent) > 0);
     return ret;
 }

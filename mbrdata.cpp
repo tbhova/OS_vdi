@@ -22,14 +22,8 @@ unsigned char getStreamDataChar(int size, long long seek_to, ifstream &input){
 
 }
 
-
-
 mbrData::mbrData(QObject *parent, long long startOffset,  ifstream &file) : QObject(parent)
 {
-
-    //mbrDataTable0 = getStreamData(1,startOffset, file);
-
-
     partitionTable1[16] = getStreamDataChar(16, startOffset+446,file);
     partitionTable2[16] = getStreamDataChar(16, startOffset+462,file);
     partitionTable3[16] = getStreamDataChar(16, startOffset+478,file);
@@ -39,11 +33,9 @@ mbrData::mbrData(QObject *parent, long long startOffset,  ifstream &file) : QObj
     cout << "The Magic Number for mbr is:" <<endl;
     eofMagicNumber = getStreamData(2, startOffset+510, file);
 
-
     if (eofMagicNumber == 0xAA55){
         cout << "Correct Magic Numbers" << endl;
     }
-
 
     mbrDataTable[0] = getStreamData(4,startOffset+454,file);
     mbrDataTable[1] = getStreamData(4,startOffset+470,file);
@@ -56,5 +48,3 @@ int mbrData::getMbrDataTable(int pos) {
     return mbrDataTable[pos];
 
 }
-
-

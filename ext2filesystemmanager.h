@@ -1,7 +1,6 @@
 #ifndef EXT2FILESYSTEMMANAGER_H
 #define EXT2FILESYSTEMMANAGER_H
 
-//#include <QObject>
 #include "ext2folder.h"
 #include "ext2file.h"
 #include <fstream>
@@ -15,14 +14,13 @@ struct Inode_info {
     unsigned short	rec_len;		/* Directory entry length */
     unsigned char 	name_len;		/* Name length */
     unsigned char	file_type;  //1 is file, 2 is folder
-    //QVector <unsigned char>   name;	    /* File name */
     std::string   name;	    /* File name */
 };
 
 class ext2FileSystemManager
 {
 public:
-    ext2FileSystemManager(std::ifstream *file, ext2GroupDescriptor *group, ext2SuperBlock *super, unsigned int bootBlock, unsigned int blockSize);
+    ext2FileSystemManager(std::ifstream *file, ext2GroupDescriptor *group, ext2SuperBlock *super, unsigned int bootBlock);
 
     ~ext2FileSystemManager();
 
@@ -39,13 +37,11 @@ public:
 
     void getInodeTableData(unsigned int inodeNumber);
 
+    long long getInodeOffset(unsigned int inodeNumber);
+
 
 
 private:
-    /*bool isDirInTable() const;
-
-    bool isFileInTable() const;*/
-
     void addEntry(ext2Folder *folder, const Inode_info &InodeIn);
 
     ext2Folder *root;

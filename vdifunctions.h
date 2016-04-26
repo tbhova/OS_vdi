@@ -17,9 +17,6 @@ long long blocksInHDD;
 extern VdiMap *globalMap;
 extern VdiHeaderGlobal globalHeader;
 
-//QVector < unsigned int > *globalVDIMap; //dyanmic array of char for the map
-
-
 void addBitsFromStreamData(std::vector<bool> *bits, int numBits, long long seek_to, std::ifstream &input);
 unsigned long long convertEndian(unsigned char C[], int size, bool littleEndian = false);
 unsigned char getCharFromStream(int size, long long seek_to, std::ifstream &input);

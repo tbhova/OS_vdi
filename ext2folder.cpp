@@ -20,17 +20,3 @@ QVector<ext2File*>* ext2Folder::getFiles() {
 bool ext2Folder::isFolder() {
     return true;
 }
-
-/*void ext2Folder::setName(QString newName) {
-    ext2FSEntry::setName(newName);
-    path.chop(path.size() - path.lastIndexOf("/")+1); //remove old folder name
-    path.append(newName); //add new folder name
-}
-
-/*void ext2Folder::setPath(QString newPath) {
-    path = newPath;
-}
-
-QString ext2Folder::getPath() const {
-    return path;
-}*/
