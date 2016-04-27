@@ -104,8 +104,8 @@ void addBitsFromStreamData(vector<bool> *bits, int numBits, long long seek_to, f
         if(i % (sizeof(unsigned long long)*8) == 0) {
 
             temp = getStreamData(sizeof(unsigned long long), seek_to+(sizeof(unsigned long long))*seeks, input, (string)"  ", false, true);
-            //cout << endl << "address: " << hex << seek_to+(sizeof(unsigned long long))*seeks << endl;
-            //cout << hex << temp << endl;
+            cout << endl << "address: " << hex << seek_to+(sizeof(unsigned long long))*seeks << endl;
+            cout << hex << temp << endl;
             seeks++;
         }
         bits->push_back((temp & ((unsigned long long)1 << (sizeof(unsigned long long)*8-1-(i % (sizeof(unsigned long long)*8))))) > 0);
