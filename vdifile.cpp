@@ -443,6 +443,7 @@ void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFi
     this->writeNewInode(newEntry, newTab, InputFileIntoVdiFS.tellg());
 
     //allocate block pointers
+    this->allocateIndirectBlockPointers(newTab, InputFileIntoVdiFS.tellg());
 
     //write data to blocks
 
@@ -573,6 +574,7 @@ void VdiFile::addBytesToVector(QVector<unsigned char> &vec, unsigned long long v
 }
 
 unsigned int VdiFile::findFreeBitmap(vector<bool> *vec) {
+#warning make this write changes out
     for (unsigned int i = 2; i < vec->size(); i++) { //skip badBlocks and root iNodes
         if (!vec->at(i)) {
             vec->at(i) = true; //inode is now used
@@ -587,14 +589,14 @@ void VdiFile::writeNewInode(DirectoryEntry &newEntry, InodeTable newTab, unsigne
     long long writeOffset = this->fsManager->getInodeOffset(newEntry.inode);
 
     newTab.i_mode = 0;
-    newTab.i_uid = 100;
+    newTab.i_uid = 1000;
     newTab.i_size = 0;
     newTab.i_atime = 0;
     newTab.i_ctime = 0;
     newTab.i_mtime = 0;
     newTab.i_dtime = 0;
     newTab.i_gid = 0;
-    newTab.i_links_count = 0;
+    newTab.i_links_count = 1;
     newTab.i_blocks = 0;
     newTab.i_flags = 0;
     newTab.i_osd1 = 0;
@@ -606,15 +608,42 @@ void VdiFile::writeNewInode(DirectoryEntry &newEntry, InodeTable newTab, unsigne
         newTab.i_osd2[i] = 0;
     }
     this->allocateBlockPointers(newTab.i_block, fileSize);
+
+#warning finish
 }
 
 void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSize) {
     unsigned int blocks = fileSize/block_size;
-    for (int i = 0; i < 12; i++) {
-        if ((i+1) < blocks) {
+    for (int i = 0; i < 15; i++) {
+        if ((i+1) < blocks && i < 12) {
             i_block[i] = findFreeBitmap(blockBitmap);
         } else {
             i_block[i] = 0;
         }
     }
+    if (blocks < 12)
+        return;
+
+    //singly indirect
+    i_block[12] = findFreeBitmap(blockBitmap);
+    if (blocks < 12 + this->fsManager->getBlocksPerIndirection(1)) {
+        return;
+    }
+
+    //doubly indirect
+    i_block[13] = findFreeBitmap(blockBitmap);
+    if (blocks < 12 + this->fsManager->getBlocksPerIndirection(1) + fsManager->getBlocksPerIndirection(2)) {
+        return;
+    }
+
+    //triply indirect
+    i_block[14] = findFreeBitmap(blockBitmap);
+}
+
+void VdiFile::allocateIndirectBlockPointers(InodeTable &tab, unsigned int fileSize) {
+#error andy write code here
+
+    //relevant functions
+    this->fsManager->getBlocksPerIndirection(1);
+    findFreeBitmap(blockBitmap);
 }

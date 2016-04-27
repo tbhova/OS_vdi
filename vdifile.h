@@ -65,6 +65,7 @@ private:
     void addBytesToVector(QVector<unsigned char> &vec, unsigned long long value, unsigned char bytes);
     void writeNewInode(DirectoryEntry &newEntry, InodeTable newTab, unsigned int fileSize);
     void allocateBlockPointers(unsigned int i_block[], unsigned int fileSize);
+    void allocateIndirectBlockPointers(InodeTable &tab, unsigned int fileSize);
 
     QFile *vdi; //whatever filetype we intend to use
     VdiMap *map;

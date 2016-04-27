@@ -248,12 +248,30 @@ long long ext2FileSystemManager::getBlockOffset(unsigned int block_num) {
     return bootBlockAddress+(block_size * (block_num));
 }
 
+unsigned int ext2FileSystemManager::getBlocksPerIndirection(int indirection) {
+    unsigned int size = 1;
+    switch (indirection) {
+    case (3) :
+        size = block_size/sizeof(unsigned int);
+    case (2) :
+        size *= block_size/sizeof(unsigned int);
+    case (1) :
+        size *= block_size/sizeof(unsigned int);
+        return size;
+    case (0) :
+        return 12;
+    default:
+        return -1;
+
+    }
+}
+
 unsigned int ext2FileSystemManager::getBlockNumAtIndex(const InodeTable *tab, unsigned int index) {
     if (index < 12) {
         return tab->i_block[index];
     }
 
-    unsigned int blocksPerInd = (block_size/4); //singly indirect blocks
+    unsigned int blocksPerInd = this->getBlocksPerIndirection(1); //singly indirect blocks
     index -= 11; //remove direct
     if (index <= blocksPerInd) {
         unsigned int block_num = tab->i_block[12];
@@ -261,7 +279,7 @@ unsigned int ext2FileSystemManager::getBlockNumAtIndex(const InodeTable *tab, un
     }
 
     index -= blocksPerInd; //remove singly indirect
-    unsigned int blocksPerDoublyInd = blocksPerInd*blocksPerInd; //doubly indirect blocks
+    unsigned int blocksPerDoublyInd = this->getBlocksPerIndirection(1); //doubly indirect blocks
     if (index <= blocksPerDoublyInd) {
         unsigned int block_num = tab->i_block[13];
         block_num = getStreamData(4, getBlockOffset(block_num) + (index/blocksPerInd)*sizeof(unsigned int), *input, "double block num - singly pointer");
@@ -269,7 +287,7 @@ unsigned int ext2FileSystemManager::getBlockNumAtIndex(const InodeTable *tab, un
     }
 
     index -= blocksPerInd; //remove doubly indirect
-    unsigned int blocksPerTriplyInd = blocksPerInd*blocksPerDoublyInd; //triply indirect blocks
+    unsigned int blocksPerTriplyInd = this->getBlocksPerIndirection(1); //triply indirect blocks
     if (index <= blocksPerTriplyInd) {
         unsigned int block_num = tab->i_block[14];
         block_num = getStreamData(4, getBlockOffset(block_num) + (index/blocksPerDoublyInd)*sizeof(unsigned int), *input, "triply block num - doubly pointer");
