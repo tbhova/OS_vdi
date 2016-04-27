@@ -68,15 +68,12 @@ private:
     ext2SuperBlock *superBlock;
 
     std::fstream input;
-
-
-    //QVector<ext2GroupDescriptor*> *groupDescriptors;
     ext2GroupDescriptor *groupDescriptors;
     VdiHeader header;
     InodeTable tab;
-    Inode_info InodeIn;
+    DirectoryEntry InodeIn;
     QVector<unsigned char> *DataBlockBitmap;
-    QVector <Inode_info> *InodeInfo;
+    QVector <DirectoryEntry> *InodeInfo;
     QVector <unsigned int> *SinglyIndirectPointers;
     QVector <unsigned int> *DoublyIndirectPointers;
     QVector <unsigned int> *TriplyIndirectPointers;

@@ -54,6 +54,31 @@ VdiFileSystem::~VdiFileSystem() {
 }
 
 void VdiFileSystem::setupModelData(ext2FSEntry *extNode, VDIFileSystemTreeItem *guiNode) {
+    if (guiNode->getExt2Entry() == NULL) {
+      //do nothing this is the root node
+    } else if (guiNode->getExt2Entry()->isFolder()) { //guiNode represent a folder
+        for (int i = 0; i < guiNode->childCount(); i++) {
+            if (guiNode->child(i)->getExt2Entry()->isFolder()) { //child is folder
+                if (!extNode->isFolder())
+                    continue; //we don't want to compare folders and files
+                if (*(static_cast<ext2Folder*>(extNode)) == *(static_cast<ext2Folder*>(guiNode->child(i)->getExt2Entry()))) {
+                    qDebug() << "don't add duplicate folder " << extNode->getName();
+                    return; // don't add duplicate folder to gui
+                }
+            } else { //child guiNode is file
+                if (extNode->isFolder()) {
+                    continue; //don't compare a file and folder
+                }
+                if (*(static_cast<ext2File*>(extNode)) == *(static_cast<ext2File*>(guiNode->child(i)->getExt2Entry()))) {
+                    qDebug() << "don't add duplicate file " << extNode->getName();
+                    return; // don't add duplicate folder to gui
+                }
+            }
+        }
+    } else { //guiNode represents a file
+        qDebug () << "Error - setupModelData guiNode is file. This probably shouldn't happen";
+    }
+
     QList<QVariant> data;
     QString permissions = "";
 
@@ -159,35 +184,6 @@ void VdiFileSystem::setupModelData(ext2FSEntry *extNode, VDIFileSystemTreeItem *
             setupModelData(f, guiNode);
         }
     } else return;
-
-
-
-
-    /*rootData.clear();
-    rootData.push_back(tr("/"));
-    rootData.push_back(tr("root"));
-    rootData.push_back(FileSizeToString(900));
-    rootData.push_back(QDateTime::currentDateTime().toString(tr("M/d/yyyy h:mm AP")));
-
-    rootNode->appendChild(new VDIFileSystemTreeItem(rootData, rootNode));
-    rootData.clear();
-    rootData.push_back(tr("TestDir"));
-    rootData.push_back(tr("File Folder"));
-    rootData.push_back(FileSizeToString(0));
-    rootData.push_back(QDateTime::fromString(tr("1/6/2010 12:35 PM"), tr("M/d/yyyy h:mm AP")).toString("M/d/yyyy h:mm AP"));
-
-    rootNode->appendChild(new VDIFileSystemTreeItem(rootData, rootNode));
-
-    rootData.clear();
-    rootData.push_back(tr("TestFile"));
-#warning can make a class and override casting to QString and QVariant methods
-    rootData.push_back(tr("File"));
-
-    rootData.push_back(FileSizeToString(2050));
-    rootData.push_back(QDateTime::fromString(tr("11/26/1989 8:08 AM"), tr("M/d/yyyy h:mm AP")).toString("M/d/yyyy h:mm AP"));
-
-    rootNode->child(0)->appendChild(new VDIFileSystemTreeItem(rootData, rootNode->child(0)));*/
-
 }
 
 void VdiFileSystem::fsManagerConstructed(ext2FileSystemManager *fs) {

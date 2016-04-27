@@ -9,7 +9,7 @@
 
 namespace CSCI5806 {
 
-struct Inode_info {
+struct DirectoryEntry {
     unsigned int	inode;		/* Inode number */
     unsigned short	rec_len;		/* Directory entry length */
     unsigned char 	name_len;		/* Name length */
@@ -30,7 +30,7 @@ public:
 
     void addFilesAndFolders(ext2Folder *folder);
 
-    bool fillInFilesFromBlock(ext2Folder *folder, unsigned int block_num, unsigned long long offsetOfStruct);
+    void fillInFilesFromBlock(ext2Folder *folder, unsigned int block_num, unsigned long long offsetOfStruct);
 
     //used for gui traversal
     ext2Folder* getRoot() const;
@@ -39,17 +39,21 @@ public:
 
     long long getInodeOffset(unsigned int inodeNumber);
 
+    long long getBlockOffset(unsigned int block_num);
+
+    unsigned int getBlockNumAtIndex(const InodeTable *tab, unsigned int index);
+
 
 
 private:
-    void addEntry(ext2Folder *folder, const Inode_info &InodeIn);
+    void addEntry(ext2Folder *folder, const DirectoryEntry &InodeIn);
 
     ext2Folder *root;
     std::fstream *input;
     ext2SuperBlock *superBlock;
     ext2GroupDescriptor *groupDescriptor;
     InodeTable tab, *tempTab;
-    Inode_info InodeIn;
+    DirectoryEntry InodeIn;
 
     unsigned int bootBlockAddress, block_size;
 };

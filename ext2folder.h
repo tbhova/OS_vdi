@@ -15,6 +15,7 @@ public:
     QVector<ext2Folder*>* getFolders();
     QVector<ext2File*>* getFiles();
     virtual bool isFolder();
+    bool operator==(const ext2Folder &other) const;
 
 private:
     QVector<ext2Folder*> *folders;
