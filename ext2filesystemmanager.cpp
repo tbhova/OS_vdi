@@ -8,7 +8,7 @@
 using namespace std;
 using namespace CSCI5806;
 
-ext2FileSystemManager::ext2FileSystemManager(ifstream *file, ext2GroupDescriptor *group, ext2SuperBlock *super, unsigned int bootBlock)
+ext2FileSystemManager::ext2FileSystemManager(fstream *file, ext2GroupDescriptor *group, ext2SuperBlock *super, unsigned int bootBlock)
 {
     input = file;
     groupDescriptor = group;

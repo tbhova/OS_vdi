@@ -52,18 +52,21 @@ signals:
 private:
     void closeAndReset();
     void getHeaderValues();
-    //In globalfunctions.h//unsigned char getCharFromStream(int size, long long seek_to, std::ifstream &input);
-    void fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsigned int block_bitmap_address,unsigned int inode_bitmap_address,std::ifstream& input);
-    void loadLocalFile(InodeTable* InodeTab,unsigned int size,unsigned int inodeIndexSize, std::ifstream& input, std::ofstream& localFile );
-    unsigned long long singlyIndirectPointersValues(unsigned long long blockNumberOfSinglyIndirect, std::ifstream& input, std::ofstream& localFile, unsigned long long size);
-    unsigned long long doublyIndirectPointersValues(unsigned long long blockNumberOfDoublyIndirect, std::ifstream& input, std::ofstream& localFile, unsigned long long size);
-    unsigned long long triplyIndirectPointersValues(unsigned long long blockNumberOfTriplyIndirect, std::ifstream& input, std::ofstream& localFile, unsigned long long size);
+    //In globalfunctions.h//unsigned char getCharFromStream(int size, long long seek_to, std::fstream &input);
+    void fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsigned int block_bitmap_address,unsigned int inode_bitmap_address,std::fstream& input);
+    void loadLocalFile(InodeTable* InodeTab,unsigned int size,unsigned int inodeIndexSize, std::fstream& input, std::ofstream& localFile );
+    unsigned long long singlyIndirectPointersValues(unsigned long long blockNumberOfSinglyIndirect, std::fstream& input, std::ofstream& localFile, unsigned long long size);
+    unsigned long long doublyIndirectPointersValues(unsigned long long blockNumberOfDoublyIndirect, std::fstream& input, std::ofstream& localFile, unsigned long long size);
+    unsigned long long triplyIndirectPointersValues(unsigned long long blockNumberOfTriplyIndirect, std::fstream& input, std::ofstream& localFile, unsigned long long size);
+    void updateBitmap (unsigned int BitmapLocation, long long inodeNumber, std::fstream& VDIFile, bool setToUsed, bool isInodeBitmap);
+    void addBytesToFile (QVector <unsigned char> * toLoadVector, long long offset,std::fstream& VDIFile);
+
 
     QFile *vdi; //whatever filetype we intend to use
     VdiMap *map;
     mbrData *mbr;
     ext2SuperBlock *superBlock;
-    std::ifstream input;
+    std::fstream input;
     //QVector<ext2GroupDescriptor*> *groupDescriptors;
     ext2GroupDescriptor *groupDescriptors;
     VdiHeader header;
@@ -74,6 +77,7 @@ private:
     QVector <unsigned int> *SinglyIndirectPointers;
     QVector <unsigned int> *DoublyIndirectPointers;
     QVector <unsigned int> *TriplyIndirectPointers;
+    QVector <char> *InputData;
     ext2FileSystemManager *fsManager;
     std::ofstream OutputFileIntoLocalFS;
     std::fstream InputFileIntoVdiFS;

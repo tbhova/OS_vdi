@@ -22,7 +22,7 @@ class ext2GroupDescriptor : public QObject
 {
     Q_OBJECT
 public:
-    explicit ext2GroupDescriptor(QObject *parent, int group_count, long long offset, std::ifstream &file);
+    explicit ext2GroupDescriptor(QObject *parent, int group_count, long long offset, std::fstream &file);
     int getBlockBitmap(int block);
     int getInodeBitmap(int block);
     int getInodeTable(int block);

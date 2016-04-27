@@ -20,7 +20,7 @@ struct Inode_info {
 class ext2FileSystemManager
 {
 public:
-    ext2FileSystemManager(std::ifstream *file, ext2GroupDescriptor *group, ext2SuperBlock *super, unsigned int bootBlock);
+    ext2FileSystemManager(std::fstream *file, ext2GroupDescriptor *group, ext2SuperBlock *super, unsigned int bootBlock);
 
     ~ext2FileSystemManager();
 
@@ -45,7 +45,7 @@ private:
     void addEntry(ext2Folder *folder, const Inode_info &InodeIn);
 
     ext2Folder *root;
-    std::ifstream *input;
+    std::fstream *input;
     ext2SuperBlock *superBlock;
     ext2GroupDescriptor *groupDescriptor;
     InodeTable tab, *tempTab;

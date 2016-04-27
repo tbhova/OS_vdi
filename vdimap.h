@@ -10,7 +10,7 @@ class VdiMap : public QObject
 {
     Q_OBJECT
 public:
-    explicit VdiMap(QObject *parent, long long startOffset, long long stopOffset, std::ifstream &file);
+    explicit VdiMap(QObject *parent, long long startOffset, long long stopOffset, std::fstream &file);
     int getMappedLocation (int location);
 signals:
 
