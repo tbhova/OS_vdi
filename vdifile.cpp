@@ -24,6 +24,9 @@
 #include "vdifunctions.h"
 #include <QDebug>
 #include <ios>
+#include <QMessageBox>
+#include <qmessagebox.h>
+#include <cstring>
 
 using namespace std;
 using namespace CSCI5806;

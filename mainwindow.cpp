@@ -48,7 +48,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //connect(vdiFS, VdiFileSystem::progressUpdate, progress, QProgressBar::setValue);
     connect(vdiFS, VdiFileSystem::progressUpdate, this, MainWindow::processProgressUpdate);
 
-/*
+
     QMessageBox WELCOME_BOX(this);
 
     WELCOME_BOX.setIconPixmap(QPixmap(":/images/Kramer_pic.PNG"));
@@ -89,7 +89,6 @@ MainWindow::MainWindow(QWidget *parent) :
     WELCOME_BOX.setParent(this);
 
     WELCOME_BOX.exec();
-*/
 
 }
 

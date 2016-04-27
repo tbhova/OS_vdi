@@ -8,7 +8,7 @@ using namespace std;
 using namespace CSCI5806;
 
 //get data from Stream
-unsigned char getStreamDataChar(int size, long long seek_to, ifstream &input){
+unsigned char getStreamDataChar(int size, long long seek_to, fstream &input){
 
     unsigned char data[size];
     input.clear();
@@ -22,7 +22,7 @@ unsigned char getStreamDataChar(int size, long long seek_to, ifstream &input){
 
 }
 
-mbrData::mbrData(QObject *parent, long long startOffset,  ifstream &file) : QObject(parent)
+mbrData::mbrData(QObject *parent, long long startOffset,  fstream &file) : QObject(parent)
 {
     partitionTable1[16] = getStreamDataChar(16, startOffset+446,file);
     partitionTable2[16] = getStreamDataChar(16, startOffset+462,file);

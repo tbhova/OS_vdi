@@ -8,7 +8,7 @@ class ext2SuperBlock : public QObject
 {
     Q_OBJECT
 public:
-    explicit ext2SuperBlock(QObject *parent, long long startOffset,  std::ifstream &file);
+    explicit ext2SuperBlock(QObject *parent, long long startOffset,  std::fstream &file);
     int getGroupCount();
     int getGroupDescriptorBlockNumber();
     int getBlockSize();
