@@ -46,13 +46,13 @@ public:
 
 
 private:
-    void addEntry(ext2Folder *folder, const DirectoryEntry &InodeIn);
+    void addEntry(ext2Folder *folder);
 
     ext2Folder *root;
     std::fstream *input;
     ext2SuperBlock *superBlock;
     ext2GroupDescriptor *groupDescriptor;
-    InodeTable tab, *tempTab;
+    InodeTable tab;
     DirectoryEntry InodeIn;
 
     unsigned int bootBlockAddress, block_size;
