@@ -66,12 +66,10 @@ private:
     VdiMap *map;
     mbrData *mbr;
     ext2SuperBlock *superBlock;
-<<<<<<< HEAD
+
     std::fstream input;
-=======
-    std::ifstream input;
-    std::ofstream OutputFileIntoLocalFS;
->>>>>>> origin/Andy-Fork
+
+
     //QVector<ext2GroupDescriptor*> *groupDescriptors;
     ext2GroupDescriptor *groupDescriptors;
     VdiHeader header;
