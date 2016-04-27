@@ -412,6 +412,9 @@ void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFi
     }
     //get folder inode offset in disk
     long long folderInodeOffset = fsManager->getInodeOffset(inodeNum);
+    DirectoryEntry newEntry;
+    //create and write directory entry to the directory
+    this->writeDirectoryEntry(newEntry, tab, inodeNum, folderInodeOffset, sourceFile);
 
     //write file inode to table (all block pointers 0 (NULL))
 
@@ -419,4 +422,61 @@ void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFi
 
     //close the file you are writing from
     InputFileIntoVdiFS.close();
+}
+
+void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, unsigned int inodeNum, long long folderInodeOffset, QFileInfo *sourceFile) {
+    newEntry.name = sourceFile->fileName().toStdString();
+    newEntry.name_len = newEntry.name.size();
+    newEntry.rec_len = newEntry.name.size() + sizeof(newEntry.file_type) + sizeof(newEntry.inode) + sizeof(newEntry.name_len) + sizeof(newEntry.rec_len);
+    unsigned int calculatedSize = newEntry.rec_len;
+    if (newEntry.rec_len % 4 != 0) {
+        newEntry.rec_len += 4 - (newEntry.rec_len % 4); //align to 4 byte blocks
+    }
+    newEntry.inode = this->findFreeInodeNumber();
+    newEntry.file_type = 1; //we only support writing files
+
+    //find space in directory blocks to write DirectoryEntry
+    unsigned int destinationBlockIndex = tab->i_blocks/(block_size/512);
+    qDebug() << "destBlock " << destinationBlockIndex;
+
+    //get last block used in directory
+    unsigned int destBlock = fsManager->getBlockNumAtIndex(tab, destinationBlockIndex);
+
+    //find out if we have enough space to place directory entry
+    unsigned short usedInBlock = 0;
+    for (unsigned int i = 24; i < block_size;) { //start at 24 to get
+        unsigned short rec_len = getStreamData(2, fsManager->getBlockOffset(destBlock) + i+4, input, "Directory Length", true);
+        unsigned char file_type = getStreamData(1, fsManager->getBlockOffset(destBlock) +i+7, input, "File Type", true);
+
+        if (file_type == 0 || file_type > 7 || rec_len < 1) { //if invalid file type/invalid directory entry
+            break;
+        }
+        usedInBlock = i;
+        i+= rec_len;
+    }
+
+    if((block_size - usedInBlock) < newEntry.rec_len) {
+        //there is not enough size in the current block
+        usedInBlock = 0;
+#warning ToDo allocate new block and update directory pointers, and update destBlock
+        qDebug() << "very bad, this code needs finished";
+        return;
+    }
+
+    //build QVector<unsigned char> for directory entry
+
+    //find offset to write at from destBlock and usedInBlock
+
+    //write QVector at offset
+}
+
+unsigned int VdiFile::findFreeInodeNumber() {
+    for (unsigned int i = 2; i < inodesBitmap->size(); i++) { //skip badBlocks and root iNodes
+        if (!inodesBitmap->at(i)) {
+            inodesBitmap->at(i) = true; //inode is now used
+            return i+1; //1 based iNode indexing
+        }
+    }
+    cout << "error, no free iNodes";
+    return inodesBitmap->size();
 }
