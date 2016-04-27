@@ -8,6 +8,7 @@ ext2FSEntry::ext2FSEntry(InodeTable tab, unsigned int iNodeNum, QString entryNam
 {
     table = tab;
     iNodeNumber = iNodeNum;
+    cout << "iNodeNum entry " << iNodeNum << " " << iNodeNumber << endl;
     name = entryName;
 }
 
@@ -15,15 +16,12 @@ InodeTable* ext2FSEntry::getInodeTable() {
     return &table;
 }
 
-void ext2FSEntry::setName(QString newName) {
-    name = newName;
-}
-
 QString ext2FSEntry::getName() const {
     return name;
 }
 
 unsigned int ext2FSEntry::getInodeNumber() const {
+    cout << "iNodeNum entry get " << iNodeNumber << endl;
     return iNodeNumber;
 }
 
