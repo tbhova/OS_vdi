@@ -7,7 +7,7 @@
 using namespace std;
 using namespace CSCI5806;
 
-VdiMap::VdiMap(QObject *parent, long long startOffset, long long stopOffset, ifstream &file) : QObject(parent)
+VdiMap::VdiMap(QObject *parent, long long startOffset, long long stopOffset, fstream &file) : QObject(parent)
 {
     map = new QVector <unsigned int>;
 

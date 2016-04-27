@@ -8,7 +8,7 @@
 using namespace std;
 using namespace CSCI5806;
 
-ext2SuperBlock::ext2SuperBlock(QObject *parent, long long startOffset,  ifstream &file) : QObject(parent)
+ext2SuperBlock::ext2SuperBlock(QObject *parent, long long startOffset,  fstream &file) : QObject(parent)
 {
 
     cout << "The start of the superblock was " << hex << startOffset << endl;

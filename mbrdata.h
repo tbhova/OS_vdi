@@ -10,7 +10,7 @@ class mbrData : public QObject
 {
     Q_OBJECT
 public:
-    explicit mbrData(QObject *parent , long long startOffset, std::ifstream &file);
+    explicit mbrData(QObject *parent , long long startOffset, std::fstream &file);
     int getMbrDataTable(int pos);
 
 signals:
