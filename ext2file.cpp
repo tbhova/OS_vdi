@@ -11,3 +11,7 @@ ext2File::ext2File(InodeTable tab, unsigned int iNodeNum, QString entryName) : e
 bool ext2File::isFolder() {
     return false;
 }
+
+bool ext2File::operator==(const ext2File &other) const {
+    return ext2FSEntry::operator ==(other);
+}

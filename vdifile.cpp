@@ -246,7 +246,7 @@ void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFi
 
     trialToDekstop.close();
     InputFileIntoVdiFS.close();
-
+    cout << "The size of that file was " << InputFileIntoVdiFS.tellg() << endl;
 
     //get folder table
     InodeTable *tab = VDIFolder->getInodeTable();
@@ -377,10 +377,7 @@ unsigned long long VdiFile::singlyIndirectPointersValues(unsigned long long bloc
         //cout << "Singly Indirect..." << endl;
         if(size == 0) break;
 
-        if(lastSize - OffsetForProgressBar > size){
-            emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
-            lastSize = size;
-            }
+        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
  }
 
 
