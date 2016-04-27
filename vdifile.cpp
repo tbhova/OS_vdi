@@ -268,11 +268,10 @@ void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFi
     InputFileIntoVdiFS.close();
 }
 
-<<<<<<< HEAD
+
+
 void VdiFile::loadLocalFile(InodeTable* InodeTab, unsigned int size, unsigned int inodeIndexNum, fstream& input , ofstream& localFile){
-=======
-void VdiFile::loadLocalFile(InodeTable* InodeTab, unsigned int size, unsigned int inodeIndexNum, ifstream& input , ofstream& localFile){
->>>>>>> origin/Andy-Fork
+
     cout << "The size of this field is " << size << " bytes" << endl;
     cout << "Inode index num" << inodeIndexNum << endl;
     if (inodeIndexNum <12){
