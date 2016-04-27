@@ -24,6 +24,9 @@
 #include "vdifunctions.h"
 #include <QDebug>
 #include <ios>
+#include <QMessageBox>
+#include <qmessagebox.h>
+#include <cstring>
 
 using namespace std;
 using namespace CSCI5806;
@@ -41,6 +44,7 @@ VdiFile::VdiFile(QObject *parent) : QObject(parent)
     SinglyIndirectPointers = new QVector <unsigned int>;
     DoublyIndirectPointers = new QVector <unsigned int>;
     TriplyIndirectPointers = new QVector <unsigned int>;
+    InputData = new QVector <char>;
 }
 
 VdiFile::~VdiFile() {
@@ -169,6 +173,8 @@ void VdiFile::openFile(QString fileName) {
 
     fsManager = new ext2FileSystemManager(&input, groupDescriptors, superBlock, bootBlockLocation);
     emit FSManagerConstructed(fsManager);
+
+    //updateBitmap(inode_bitmap_address,21,input,false,true);
 }
 
 void VdiFile::closeAndReset() {
@@ -178,8 +184,7 @@ void VdiFile::closeAndReset() {
     inodesBitmap->clear();
 }
 
-
-void VdiFile::fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsigned int block_bitmap_address,unsigned int inode_bitmap_address,ifstream& input) {
+void VdiFile::fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsigned int block_bitmap_address,unsigned int inode_bitmap_address,fstream& input) {
     for (unsigned int i=block_bitmap_address; i <inode_bitmap_address; i++){
          DataBlockBitmap->push_back(getCharFromStream(1,i,input));
     }   
@@ -200,6 +205,9 @@ void VdiFile::transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir) {
         }
     OffsetForProgressBar = sourceFile->getInodeTable()->i_size/50;
     FileSizeForProgressBar = sourceFile->getInodeTable()->i_size;
+    if(FileSizeForProgressBar > 3000)
+        QMessageBox::information(NULL, tr("Download Time"), tr("Your download may take a little time. Please click 'OK' to start download and please do not click off of this window until complete..."));
+
     loadLocalFile(sourceFile->getInodeTable(),sourceFile->getInodeTable()->i_size,0, input, OutputFileIntoLocalFS);
     OutputFileIntoLocalFS.close();
 }
@@ -209,24 +217,35 @@ void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFi
     //open file,check to make sure its open
     string sourceDir = sourceFile->absoluteFilePath().toStdString();
     InputFileIntoVdiFS.open(sourceDir.c_str(), ios::in|ios::binary|ios::ate);
+
+    //Find size of the file
+    cout << "The size of that file was " << InputFileIntoVdiFS.tellg() << endl;
+
     trialToDekstop.open("/Users/Andy/Desktop/trial.txt", ios::in|ios::out|ios::binary);
     if (InputFileIntoVdiFS.is_open()){
-        cout <<  "File is open and is ready to go" << endl;
+        cout << hex << "File is open and is ready to go" << endl;
         }
+
     InputFileIntoVdiFS.seekg(1);
-    trialToDekstop.seekp(32|ios::beg);
+    InputFileIntoVdiFS >> noskipws;
+    string input;
+
     for(int i=0; i< 32; i++){
-        const char a = InputFileIntoVdiFS.get();
-        trialToDekstop << a;
-        }
+        InputData->push_back((char) InputFileIntoVdiFS.get());
+        //cout << "The value at " << i << " is: " << InputData->at(i) << " with a total size of: " << InputData->size() << " ..." << InputData->length() << endl;
+        input=input+InputData->at(i);
 
 
-    //for(int i=0; i<5; i++)
-    //trialToDekstop << InputFileIntoVdiFS.get();
+    }
+    cout << "We got here after vector" << input << endl;
+    cout << "The length of the string is" << InputData->length() << endl;
+
+
+    trialToDekstop.seekp(32|ios::beg);
+    trialToDekstop.write(input.c_str(),InputData->length());
 
     trialToDekstop.close();
     InputFileIntoVdiFS.close();
-    //Find size of the file
     cout << "The size of that file was " << InputFileIntoVdiFS.tellg() << endl;
 
     //get folder table
@@ -249,7 +268,10 @@ void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFi
     InputFileIntoVdiFS.close();
 }
 
-void VdiFile::loadLocalFile(InodeTable* InodeTab, unsigned int size, unsigned int inodeIndexNum, ifstream& input , ofstream& localFile){
+
+
+void VdiFile::loadLocalFile(InodeTable* InodeTab, unsigned int size, unsigned int inodeIndexNum, fstream& input , ofstream& localFile){
+
     cout << "The size of this field is " << size << " bytes" << endl;
     cout << "Inode index num" << inodeIndexNum << endl;
     if (inodeIndexNum <12){
@@ -309,7 +331,7 @@ void VdiFile::loadLocalFile(InodeTable* InodeTab, unsigned int size, unsigned in
 
 }
 
-unsigned long long VdiFile::singlyIndirectPointersValues(unsigned long long blockNumberOfSinglyIndirect, ifstream& input, ofstream& localFile, unsigned long long size){
+unsigned long long VdiFile::singlyIndirectPointersValues(unsigned long long blockNumberOfSinglyIndirect, fstream& input, ofstream& localFile, unsigned long long size){
     unsigned int offset = bootBlockLocation+(block_size * (blockNumberOfSinglyIndirect));
     // we know that each entry is 4 bytes long due to what we used for inode reading in ext2
     //cout << "The offset we got for you" << hex << offset << endl;
@@ -355,10 +377,7 @@ unsigned long long VdiFile::singlyIndirectPointersValues(unsigned long long bloc
         //cout << "Singly Indirect..." << endl;
         if(size == 0) break;
 
-        if(lastSize - OffsetForProgressBar > size){
-            emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
-            lastSize = size;
-            }
+        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
  }
 
 
@@ -370,7 +389,7 @@ unsigned long long VdiFile::singlyIndirectPointersValues(unsigned long long bloc
     // end of singly indirect
 }
 
-unsigned long long VdiFile::doublyIndirectPointersValues(unsigned long long blockNumberOfDoublyIndirect, ifstream& input, ofstream& localFile, unsigned long long size){
+unsigned long long VdiFile::doublyIndirectPointersValues(unsigned long long blockNumberOfDoublyIndirect, fstream& input, ofstream& localFile, unsigned long long size){
     unsigned long long offsetStartDoublyIndirect = bootBlockLocation+(block_size * (blockNumberOfDoublyIndirect));
     // we know that each entry is 4 bytes long due to what we used for inode reading in ext
     DoublyIndirectPointers->clear();
@@ -397,7 +416,7 @@ unsigned long long VdiFile::doublyIndirectPointersValues(unsigned long long bloc
 // end of doublyindirect
 }
 
-unsigned long long VdiFile::triplyIndirectPointersValues(unsigned long long blockNumberOfTriplyIndirect, ifstream& input, ofstream& localFile, unsigned long long size){
+unsigned long long VdiFile::triplyIndirectPointersValues(unsigned long long blockNumberOfTriplyIndirect, fstream& input, ofstream& localFile, unsigned long long size){
     unsigned long long offsetStartTriplyIndirect = bootBlockLocation+(block_size * (blockNumberOfTriplyIndirect));
     // we know that each entry is 4 bytes long due to what we used for inode reading in ext
     TriplyIndirectPointers->clear();
@@ -422,4 +441,49 @@ unsigned long long VdiFile::triplyIndirectPointersValues(unsigned long long bloc
 
 
 // end of doublyindirect
+}
+
+void VdiFile::updateBitmap (unsigned int BitmapLocation, long long inodeOrBlockNumber, fstream& VDIFile, bool setToUsed, bool isInodeBitmap){
+    inodeOrBlockNumber--; //this converts us into 0 based indexing on the inodeNumber
+    long long inodeByteNumber = inodeOrBlockNumber /8;
+    long long localBitNumberInByte = inodeOrBlockNumber%8;
+    vector <bool> *localVec = new vector <bool>;
+    if(isInodeBitmap)
+        localVec =inodesBitmap;
+    else
+        localVec = blockBitmap;
+
+    QString byteString;
+    for(int i=0; i<8; i++){
+        if(i == localBitNumberInByte && setToUsed )
+            byteString.append('1');
+        else if(i == localBitNumberInByte && !setToUsed )
+            byteString.append('0');
+        else if(inodesBitmap->at(inodeByteNumber*8+i) == true )
+            byteString.append('1');
+        else
+            byteString.append('0');
+    }
+
+    bool ok;
+    string byteInput;
+    byteInput = byteInput + (char) byteString.toUShort(&ok,2);
+    cout << "Size "<< sizeof(byteInput) << " with value of " << byteInput << endl;
+
+    /* Now we need to open up the file and and replace this new byte with what was orginally there */
+    long long location = BitmapLocation +inodeByteNumber;
+    VDIFile.seekp (location|ios::beg);
+    VDIFile.write(byteInput.c_str(),1);
+
+}
+
+void VdiFile::addBytesToFile (QVector <unsigned char> * toLoadVector, long long offset,fstream& VDIFile ){
+    string localAddToFile;
+    for(int i=0; i<toLoadVector->length(); i++){
+        localAddToFile = localAddToFile + (char)toLoadVector->at(i);
+    }
+
+    VDIFile.seekp (offset|ios::beg);
+    VDIFile.write(localAddToFile.c_str(),localAddToFile.length());
+
 }

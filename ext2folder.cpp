@@ -20,3 +20,7 @@ QVector<ext2File*>* ext2Folder::getFiles() {
 bool ext2Folder::isFolder() {
     return true;
 }
+
+bool ext2Folder::operator==(const ext2Folder &other) const {
+    return ext2FSEntry::operator ==(other);
+}

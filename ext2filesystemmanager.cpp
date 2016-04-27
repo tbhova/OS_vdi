@@ -8,7 +8,7 @@
 using namespace std;
 using namespace CSCI5806;
 
-ext2FileSystemManager::ext2FileSystemManager(ifstream *file, ext2GroupDescriptor *group, ext2SuperBlock *super, unsigned int bootBlock)
+ext2FileSystemManager::ext2FileSystemManager(fstream *file, ext2GroupDescriptor *group, ext2SuperBlock *super, unsigned int bootBlock)
 {
     input = file;
     groupDescriptor = group;
@@ -56,41 +56,52 @@ bool ext2FileSystemManager::exploreToPath(QString path) {
 
 
     //determine whether we should return early
-    foreach (ext2Folder *f, *(current->getFolders())) {
+    /*foreach (ext2Folder *f, *(current->getFolders())) {
         if (f->getFolders()->size() != 0 || f->getFiles()->size() != 0) {
             //we have already explored this folder, no need to reexplore
             qDebug() << "folder " << f->getName() << " already explored.";
             return false;
         }
-    }
-
+    }*/
     qDebug() << "end traverse current = " << current->getName();
+    bool entryAdded = false;
     //call addfilesFolders for all folders in the current folder
     foreach (ext2Folder *f, *(current->getFolders())) {
         qDebug() << "addFilesAndFolders" <<(f->getName());
+
+        //original vector sizes
+        int origFiles = f->getFiles()->size();
+        int origFolders = f->getFolders()->size();
+
         this->getInodeTableData(f->getInodeNumber());
         this->addFilesAndFolders(f);
+
+        //if we added entries, return true that entries were added
+        if (origFiles != f->getFiles()->size() || origFolders != f->getFolders()->size())
+            entryAdded = true;
     }
 
-    return true;
+    return entryAdded;
 }
 
 void ext2FileSystemManager::addFilesAndFolders(ext2Folder *folder) {
     cout << "add files and folders - folderName = " << folder->getName().toStdString() << endl;
     tempTab = folder->getInodeTable();
     cout << "tempTab->i_blocks " << tempTab->i_blocks << endl;
-    for (unsigned int i = 0; i < (tempTab->i_blocks*(block_size/512)) && i < 12; i++) {
+    for (unsigned int i = 0; i < (tempTab->i_blocks)/(block_size/512) && i < 12; i++) {
         qDebug() << "add files i_block " << tempTab->i_block[i];
-        if (!fillInFilesFromBlock(folder, tempTab->i_block[i], 24))
+        if (tempTab->i_block[i] == 0)
             break;
+        fillInFilesFromBlock(folder, tempTab->i_block[i], 24);
     }
+#warning add indirection
     for (int i = 0; i < 15; i++)
         cout << dec << "dir i_block " << i << " " << tempTab->i_block[i] << endl;
 }
 
-bool ext2FileSystemManager::fillInFilesFromBlock(ext2Folder *folder, unsigned int block_num, unsigned long long offsetOfStruct) {
+void ext2FileSystemManager::fillInFilesFromBlock(ext2Folder *folder, unsigned int block_num, unsigned long long offsetOfStruct) {
     while (true) {
-        long long offset = bootBlockAddress+(block_size * (block_num))+offsetOfStruct; //the "+24" allows us to skip unneeded data
+        long long offset = this->getBlockOffset(block_num) + offsetOfStruct;
         cout << "fill in files from block - folderName = " << folder->getName().toStdString() << endl;
         cout << hex << "offset " << offset << endl;
         cout << dec << bootBlockAddress << endl;
@@ -115,19 +126,14 @@ bool ext2FileSystemManager::fillInFilesFromBlock(ext2Folder *folder, unsigned in
         offsetOfStruct += InodeIn.rec_len; //increment running count
         if (InodeIn.file_type == 1 || InodeIn.file_type == 2) {
             this->addEntry(folder, InodeIn);
-        } else
+        } else if (InodeIn.file_type == 0 || InodeIn.file_type > 7 || InodeIn.rec_len < 1) //if invalid file type/invalid directory entry
             break;
         if (offsetOfStruct >= block_size)
             break;
     }
-
-    if (offsetOfStruct >= block_size) {
-        return false; //we are not done getting files
-    }
-    return true;
 }
 
-void ext2FileSystemManager::addEntry(ext2Folder *folder, const Inode_info &InodeIn) {
+void ext2FileSystemManager::addEntry(ext2Folder *folder, const DirectoryEntry &InodeIn) {
     cout << "add entry - folderName = " << folder->getName().toStdString() << endl;
     cout << "add entry name  = " << InodeIn.name << endl;
     cout << "inodeNumber = " << InodeIn.inode << endl;
@@ -135,15 +141,21 @@ void ext2FileSystemManager::addEntry(ext2Folder *folder, const Inode_info &Inode
         return;
     ext2File *newFile;
     ext2Folder *newFolder;
+    bool exists = false;
     switch (InodeIn.file_type) {
     case (1) : //file
         //populate folder inode data in tab
         this->getInodeTableData(InodeIn.inode);
         //add new file to current folder
         newFile = new ext2File(tab, InodeIn.inode, QObject::tr(InodeIn.name.c_str()));
-        if (folder->getFiles()->contains(newFile)) {
-            qDebug() << "file already in folder";
-        } else {
+        foreach (ext2File *f, *folder->getFiles()) {
+            if (*f == *newFile) {
+                exists = true;
+                qDebug() << "file already in folder";
+                break;
+            }
+        }
+        if (!exists) {
             folder->getFiles()->push_back(newFile);
             cout << "add file " << newFile->getName().toStdString() << " to folder " << folder->getName().toStdString() << endl;
         }
@@ -153,9 +165,14 @@ void ext2FileSystemManager::addEntry(ext2Folder *folder, const Inode_info &Inode
         this->getInodeTableData(InodeIn.inode);
         //add new folder to our current folder
         newFolder = new ext2Folder(tab, InodeIn.inode, QObject::tr(InodeIn.name.c_str()));
-        if (folder->getFolders()->contains(newFolder)) {
-            qDebug() << "folder already in folder";
-        } else {
+        foreach (ext2Folder *f, *folder->getFolders()) {
+            if (*f == *newFolder) {
+                exists = true;
+                qDebug() << "folder already in folder";
+                break;
+            }
+        }
+        if (!exists) {
             folder->getFolders()->append(newFolder);
             cout << "add folder " << newFolder->getName().toStdString() << " to folder " << folder->getName().toStdString() << endl;
         }
@@ -188,7 +205,6 @@ void ext2FileSystemManager::getInodeTableData(unsigned int InodeNumber) {
     tab.i_dir_acl = getStreamData(4,offset+108, *input, "Dir ACL", true);
     tab.i_faddr = getStreamData(4,offset+112, *input, "Faddr", false);
 
-
     tab.i_osd2[12] = getCharFromStream(12,offset+116, *input);
 
 }
@@ -208,14 +224,47 @@ long long ext2FileSystemManager::getInodeOffset(unsigned int InodeNumber) {
     unsigned int local_inode_index= (InodeNumber-1) % superBlock->getInodesPerGroup();
     cout << "local_inode_index " << local_inode_index << endl;
 
-
-    //long long offset = iNodeTableAddress + ((block_group)*group_size) + (local_inode_index * sizeof(tab));
     long long offset = bootBlockAddress + block_size*groupDescriptor->getInodeTable(block_group) + (local_inode_index * sizeof(tab));
 
     cout << "offset " << hex << offset << endl;
     cout << "sizeof tab " << dec << sizeof(tab) << endl;
-    //cout << "inodetableaddress " << iNodeTableAddress << endl;
     cout << "bootBlockAddress " << bootBlockAddress << endl;
 
     return offset;
+}
+
+long long ext2FileSystemManager::getBlockOffset(unsigned int block_num) {
+    return bootBlockAddress+(block_size * (block_num));
+}
+
+unsigned int ext2FileSystemManager::getBlockNumAtIndex(const InodeTable *tab, unsigned int index) {
+    if (index < 12) {
+        return tab->i_block[index];
+    }
+
+    unsigned int blocksPerInd = (block_size/4); //singly indirect blocks
+    index -= 11; //remove direct
+    if (index <= blocksPerInd) {
+        unsigned int block_num = tab->i_block[12];
+        return getStreamData(4, getBlockOffset(block_num) + index*sizeof(unsigned int), *input, "block num");
+    }
+
+    index -= blocksPerInd; //remove singly indirect
+    unsigned int blocksPerDoublyInd = blocksPerInd*blocksPerInd; //doubly indirect blocks
+    if (index <= blocksPerDoublyInd) {
+        unsigned int block_num = tab->i_block[13];
+        block_num = getStreamData(4, getBlockOffset(block_num) + (index/blocksPerInd)*sizeof(unsigned int), *input, "double block num - singly pointer");
+        return getStreamData(4, getBlockOffset(block_num) + (index % blocksPerInd) * sizeof(unsigned int), *input, "doubly block num - direct pointer");
+    }
+
+    index -= blocksPerInd; //remove doubly indirect
+    unsigned int blocksPerTriplyInd = blocksPerInd*blocksPerDoublyInd; //triply indirect blocks
+    if (index <= blocksPerTriplyInd) {
+        unsigned int block_num = tab->i_block[14];
+        block_num = getStreamData(4, getBlockOffset(block_num) + (index/blocksPerDoublyInd)*sizeof(unsigned int), *input, "triply block num - doubly pointer");
+        index /= blocksPerDoublyInd;
+        block_num = getStreamData(4, getBlockOffset(block_num) + (index / blocksPerInd) * sizeof(unsigned int), *input, "triply block num - singly pointer");
+        return getStreamData(4, getBlockOffset(block_num) + (index % blocksPerInd) * sizeof(unsigned int), *input, "triply block num - direct pointer");
+    }
+    return 0;
 }

@@ -57,7 +57,7 @@ unsigned long long convertEndian(unsigned char C[], int size, bool littleEndian)
 }
 
 //get data from Stream
-unsigned long long getStreamData(int size, long long seek_to, ifstream &input, string name, bool output, bool littleEndian, bool afterVDIMap){
+unsigned long long getStreamData(int size, long long seek_to, fstream &input, string name, bool output, bool littleEndian, bool afterVDIMap){
     unsigned char data[size];
     input.clear();
 
@@ -93,7 +93,7 @@ unsigned long long getStreamData(int size, long long seek_to, ifstream &input, s
 
 }
 
-void addBitsFromStreamData(vector<bool> *bits, int numBits, long long seek_to, ifstream &input){
+void addBitsFromStreamData(vector<bool> *bits, int numBits, long long seek_to, fstream &input){
     unsigned long long temp;
 
     input.clear();
@@ -104,8 +104,8 @@ void addBitsFromStreamData(vector<bool> *bits, int numBits, long long seek_to, i
         if(i % (sizeof(unsigned long long)*8) == 0) {
 
             temp = getStreamData(sizeof(unsigned long long), seek_to+(sizeof(unsigned long long))*seeks, input, (string)"  ", false, true);
-            //cout << endl << "address: " << hex << seek_to+(sizeof(unsigned long long))*seeks << endl;
-            //cout << hex << temp << endl;
+            cout << endl << "address: " << hex << seek_to+(sizeof(unsigned long long))*seeks << endl;
+            cout << hex << temp << endl;
             seeks++;
         }
         bits->push_back((temp & ((unsigned long long)1 << (sizeof(unsigned long long)*8-1-(i % (sizeof(unsigned long long)*8))))) > 0);
@@ -118,7 +118,7 @@ void addBitsFromStreamData(vector<bool> *bits, int numBits, long long seek_to, i
 }
 
 //get data from Stream
-unsigned char getCharFromStream(int size, long long seek_to, ifstream &input){
+unsigned char getCharFromStream(int size, long long seek_to, fstream &input){
 
     unsigned char data[size];
     input.clear();
