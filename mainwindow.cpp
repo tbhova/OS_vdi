@@ -45,7 +45,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, MainWindow::transferToLocalFS, vdiFS, VdiFileSystem::transferToLocalFS);
     connect(this, MainWindow::transferToVDI, vdiFS, VdiFileSystem::transferToVDI);
 
-    connect(vdiFS, VdiFileSystem::progressUpdate, progress, QProgressBar::setValue);
+    //connect(vdiFS, VdiFileSystem::progressUpdate, progress, QProgressBar::setValue);
     connect(vdiFS, VdiFileSystem::progressUpdate, this, MainWindow::processProgressUpdate);
 
 /*
@@ -222,7 +222,10 @@ void MainWindow::on_copyToVdiPushButton_clicked()
 }
 
 void MainWindow::processProgressUpdate(int value) {
-    qDebug() << "value " << value;
+    static int oldValue = -1;
+    if (oldValue != value)
+        progress->setValue(value);
+    oldValue = value;
     if (value == 100) {
         QTimer::singleShot(8000, this, SLOT(hideStatusBar()));
     }
