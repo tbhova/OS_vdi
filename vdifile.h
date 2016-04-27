@@ -60,7 +60,8 @@ private:
     unsigned long long triplyIndirectPointersValues(unsigned long long blockNumberOfTriplyIndirect, std::fstream& input, std::ofstream& localFile, unsigned long long size);
     void updateBitmap (unsigned int BitmapLocation, long long inodeNumber, std::fstream& VDIFile, bool setToUsed, bool isInodeBitmap);
     void addBytesToFile (QVector <unsigned char> * toLoadVector, long long offset,std::fstream& VDIFile);
-
+    void writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, unsigned int inodeNum, long long folderInodeOffset, QFileInfo *sourceFile);
+    unsigned int findFreeInodeNumber();
 
     QFile *vdi; //whatever filetype we intend to use
     VdiMap *map;
@@ -73,7 +74,6 @@ private:
     InodeTable tab;
     DirectoryEntry InodeIn;
     QVector<unsigned char> *DataBlockBitmap;
-    QVector <DirectoryEntry> *InodeInfo;
     QVector <unsigned int> *SinglyIndirectPointers;
     QVector <unsigned int> *DoublyIndirectPointers;
     QVector <unsigned int> *TriplyIndirectPointers;
