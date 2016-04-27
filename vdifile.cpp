@@ -150,8 +150,8 @@ void VdiFile::openFile(QString fileName) {
     //groupDescriptors->push_back(new ext2GroupDescriptor (this, group_count, gdtLocation, input));
     groupDescriptors = new ext2GroupDescriptor (this, group_count, gdtLocation, input);
 
-    unsigned int block_bitmap_address = bootBlockLocation + block_size*groupDescriptors->getBlockBitmap(0);
-    unsigned int inode_bitmap_address = bootBlockLocation + block_size*groupDescriptors->getInodeBitmap(0);
+    block_bitmap_address = bootBlockLocation + block_size*groupDescriptors->getBlockBitmap(0);
+    inode_bitmap_address = bootBlockLocation + block_size*groupDescriptors->getInodeBitmap(0);
     cout << "Hello:: Inode Bitmap Location: " << hex << setw(2) << setfill('0') << inode_bitmap_address << endl;
     unsigned int inode_table_address = bootBlockLocation + block_size*groupDescriptors->getInodeTable(0);
     cout << "Hello:: Inode Table Location: " << hex << setw(2) << setfill('0') << inode_table_address << endl;
@@ -439,18 +439,22 @@ void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFi
     this->writeDirectoryEntry(newEntry, tab, inodeNum, folderInodeOffset, sourceFile);
 
     //write file inode to table (all block pointers 0 (NULL))
+    InodeTable newTab;
+    this->writeNewInode(newEntry, newTab, InputFileIntoVdiFS.tellg());
 
-    //allocate direct block pointers
+    //allocate block pointers
+
+    //write data to blocks
 
     //close the file you are writing from
     InputFileIntoVdiFS.close();
 }
 
-void VdiFile::updateBitmap (unsigned int BitmapLocation, long long inodeOrBlockNumber, fstream& VDIFile, bool setToUsed, bool isInodeBitmap){
+void VdiFile::updateBitmap (long long BitmapLocation, unsigned int inodeOrBlockNumber, fstream& VDIFile, bool setToUsed, bool isInodeBitmap){
     inodeOrBlockNumber--; //this converts us into 0 based indexing on the inodeNumber
     long long inodeByteNumber = inodeOrBlockNumber /8;
     long long localBitNumberInByte = inodeOrBlockNumber%8;
-    vector <bool> *localVec = new vector <bool>;
+    vector <bool> *localVec;
     if(isInodeBitmap)
         localVec =inodesBitmap;
     else
@@ -461,6 +465,7 @@ void VdiFile::updateBitmap (unsigned int BitmapLocation, long long inodeOrBlockN
         if(i == localBitNumberInByte && setToUsed )
             byteString.append('1');
         else if(i == localBitNumberInByte && !setToUsed )
+#warning what is this condition?
             byteString.append('0');
         else if(inodesBitmap->at(inodeByteNumber*8+i) == true )
             byteString.append('1');
@@ -500,8 +505,10 @@ void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, uns
     if (newEntry.rec_len % 4 != 0) {
         newEntry.rec_len += 4 - (newEntry.rec_len % 4); //align to 4 byte blocks
     }
-    newEntry.inode = this->findFreeInodeNumber();
+    newEntry.inode = this->findFreeBitmap(inodesBitmap);
     newEntry.file_type = 1; //we only support writing files
+    //update inodeBitmap
+    this->updateBitmap(inode_bitmap_address, newEntry.inode, input, false, true);
 
     //find space in directory blocks to write DirectoryEntry
     unsigned int destinationBlockIndex = tab->i_blocks/(block_size/512);
@@ -532,19 +539,82 @@ void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, uns
     }
 
     //build QVector<unsigned char> for directory entry
+    QVector<unsigned char> dirEntry;
+    addBytesToVector(dirEntry, newEntry.inode, sizeof(newEntry.inode));
+    addBytesToVector(dirEntry, newEntry.rec_len, sizeof(newEntry.rec_len));
+    addBytesToVector(dirEntry, newEntry.name_len, sizeof(newEntry.name_len));
+    addBytesToVector(dirEntry, newEntry.file_type, sizeof(newEntry.file_type));
+    for (int i = 0; i < newEntry.name.size(); i++) {
+        addBytesToVector(dirEntry, newEntry.name.at(i), sizeof(char));
+    }
+    //pad with \0 bytes
+    for (int i = 0; i < newEntry.rec_len-calculatedSize; i++) {
+        addBytesToVector(dirEntry, 0, 1);
+    }
+    cout << "dir Entry byte array: ";
+    for (int j = 0; j < dirEntry.size(); j++) {
+        cout << dirEntry.at(j) << " ";
+    }
+    cout << endl;
 
     //find offset to write at from destBlock and usedInBlock
+    long long writeOffset = this->fsManager->getBlockOffset(destBlock) + usedInBlock;
 
     //write QVector at offset
+    this->addBytesToFile(&dirEntry, writeOffset, input);
 }
 
-unsigned int VdiFile::findFreeInodeNumber() {
-    for (unsigned int i = 2; i < inodesBitmap->size(); i++) { //skip badBlocks and root iNodes
-        if (!inodesBitmap->at(i)) {
-            inodesBitmap->at(i) = true; //inode is now used
+void VdiFile::addBytesToVector(QVector<unsigned char> &vec, unsigned long long value, unsigned char bytes) {
+    for (int i = 0; i < bytes; i++) {
+        unsigned long long maskedValue = value & (0xFF << (sizeof(unsigned char)*i));
+        unsigned char append = (unsigned char)(maskedValue >> (sizeof(unsigned char)*i));
+        vec.push_back(append);
+    }
+}
+
+unsigned int VdiFile::findFreeBitmap(vector<bool> *vec) {
+    for (unsigned int i = 2; i < vec->size(); i++) { //skip badBlocks and root iNodes
+        if (!vec->at(i)) {
+            vec->at(i) = true; //inode is now used
             return i+1; //1 based iNode indexing
         }
     }
     cout << "error, no free iNodes";
     return inodesBitmap->size();
+}
+
+void VdiFile::writeNewInode(DirectoryEntry &newEntry, InodeTable newTab, unsigned int fileSize) {
+    long long writeOffset = this->fsManager->getInodeOffset(newEntry.inode);
+
+    newTab.i_mode = 0;
+    newTab.i_uid = 100;
+    newTab.i_size = 0;
+    newTab.i_atime = 0;
+    newTab.i_ctime = 0;
+    newTab.i_mtime = 0;
+    newTab.i_dtime = 0;
+    newTab.i_gid = 0;
+    newTab.i_links_count = 0;
+    newTab.i_blocks = 0;
+    newTab.i_flags = 0;
+    newTab.i_osd1 = 0;
+    newTab.i_generation = 0;
+    newTab.i_file_acl = 0;
+    newTab.i_dir_acl = 0;
+    newTab.i_faddr = 0;
+    for (int i = 0; i < 12; i ++) {
+        newTab.i_osd2[i] = 0;
+    }
+    this->allocateBlockPointers(newTab.i_block, fileSize);
+}
+
+void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSize) {
+    unsigned int blocks = fileSize/block_size;
+    for (int i = 0; i < 12; i++) {
+        if ((i+1) < blocks) {
+            i_block[i] = findFreeBitmap(blockBitmap);
+        } else {
+            i_block[i] = 0;
+        }
+    }
 }
