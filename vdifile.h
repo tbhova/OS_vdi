@@ -28,6 +28,10 @@ long long UUIDofVDI;
 long long UUIDofSNAP;
 };
 
+struct NumPlusBytes {
+    unsigned long long number;
+    unsigned char bytes;
+};
 
 
 class VdiFile : public QObject
