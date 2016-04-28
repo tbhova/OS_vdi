@@ -38,7 +38,6 @@ VdiFile::VdiFile(QObject *parent) : QObject(parent)
     superBlock = NULL;
     groupDescriptors = NULL;
     fsManager = NULL;
-    DataBlockBitmap = new QVector<unsigned char>;
     blockBitmap = new vector<bool>;
     inodesBitmap = new vector<bool>;
     SinglyIndirectPointers = new QVector <unsigned int>;
@@ -57,8 +56,6 @@ VdiFile::~VdiFile() {
         delete superBlock;
     if (groupDescriptors != NULL)
         delete groupDescriptors;
-    if (DataBlockBitmap != NULL)
-        delete DataBlockBitmap;
     if (blockBitmap != NULL)
         delete blockBitmap;
     if (inodesBitmap != NULL)
@@ -204,7 +201,6 @@ void VdiFile::openFile(QString fileName) {
 
 void VdiFile::closeAndReset() {
     input.close();
-    DataBlockBitmap->clear();
     blockBitmap->clear();
     inodesBitmap->clear();
 }
@@ -212,7 +208,7 @@ void VdiFile::closeAndReset() {
 void VdiFile::fillDataBlockBitmap(QVector<unsigned char>* DataBlockBitmap, unsigned int block_bitmap_address,unsigned int inode_bitmap_address,fstream& input) {
     for (unsigned int i=block_bitmap_address; i <inode_bitmap_address; i++){
          DataBlockBitmap->push_back(getCharFromStream(1,i,input));
-    }   
+    }
 }
 
 void VdiFile::transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir) {
@@ -633,11 +629,12 @@ void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, uns
     cout << dec << endl;
     //write QVector at offset
 #warning this doesn't work because we forgot about endianness... they musta forgot
+    //i think endianness is fixed, we need to check with the 4 byte and 2 byte values
     this->addBytesToFile(&dirEntry, writeOffset, input);
 }
 
 void VdiFile::addBytesToVector(QVector<unsigned char> &vec, unsigned long long value, unsigned char bytes) {
-    for (int i = 0; i < bytes; i++) {
+    for (int i = bytes-1; i >= 0; i--) {
         unsigned long long maskedValue = value & (0xFF << (sizeof(unsigned char)*i));
         unsigned char append = (unsigned char)(maskedValue >> (sizeof(unsigned char)*i));
         vec.push_back(append);
@@ -682,8 +679,8 @@ void VdiFile::writeNewInode(DirectoryEntry &newEntry, InodeTable newTab, unsigne
 
 void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSize, fstream& input) {
     unsigned int blocksNeeded = ((fileSize-1)/block_size)+1;
-    for (int i = 0; i < 12; i++) {
-        if ((i+1) < blocksNeeded) {
+    for (int i = 0; i < 15; i++) { //up to 15 to set all non used blocks to 0
+        if ((i+1) < blocksNeeded && i < 12) {
                 i_block[i] = findFreeBitmap(blockBitmap);
                 cout << "iBlock"<< i<< " equals " << i_block[i] << " for this instance"<< endl;
                 updateBitmap (i_block[i], input,false,true);
@@ -741,4 +738,6 @@ void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSiz
 
 }
 
-
+void VdiFile::allocateIndirectBlockPointers(InodeTable &tab, unsigned int fileSize) {
+#warning needs done
+}
