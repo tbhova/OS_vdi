@@ -43,6 +43,8 @@ public:
 
     unsigned int getBlockNumAtIndex(const InodeTable *tab, unsigned int index);
 
+    unsigned int getBlocksPerIndirection(int indirection);
+
 
 
 private:

@@ -470,6 +470,7 @@ void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFi
     this->writeNewInode(newEntry, newTab, InputFileIntoVdiFS.tellg(),input);
 
     //allocate block pointers
+    this->allocateIndirectBlockPointers(newTab, InputFileIntoVdiFS.tellg());
 
     //write data to blocks
 
@@ -658,14 +659,14 @@ void VdiFile::writeNewInode(DirectoryEntry &newEntry, InodeTable newTab, unsigne
     long long writeOffset = this->fsManager->getInodeOffset(newEntry.inode);
 
     newTab.i_mode = 0;
-    newTab.i_uid = 100;
+    newTab.i_uid = 1000;
     newTab.i_size = 0;
     newTab.i_atime = 0;
     newTab.i_ctime = 0;
     newTab.i_mtime = 0;
     newTab.i_dtime = 0;
     newTab.i_gid = 0;
-    newTab.i_links_count = 0;
+    newTab.i_links_count = 1;
     newTab.i_blocks = 0;
     newTab.i_flags = 0;
     newTab.i_osd1 = 0;
@@ -736,13 +737,6 @@ void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSiz
     i_block[12] = findFreeBitmap(blockBitmap);
     long long offset = bootBlockLocation +i_block[12]*block_size;
     addBytesToFile(&bytesToAdd,offset,input);
-
-
-
-
-
-
-
     //we have to remember to write to the block bitmaps that we took them up
 
 }
