@@ -58,13 +58,13 @@ private:
     unsigned long long singlyIndirectPointersValues(unsigned long long blockNumberOfSinglyIndirect, std::fstream& input, std::ofstream& localFile, unsigned long long size);
     unsigned long long doublyIndirectPointersValues(unsigned long long blockNumberOfDoublyIndirect, std::fstream& input, std::ofstream& localFile, unsigned long long size);
     unsigned long long triplyIndirectPointersValues(unsigned long long blockNumberOfTriplyIndirect, std::fstream& input, std::ofstream& localFile, unsigned long long size);
-    void updateBitmap (long long BitmapLocation, unsigned int inodeNumber, std::fstream& VDIFile, bool setToUsed, bool isInodeBitmap);
+    void updateBitmap (unsigned int inodeNumber, std::fstream& VDIFile, bool isInodeBitmap, bool setToUsed =1);
     void addBytesToFile (QVector <unsigned char> * toLoadVector, long long offset,std::fstream& VDIFile);
     void writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, unsigned int inodeNum, long long folderInodeOffset, QFileInfo *sourceFile);
     unsigned int findFreeBitmap(std::vector<bool> *vec);
     void addBytesToVector(QVector<unsigned char> &vec, unsigned long long value, unsigned char bytes);
-    void writeNewInode(DirectoryEntry &newEntry, InodeTable newTab, unsigned int fileSize);
-    void allocateBlockPointers(unsigned int i_block[], unsigned int fileSize);
+    void writeNewInode(DirectoryEntry &newEntry, InodeTable newTab, unsigned int fileSize, std::fstream& input);
+    void allocateBlockPointers(unsigned int i_block[], unsigned int fileSize, std::fstream& input);
 
     QFile *vdi; //whatever filetype we intend to use
     VdiMap *map;
