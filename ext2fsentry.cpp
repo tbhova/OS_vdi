@@ -4,11 +4,9 @@
 using namespace std;
 using namespace CSCI5806;
 
-ext2FSEntry::ext2FSEntry(InodeTable tab, unsigned int iNodeNum, QString entryName)
-{
+ext2FSEntry::ext2FSEntry(InodeTable tab, unsigned int iNodeNum, QString entryName) {
     table = tab;
     iNodeNumber = iNodeNum;
-    cout << "iNodeNum entry " << iNodeNum << " " << iNodeNumber << endl;
     name = entryName;
 }
 
@@ -21,7 +19,6 @@ QString ext2FSEntry::getName() const {
 }
 
 unsigned int ext2FSEntry::getInodeNumber() const {
-    cout << "iNodeNum entry get " << iNodeNumber << endl;
     return iNodeNumber;
 }
 
