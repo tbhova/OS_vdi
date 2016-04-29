@@ -41,12 +41,14 @@ public:
 public slots:
     void selectVdiPrompt();
     void transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir);
-    void transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFile);
+    void transferToVDI(CSCI5806::ext2Folder *VDIFolder, QModelIndex *index, QFileInfo *sourceFile);
 
 signals:
     void vdiFileSelected(QString fileName);
     void FSManagerConstructed(ext2FileSystemManager *fs);
     void progressUpdate(int value);
+    void updateFolder(QModelIndex &index);
+    void updateRoot();
 
 private:
     void closeAndReset();

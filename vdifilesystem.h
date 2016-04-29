@@ -19,6 +19,7 @@ public:
     void setupModelData(ext2FSEntry *extNode, VDIFileSystemTreeItem *guiNode);
     ext2FSEntry* getExt2Entry(const QModelIndex &index) const;
 
+
     //mandantory method overloads for QAbstractItemModel inheritance
     virtual Qt::ItemFlags flags(const QModelIndex &index) const Q_DECL_OVERRIDE;
     virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const Q_DECL_OVERRIDE;
@@ -34,12 +35,13 @@ signals:
     void vdiFileSelected(QString fileName);
     void onBrowseVDIClicked();
     void transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir);
-    void transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFile);
+    void transferToVDI(CSCI5806::ext2Folder *VDIFolder, QModelIndex *index, QFileInfo *sourceFile);
     void progressUpdate(int value);
 
 private slots:
     void fsManagerConstructed(ext2FileSystemManager *fs);
     void folderExpanded(const QModelIndex &index);
+    void updateRootNode();
 
 private:
     QTreeView *tree;
