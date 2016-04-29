@@ -522,7 +522,6 @@ void VdiFile::addBytesToFile (QVector <unsigned char> * toLoadVector, long long 
 
 }
 
-
 void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, unsigned int inodeNum, long long folderInodeOffset, QFileInfo *sourceFile) {
     newEntry.name = sourceFile->fileName().toStdString();
     cout << "Name: " << newEntry.name << endl;
@@ -536,6 +535,7 @@ void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, uns
     }
     cout << "New Record length: " << (int)newEntry.rec_len << endl;
     newEntry.inode = this->findFreeBitmap(inodesBitmap);
+    cout << "NewEntry Inode: "<< hex << newEntry.inode <<endl;
     newEntry.file_type = 1; //we only support writing files
     //update inodeBitmap
 
@@ -553,6 +553,7 @@ void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, uns
     //find out if we have enough space to place directory entry
     unsigned short usedInBlock = 0;
     unsigned short startOfLastCurrent = 0;
+    unsigned short SizeOfLast =0;
     cout << "Block Offset: " <<fsManager->getBlockOffset(destBlock) << endl;
     for (unsigned int i = 24; i < block_size;) { //start at 24 to get beginning of directory entry
         unsigned short rec_len = getStreamData(2, fsManager->getBlockOffset(destBlock) + i+4, input, "Directory Length", true);
@@ -560,7 +561,7 @@ void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, uns
         startOfLastCurrent = usedInBlock;
         usedInBlock = i;
         i+= rec_len;
-
+        SizeOfLast =0;
         //if this is the last inode
         if (i == block_size) {
             //get all chars until 0 byte
@@ -572,9 +573,11 @@ void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, uns
                     usedInBlock += j + 8;
                     if (usedInBlock % 4 != 0) {
                         usedInBlock += 4 - (usedInBlock%4);
+
                     }
                     break;
                 }
+            SizeOfLast++;
             }
             break;
         }
@@ -584,6 +587,18 @@ void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, uns
 
     }
     cout << "Value used in block: " <<usedInBlock << endl;
+
+    /* Change value of length for the directory entry directly before the one we add*/
+    QVector <unsigned char> bytesToAddToFile;
+    SizeOfLast= (((SizeOfLast-1)/4)+1)*4 +8;
+    cout << "Size of last: " << SizeOfLast<< endl;
+    cout << "Least significant for size: " << hex <<(SizeOfLast & 0xFF); // least significant
+    cout << "Most significant for size: " << hex <<((SizeOfLast>> 8) & 0xFF);
+    bytesToAddToFile.push_back((SizeOfLast & 0xFF));
+    bytesToAddToFile.push_back(((SizeOfLast>> 8) & 0xFF));
+    unsigned short beginningOfLastEntry = usedInBlock - SizeOfLast+4;
+    addBytesToFile(&bytesToAddToFile,bootBlockLocation+destBlock*block_size+beginningOfLastEntry,input);
+
 
     if((block_size - usedInBlock) < newEntry.rec_len) {
         //there is not enough size in the current block
@@ -631,12 +646,28 @@ void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, uns
 #warning this doesn't work because we forgot about endianness... they musta forgot
     //i think endianness is fixed, we need to check with the 4 byte and 2 byte values
     this->addBytesToFile(&dirEntry, writeOffset, input);
+
+
+    /*Change the length of the entry we add to finish off the rest of the block*/
+    QVector <unsigned char> bytesToAddToFile2;
+    unsigned short newEntryDirLength = block_size-usedInBlock;
+    cout << "Size of newEntryDirLength: " << newEntryDirLength << endl;
+    cout << "Least significant for size: " << hex <<(newEntryDirLength& 0xFF); // least significant
+    cout << "Most significant for size: " << hex <<((newEntryDirLength>> 8) & 0xFF);
+    bytesToAddToFile2.push_back((newEntryDirLength & 0xFF));
+    bytesToAddToFile2.push_back(((newEntryDirLength>> 8) & 0xFF));
+    cout << "The offset we used to write: " << hex << bootBlockLocation+destBlock*block_size+usedInBlock+4 << endl;
+    addBytesToFile(&bytesToAddToFile2,bootBlockLocation+destBlock*block_size+usedInBlock+4,input);
+
+
+
+
+
 }
 
 void VdiFile::addBytesToVector(QVector<unsigned char> &vec, unsigned long long value, unsigned char bytes) {
-    for (int i = bytes-1; i >= 0; i--) {
-        unsigned long long maskedValue = value & (0xFF << (sizeof(unsigned char)*i));
-        unsigned char append = (unsigned char)(maskedValue >> (sizeof(unsigned char)*i));
+    for (int i = 0; i < bytes; i++) {
+        unsigned char append = (unsigned char)((value >> (i*8)) & 0xFF);
         vec.push_back(append);
     }
 }
