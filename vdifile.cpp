@@ -724,8 +724,9 @@ void VdiFile::buildInodeByteVector(QVector<unsigned char> &inodeByteVec, InodeTa
 
 void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSize, fstream& input) {
     unsigned int blocksNeeded = ((fileSize-1)/block_size)+1;
-    for (int i = 0; i < 15; i++) { //up to 15 to set all non used blocks to 0
-        if ((i+1) <= blocksNeeded && i < 12) {
+    cout << " The number of blocks needed is: " << blocksNeeded << endl;
+    for (int i = 0; i < 12; i++) { //up to 15 to set all non used blocks to 0
+        if ((i+1) <= blocksNeeded) {
                 i_block[i] = findFreeBitmap(blockBitmap);
                 cout << "iBlock"<< i<< " equals " <<dec << i_block[i] << " for this instance"<< endl;
                 updateBitmap (i_block[i], input, false);
@@ -741,7 +742,11 @@ void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSiz
     unsigned int spotsAvailableForAddresses = block_size/4; //number of pointers we can store in one block
     QVector <unsigned char> bytesToAdd;
     unsigned int buffer;
-    if(blocksNeeded > spotsAvailableForAddresses)
+    i_block[12] = findFreeBitmap(blockBitmap);
+    cout << "iBlock12 equals " <<dec << i_block[12] << " for this instance"<< endl;
+    cout << "The number of blocks we still need are: " << blocksNeeded << endl;
+    updateBitmap (i_block[12], input,false);
+    if(blocksNeeded > spotsAvailableForAddresses){
         for(int i=0; i<spotsAvailableForAddresses; i++){
             //findFreeBlock
             unsigned int buffer = findFreeBitmap(blockBitmap);
@@ -752,10 +757,10 @@ void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSiz
             bytesToAdd.push_back((buffer >> 8) & 0xFF);
             bytesToAdd.push_back((buffer >> 16) & 0xFF);
             bytesToAdd.push_back((buffer >> 24) & 0xFF); //most significant
-
-            blocksNeeded--;
         }
-    else
+        blocksNeeded -=spotsAvailableForAddresses;
+    }
+    else {
             for(int i=0; i<blocksNeeded; i++){
                 //findFreeBlock
                 unsigned int buffer = findFreeBitmap(blockBitmap);
@@ -767,16 +772,10 @@ void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSiz
                 bytesToAdd.push_back((buffer >> 16) & 0xFF);
                 bytesToAdd.push_back((buffer >> 24) & 0xFF); //most significant
 
-                /*unsigned char bytes[4];
-                unsigned long n = 112121175;
 
-                bytes[0] = (n >> 24) & 0xFF; //most significant
-                bytes[1] = (n >> 16) & 0xFF;
-                bytes[2] = (n >> 8) & 0xFF;
-                bytes[3] = n & 0xFF;        //least significant */
-                blocksNeeded--;
-            }
-    i_block[12] = findFreeBitmap(blockBitmap);
+                }
+            blocksNeeded =0;
+        }
     long long offset = bootBlockLocation +i_block[12]*block_size;
     addBytesToFile(&bytesToAdd,offset,input);
     //we have to remember to write to the block bitmaps that we took them up
@@ -793,78 +792,75 @@ void VdiFile::writeToVDIFS(InodeTable* InodeTab, unsigned int size, unsigned int
 
     cout << "The size of this field is " << size << " bytes" << endl;
     cout << "Inode index num" << inodeIndexNum << endl;
-    if (inodeIndexNum <12){
+    while(size!=0){
+      if(inodeIndexNum<12){
         long long block_num = InodeTab->i_block[inodeIndexNum];
         unsigned long long offset = fsManager->getBlockOffset(block_num);
-        cout << "The current offset is: " << hex << offset << endl;
+        //cout << "The current offset is: " << hex << offset << endl;
         QVector <unsigned char> addToFile;
-        localFile.seekg(0);
+        localFile.seekg(inodeIndexNum*block_size);
         //cout << "Our current offset is " << offset << endl;
         //cout << "Size "<< size << "  block size " << block_size << " differ" << (size-block_size) << endl;
         if(size >block_size){
             for(int i=0; i<block_size; i++){
-                //input.seekg(offset+i);
                 unsigned char getVal = localFile.get();
-                cout << hex <<(int) getVal << endl;
+                //cout << hex <<(int) getVal << endl;
                 addToFile.push_back(getVal);
-                //addBytesToFile();
-                //localFile << (char)getStreamData(1,offset +i,input,"",false);
-                //input.clear();
-                cout << "Looping in here: " << i << endl;
+                //cout << "Looping in here: " << i << endl;
                 }
             size=size-block_size;
+            cout << "The current size in direct is: " << size << endl;
+            //cout << "Size "<< size << "  block size " << block_size << " differ" << (size-block_size) << endl;
             //emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
             //cout << "We are out of the loop right now" << endl;
             }
         else{
 
             for (int i=0; i<size; i++){
-                //input.seekg(offset+i);
                 unsigned char getVal = localFile.get();
-                cout << hex <<(int) getVal << endl;
+                //cout << hex <<(int) getVal << endl;
                 addToFile.push_back(getVal);
-
-                /*   *///localFile << (char)getStreamData(1,offset +i,input,"",false);
-                //input.clear();
                 }
             size =0;
+            cout << "The current size in direct is: " << size << endl;
             //emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
             }
         cout << "We are in the direct with Inode Index num" << inodeIndexNum << endl;
         addBytesToFile(&addToFile,offset,input);
         addToFile.clear();
-    }
+      }
     else if (inodeIndexNum ==12)    {
-        qDebug() << "Entering Singly Indirect..." << endl;
+        cout << "The block pointer to the singly indirect is: " << hex << InodeTab->i_block[inodeIndexNum] << endl;
+        cout << "Entering Singly Indirect..." << endl;
         size = singlyIndirectPointersValuesWrite(InodeTab->i_block[inodeIndexNum],input,localFile,size);
         //emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
         }
     else if (inodeIndexNum ==13)    {
-        qDebug() << "Entering Doubly Indirect..." << endl;
+        cout << "Entering Doubly Indirect..." << endl;
         size = doublyIndirectPointersValuesWrite(InodeTab->i_block[inodeIndexNum],input,localFile,size);
         //emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
         }
     else if (inodeIndexNum ==14)    {
-        qDebug() << "Entering Triply Indirect..." << endl;
+        cout << "Entering Triply Indirect..." << endl;
         size = triplyIndirectPointersValuesWrite(InodeTab->i_block[inodeIndexNum],input,localFile,size);
         //emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
         }
 
     inodeIndexNum++;
-    cout << "The size before the if was" <<size<< endl;
-    if(size!=0){
-        cout << "We got into here" << endl;
-        writeToVDIFS(InodeTab, size, inodeIndexNum, input, localFile);
+    cout << "The size of iNodeNum" <<inodeIndexNum<< endl;
+    if(inodeIndexNum>14)
+        break;
     }
-    else{
-        emit progressUpdate (100);
-        return;
-        }
+
+  emit progressUpdate (100);
+
+
 
 }
 
 unsigned long long VdiFile::singlyIndirectPointersValuesWrite(unsigned long long blockNumberOfSinglyIndirect, fstream& input, ifstream& localFile, unsigned long long size){
     unsigned int offset = bootBlockLocation+(block_size * (blockNumberOfSinglyIndirect));
+    cout << "The offset we are using for the singly indirect is: " << offset << endl;
     // we know that each entry is 4 bytes long due to what we used for inode reading in ext2
     //cout << "The offset we got for you" << hex << offset << endl;
     //cout << "Before the for loop" << endl;
@@ -884,32 +880,27 @@ unsigned long long VdiFile::singlyIndirectPointersValuesWrite(unsigned long long
         offset = bootBlockLocation+(block_size * (SinglyIndirectPointers->at(iterator)));
         if(size > block_size){
             //cout << "We got into the if " << endl;
-            //cout << "Our Current size is "<< size << endl;
+            cout << "Our Current size is "<< size << endl;
             for(int i=0; i<block_size; i++){
-                //input.seekg(offset+i);
                 unsigned char getVal = localFile.get();
-                cout << hex <<(int) getVal << endl;
+                //cout << hex <<(int) getVal << endl;
                 addToFile.push_back(getVal);
-
-                //input.clear();
                 //cout << "Looping in here: " << i << endl;
             }
             size= size-block_size;
+            cout << "The current size in singly indirect is: " << size << endl;
 
             //cout << "We are out of the loop right now" << endl;
         } else {
             //cout << "We got into the else " << endl;
             //cout << "Our Current size is "<< size << endl;
             for (int i=0; i<size; i++){
-                //input.seekg(offset+i);
                 unsigned char getVal = localFile.get();
-                cout << hex <<(int) getVal << endl;
+                //cout << hex <<(int) getVal << endl;
                 addToFile.push_back(getVal);
-
-                //input.clear();
             }
             size =0;
-
+            cout << "The current size in singly indirect is: " << size << endl;
         }
 
         iterator ++;
