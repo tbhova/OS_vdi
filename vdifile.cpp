@@ -382,7 +382,7 @@ unsigned long long VdiFile::triplyIndirectPointersValues(unsigned long long bloc
 }
 
 
-void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFile) {
+void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QModelIndex *index, QFileInfo *sourceFile) {
     qDebug() << "destination folder on VDI " << VDIFolder->getName() << " source file local FS " << sourceFile->absoluteFilePath();
     //open file,check to make sure its open
     string sourceDir = sourceFile->absoluteFilePath().toStdString();
@@ -446,6 +446,16 @@ void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFi
     this->writeToVDIFS(&newTab,InputFileIntoVdiFS.tellg(),0,input,InputFileIntoVdiFS);
     //close the file you are writing from
     InputFileIntoVdiFS.close();
+
+    if(VDIFolder->getName() != "/") {
+        cout << "update not root" << endl;
+        QModelIndex i = index->parent();
+        emit updateFolder(i); // update parent folder (2 folders up from file written)
+    } else {
+        cout << "update root" << endl;
+        fsManager->addFilesAndFolders(VDIFolder);
+        emit this->updateRoot();
+    }
 }
 
 void VdiFile::updateBitmap (unsigned int inodeOrBlockNumber, fstream& VDIFile, bool isInodeBitmap){

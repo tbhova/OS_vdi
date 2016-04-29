@@ -166,6 +166,7 @@ void MainWindow::on_copyToLocalFsButton_clicked()
 
 void MainWindow::on_copyToVdiPushButton_clicked()
 {
+    QModelIndex returnIndex;
     //validate selected file in vdi
     bool found = false;
     QModelIndexList list = ui->vdiFsTreeView->selectionModel()->selectedIndexes();
@@ -178,9 +179,11 @@ void MainWindow::on_copyToVdiPushButton_clicked()
                 QModelIndex parent = vdiFS->parent(index); //get file's parent (folder)
                 fsEntry = vdiFS->getExt2Entry(parent);
                 if (fsEntry->isFolder()) {
+                    returnIndex = parent;
                     found = true;
                 }
             } else {
+                returnIndex = index;
                 found = true;
                 break;
             }
@@ -217,7 +220,7 @@ void MainWindow::on_copyToVdiPushButton_clicked()
     progressLabel->setVisible(true);
     progress->setVisible(true);
     progress->setValue(0);
-    emit this->transferToVDI(static_cast<ext2Folder*>(fsEntry), &file);
+    emit this->transferToVDI(static_cast<ext2Folder*>(fsEntry), &returnIndex, &file);
 }
 
 void MainWindow::processProgressUpdate(int value) {

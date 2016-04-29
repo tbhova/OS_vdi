@@ -45,6 +45,8 @@ VdiFileSystem::VdiFileSystem(QTreeView *initialTree, QObject *parent) : QAbstrac
     connect(this, VdiFileSystem::transferToLocalFS, vdi, VdiFile::transferToLocalFS);
     connect(this, VdiFileSystem::transferToVDI, vdi, VdiFile::transferToVDI);
     connect(vdi, VdiFile::progressUpdate, this, VdiFileSystem::progressUpdate);
+    connect(vdi, VdiFile::updateFolder, this, VdiFileSystem::folderExpanded);
+    connect(vdi, VdiFile::updateRoot, this, VdiFileSystem::updateRootNode);
 }
 
 VdiFileSystem::~VdiFileSystem() {
@@ -164,7 +166,14 @@ void VdiFileSystem::setupModelData(ext2FSEntry *extNode, VDIFileSystemTreeItem *
     data.push_back(permissions);
 #endif
 
-    guiNode->appendChild(new VDIFileSystemTreeItem(data, guiNode, extNode));
+    //special sauce
+    static bool initialized = false;
+    if (initialized && extNode->getName() == "/") {
+        qDebug() << "Special Sauce alert - setup model data - don't add duplicate root";
+    } else {
+        guiNode->appendChild(new VDIFileSystemTreeItem(data, guiNode, extNode));
+    }
+    initialized = true;
     qDebug() << QObject::tr("append ") << extNode->getName();
 
     if (extNode->isFolder()) {
@@ -187,11 +196,9 @@ void VdiFileSystem::setupModelData(ext2FSEntry *extNode, VDIFileSystemTreeItem *
 }
 
 void VdiFileSystem::fsManagerConstructed(ext2FileSystemManager *fs) {
-    emit this->layoutAboutToBeChanged();
     qDebug() << QObject::tr("fsManager Constructed!");
     fsManager = fs;
-    setupModelData(fs->getRoot(), rootNode);
-    emit this->layoutChanged();
+    this->updateRootNode();
 }
 
 //slot detecting when a folder is expanded for lazy loading
@@ -280,6 +287,12 @@ void VdiFileSystem::folderExpanded(const QModelIndex &index) {
         }
     }
 
+    emit this->layoutChanged();
+}
+
+void VdiFileSystem::updateRootNode() {
+    emit this->layoutAboutToBeChanged();
+    setupModelData(fsManager->getRoot(), rootNode);
     emit this->layoutChanged();
 }
 
