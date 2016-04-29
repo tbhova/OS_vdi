@@ -117,9 +117,9 @@ void ext2FileSystemManager::fillInFilesFromBlock(ext2Folder *folder, unsigned in
             ss << (char)input->get();
         input->clear();
 
-        ss >> InodeIn.name;
+        InodeIn.name = ss.str();
 
-        cout << dec << "The name of the file is " << InodeIn.name << endl;
+        cout << dec << "` the file is " << InodeIn.name << endl;
 
         offsetOfStruct += InodeIn.rec_len; //increment running count
         if (InodeIn.file_type == 1 || InodeIn.file_type == 2) {
