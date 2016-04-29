@@ -170,33 +170,6 @@ void VdiFile::openFile(QString fileName) {
 
     fsManager = new ext2FileSystemManager(&input, groupDescriptors, superBlock, bootBlockLocation);
     emit FSManagerConstructed(fsManager);
-/*
-    unsigned char bytes[4];
-    unsigned int n = 112121175;
-
-    bytes[0] = (n >> 24) & 0xFF; //most significant
-    bytes[1] = (n >> 16) & 0xFF;
-    bytes[2] = (n >> 8) & 0xFF;
-    bytes[3] = n & 0xFF;        //least significant
-
-    cout << hex << (unsigned int)bytes[3] << endl;
-    cout << hex << (unsigned int)bytes[2] << endl;
-    cout << hex << (unsigned int)bytes[1] << endl;
-    cout << hex << (unsigned int)bytes[0] << endl;
-*/
-    cout << "Next available Inode" << endl;
-    cout << findFreeBitmap(inodesBitmap) <<endl;
-    cout << "Next available Inode" << endl;
-    cout << findFreeBitmap(inodesBitmap) <<endl;
-    cout << "Next available Inode" << endl;
-    cout << findFreeBitmap(inodesBitmap) <<endl;
-
-    cout << "Next available Inode" << endl;
-    cout << findFreeBitmap(inodesBitmap) <<endl;
-
-
-
-    //updateBitmap(inode_bitmap_address,21,input,false,true);
 }
 
 void VdiFile::closeAndReset() {
@@ -474,11 +447,10 @@ void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFi
     InputFileIntoVdiFS.close();
 }
 
-void VdiFile::updateBitmap (unsigned int inodeOrBlockNumber, fstream& VDIFile, bool isInodeBitmap, bool setToUsed){
+void VdiFile::updateBitmap (unsigned int inodeOrBlockNumber, fstream& VDIFile, bool isInodeBitmap){
     inodeOrBlockNumber--; //this converts us into 0 based indexing on the inodeNumber
     long long location;
-    long long inodeByteNumber = inodeOrBlockNumber /8;
-    long long localBitNumberInByte = inodeOrBlockNumber%8;
+    long long inodeByteNumber = inodeOrBlockNumber/8;
     vector <bool> *localVec;
     if(isInodeBitmap){
         localVec =inodesBitmap;
@@ -488,12 +460,7 @@ void VdiFile::updateBitmap (unsigned int inodeOrBlockNumber, fstream& VDIFile, b
         location = block_bitmap_address;}
     QString byteString;
     for(int i=0; i<8; i++){
-        if(i == localBitNumberInByte && setToUsed )
-            byteString.append('1');
-        else if(i == localBitNumberInByte && !setToUsed )
-        #warning what is this condition?
-            byteString.append('0');
-        else if(inodesBitmap->at(inodeByteNumber*8+i) == true )
+        if(inodesBitmap->at(inodeByteNumber*8+i) == true)
             byteString.append('1');
         else
             byteString.append('0');
@@ -634,11 +601,14 @@ void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, uns
 }
 
 void VdiFile::addBytesToVector(QVector<unsigned char> &vec, unsigned long long value, unsigned char bytes) {
-    for (int i = bytes-1; i >= 0; i--) {
-        unsigned long long maskedValue = value & (0xFF << (sizeof(unsigned char)*i));
-        unsigned char append = (unsigned char)(maskedValue >> (sizeof(unsigned char)*i));
+    cout << "addBytes to vector value " << hex << value << endl;
+    for (int i = 0; i < bytes; i++) {
+        unsigned long long maskedValue = value & (0xFF << (sizeof(unsigned char)*i*8));
+        unsigned char append = (unsigned char)(maskedValue >> (sizeof(unsigned char)*8*i));
         vec.push_back(append);
+        cout << (int)vec.back() << " ";
     }
+    cout << endl;
 }
 
 unsigned int VdiFile::findFreeBitmap(vector<bool> *vec) {

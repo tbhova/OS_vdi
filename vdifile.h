@@ -57,7 +57,7 @@ private:
     unsigned long long singlyIndirectPointersValues(unsigned long long blockNumberOfSinglyIndirect, std::fstream& input, std::ofstream& localFile, unsigned long long size);
     unsigned long long doublyIndirectPointersValues(unsigned long long blockNumberOfDoublyIndirect, std::fstream& input, std::ofstream& localFile, unsigned long long size);
     unsigned long long triplyIndirectPointersValues(unsigned long long blockNumberOfTriplyIndirect, std::fstream& input, std::ofstream& localFile, unsigned long long size);
-    void updateBitmap (unsigned int inodeNumber, std::fstream& VDIFile, bool isInodeBitmap, bool setToUsed =1);
+    void updateBitmap (unsigned int inodeNumber, std::fstream& VDIFile, bool isInodeBitmap);
     void addBytesToFile (QVector <unsigned char> * toLoadVector, long long offset,std::fstream& VDIFile);
     void writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, unsigned int inodeNum, long long folderInodeOffset, QFileInfo *sourceFile);
     unsigned int findFreeBitmap(std::vector<bool> *vec);
