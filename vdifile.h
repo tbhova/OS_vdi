@@ -29,7 +29,6 @@ long long UUIDofSNAP;
 };
 
 
-
 class VdiFile : public QObject
 {
     Q_OBJECT
@@ -58,10 +57,15 @@ private:
     unsigned long long singlyIndirectPointersValues(unsigned long long blockNumberOfSinglyIndirect, std::fstream& input, std::ofstream& localFile, unsigned long long size);
     unsigned long long doublyIndirectPointersValues(unsigned long long blockNumberOfDoublyIndirect, std::fstream& input, std::ofstream& localFile, unsigned long long size);
     unsigned long long triplyIndirectPointersValues(unsigned long long blockNumberOfTriplyIndirect, std::fstream& input, std::ofstream& localFile, unsigned long long size);
-    void updateBitmap (unsigned int BitmapLocation, long long inodeNumber, std::fstream& VDIFile, bool setToUsed, bool isInodeBitmap);
+    void updateBitmap (unsigned int inodeNumber, std::fstream& VDIFile, bool isInodeBitmap);
     void addBytesToFile (QVector <unsigned char> * toLoadVector, long long offset,std::fstream& VDIFile);
     void writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, unsigned int inodeNum, long long folderInodeOffset, QFileInfo *sourceFile);
-    unsigned int findFreeInodeNumber();
+    unsigned int findFreeBitmap(std::vector<bool> *vec);
+    void addBytesToVector(QVector<unsigned char> &vec, unsigned long long value, unsigned char bytes);
+    void writeNewInode(DirectoryEntry &newEntry, InodeTable &newTab, unsigned int fileSize, std::fstream &input);
+    void allocateBlockPointers(unsigned int i_block[], unsigned int fileSize, std::fstream& input);
+    void allocateIndirectBlockPointers(InodeTable &tab, unsigned int fileSize);
+    void buildInodeByteVector(QVector<unsigned char> &inodeByteVec, InodeTable &newTab);
 
     QFile *vdi; //whatever filetype we intend to use
     VdiMap *map;
@@ -71,9 +75,6 @@ private:
     std::fstream input;
     ext2GroupDescriptor *groupDescriptors;
     VdiHeader header;
-    InodeTable tab;
-    DirectoryEntry InodeIn;
-    QVector<unsigned char> *DataBlockBitmap;
     QVector <unsigned int> *SinglyIndirectPointers;
     QVector <unsigned int> *DoublyIndirectPointers;
     QVector <unsigned int> *TriplyIndirectPointers;
@@ -90,6 +91,7 @@ private:
 
 
     unsigned long long bootBlockLocation, superBlockLocation, block_size, group_size,FileSizeForProgressBar,OffsetForProgressBar;
+    unsigned int inode_bitmap_address, block_bitmap_address;
 };
 }
 
