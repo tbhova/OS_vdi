@@ -443,7 +443,7 @@ void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QFileInfo *sourceFi
     this->allocateIndirectBlockPointers(newTab, InputFileIntoVdiFS.tellg());
 
     //write data to blocks
-    this->writeToVDIFS(&newTab,InputFileIntoVdiFS.tellg(),newEntry.inode,input,InputFileIntoVdiFS);
+    this->writeToVDIFS(&newTab,InputFileIntoVdiFS.tellg(),0,input,InputFileIntoVdiFS);
     //close the file you are writing from
     InputFileIntoVdiFS.close();
 }
@@ -699,12 +699,6 @@ void VdiFile::buildInodeByteVector(QVector<unsigned char> &inodeByteVec, InodeTa
     addBytesToVector(inodeByteVec, newTab.i_blocks, sizeof(newTab.i_blocks));
     addBytesToVector(inodeByteVec, newTab.i_flags, sizeof(newTab.i_flags));
     addBytesToVector(inodeByteVec, newTab.i_osd1, sizeof(newTab.i_osd1));
-    addBytesToVector(inodeByteVec, newTab.i_mode, sizeof(newTab.i_mode));
-    addBytesToVector(inodeByteVec, newTab.i_mode, sizeof(newTab.i_mode));
-    addBytesToVector(inodeByteVec, newTab.i_mode, sizeof(newTab.i_mode));
-    addBytesToVector(inodeByteVec, newTab.i_mode, sizeof(newTab.i_mode));
-    addBytesToVector(inodeByteVec, newTab.i_mode, sizeof(newTab.i_mode));
-    addBytesToVector(inodeByteVec, newTab.i_mode, sizeof(newTab.i_mode));
 
     for (int i = 0; i < 15; i++) {
         addBytesToVector(inodeByteVec, newTab.i_block[i], sizeof(newTab.i_block[i]));
@@ -721,13 +715,15 @@ void VdiFile::buildInodeByteVector(QVector<unsigned char> &inodeByteVec, InodeTa
 void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSize, fstream& input) {
     unsigned int blocksNeeded = ((fileSize-1)/block_size)+1;
     for (int i = 0; i < 15; i++) { //up to 15 to set all non used blocks to 0
-        if ((i+1) < blocksNeeded && i < 12) {
+        if ((i+1) <= blocksNeeded && i < 12) {
                 i_block[i] = findFreeBitmap(blockBitmap);
-                cout << "iBlock"<< i<< " equals " << i_block[i] << " for this instance"<< endl;
+                cout << "iBlock"<< i<< " equals " <<dec << i_block[i] << " for this instance"<< endl;
                 updateBitmap (i_block[i], input, false);
              }
-        else
+        else{
              i_block[i] = 0;
+            cout << "We want to know i says hova: " << i << endl;
+            }
 
         }
     if (blocksNeeded < 12) return;
@@ -789,20 +785,18 @@ void VdiFile::writeToVDIFS(InodeTable* InodeTab, unsigned int size, unsigned int
     cout << "Inode index num" << inodeIndexNum << endl;
     if (inodeIndexNum <12){
         long long block_num = InodeTab->i_block[inodeIndexNum];
-        unsigned long long offset = bootBlockLocation+(block_size * (block_num));
+        unsigned long long offset = fsManager->getBlockOffset(block_num);
         cout << "The current offset is: " << hex << offset << endl;
         QVector <unsigned char> addToFile;
-
+        localFile.seekg(0);
         //cout << "Our current offset is " << offset << endl;
         //cout << "Size "<< size << "  block size " << block_size << " differ" << (size-block_size) << endl;
         if(size >block_size){
-            for(int i=0; i<block_size/4; i++){
+            for(int i=0; i<block_size; i++){
                 //input.seekg(offset+i);
-                unsigned int getVal = localFile.get();
-                addToFile.push_back((getVal >> 24) & 0xFF); //most significant
-                addToFile.push_back((getVal >> 16) & 0xFF);
-                addToFile.push_back((getVal >> 8) & 0xFF);
-                addToFile.push_back(getVal & 0xFF); // least significant
+                unsigned char getVal = localFile.get();
+                cout << hex <<(int) getVal << endl;
+                addToFile.push_back(getVal);
                 //addBytesToFile();
                 //localFile << (char)getStreamData(1,offset +i,input,"",false);
                 //input.clear();
@@ -814,13 +808,11 @@ void VdiFile::writeToVDIFS(InodeTable* InodeTab, unsigned int size, unsigned int
             }
         else{
 
-            for (int i=0; i<size/4; i++){
+            for (int i=0; i<size; i++){
                 //input.seekg(offset+i);
-                unsigned int getVal = localFile.get();
-                addToFile.push_back((getVal >> 24) & 0xFF); //most significant
-                addToFile.push_back((getVal >> 16) & 0xFF);
-                addToFile.push_back((getVal >> 8) & 0xFF);
-                addToFile.push_back(getVal & 0xFF); // least significant
+                unsigned char getVal = localFile.get();
+                cout << hex <<(int) getVal << endl;
+                addToFile.push_back(getVal);
 
                 /*   *///localFile << (char)getStreamData(1,offset +i,input,"",false);
                 //input.clear();
@@ -885,11 +877,9 @@ unsigned long long VdiFile::singlyIndirectPointersValuesWrite(unsigned long long
             //cout << "Our Current size is "<< size << endl;
             for(int i=0; i<block_size; i++){
                 //input.seekg(offset+i);
-                unsigned int getVal = localFile.get();
-                addToFile.push_back((getVal >> 24) & 0xFF); //most significant
-                addToFile.push_back((getVal >> 16) & 0xFF);
-                addToFile.push_back((getVal >> 8) & 0xFF);
-                addToFile.push_back(getVal & 0xFF); // least significant
+                unsigned char getVal = localFile.get();
+                cout << hex <<(int) getVal << endl;
+                addToFile.push_back(getVal);
 
                 //input.clear();
                 //cout << "Looping in here: " << i << endl;
@@ -902,11 +892,9 @@ unsigned long long VdiFile::singlyIndirectPointersValuesWrite(unsigned long long
             //cout << "Our Current size is "<< size << endl;
             for (int i=0; i<size; i++){
                 //input.seekg(offset+i);
-                unsigned int getVal = localFile.get();
-                addToFile.push_back((getVal >> 24) & 0xFF); //most significant
-                addToFile.push_back((getVal >> 16) & 0xFF);
-                addToFile.push_back((getVal >> 8) & 0xFF);
-                addToFile.push_back(getVal & 0xFF); // least significant
+                unsigned char getVal = localFile.get();
+                cout << hex <<(int) getVal << endl;
+                addToFile.push_back(getVal);
 
                 //input.clear();
             }

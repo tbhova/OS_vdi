@@ -8,7 +8,7 @@ LocalFileSystem::LocalFileSystem(QTreeView *initialTree, QObject *parent) : QObj
     tree = initialTree; //tree comes from ui
     fileSystem = new QFileSystemModel(this); //this is parent
 
-    fileSystem->setRootPath("/"); //"C:/ also works, but / is system independent
+    fileSystem->setRootPath("C://Users//Andy//Desktop//"); //"C:/ also works, but / is system independent
 
     tree->setModel(fileSystem);
 }
