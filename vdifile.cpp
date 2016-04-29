@@ -27,6 +27,7 @@
 #include <QMessageBox>
 #include <qmessagebox.h>
 #include <cstring>
+#include <QDateTime>
 
 using namespace std;
 using namespace CSCI5806;
@@ -610,8 +611,6 @@ void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, uns
     }
     cout << dec << endl;
     //write QVector at offset
-#warning this doesn't work because we forgot about endianness... they musta forgot
-    //i think endianness is fixed, we need to check with the 4 byte and 2 byte values
     this->addBytesToFile(&dirEntry, writeOffset, input);
 
 
@@ -625,11 +624,6 @@ void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, uns
     bytesToAddToFile2.push_back(((newEntryDirLength>> 8) & 0xFF));
     cout << "The offset we used to write: " << hex << bootBlockLocation+destBlock*block_size+usedInBlock+4 << endl;
     addBytesToFile(&bytesToAddToFile2,bootBlockLocation+destBlock*block_size+usedInBlock+4,input);
-
-
-
-
-
 }
 
 void VdiFile::addBytesToVector(QVector<unsigned char> &vec, unsigned long long value, unsigned char bytes) {
@@ -650,19 +644,21 @@ unsigned int VdiFile::findFreeBitmap(vector<bool> *vec) {
     return inodesBitmap->size();
 }
 
-void VdiFile::writeNewInode(DirectoryEntry &newEntry, InodeTable newTab, unsigned int fileSize, fstream& input) {
+void VdiFile::writeNewInode(DirectoryEntry &newEntry, InodeTable &newTab, unsigned int fileSize, fstream &input) {
     long long writeOffset = this->fsManager->getInodeOffset(newEntry.inode);
 
-    newTab.i_mode = 0;
-    newTab.i_uid = 1000;
-    newTab.i_size = 0;
-    newTab.i_atime = 0;
-    newTab.i_ctime = 0;
-    newTab.i_mtime = 0;
+    newTab.i_mode = 33204; //-rw-rw-r--
+    newTab.i_uid = 1000; //default user
+    newTab.i_size = fileSize;
+    unsigned int currentTime = QDateTime::currentDateTime().toTime_t(); //current time in
+    newTab.i_atime = currentTime;
+    newTab.i_ctime = currentTime;
+    newTab.i_mtime = currentTime;
     newTab.i_dtime = 0;
-    newTab.i_gid = 0;
+    newTab.i_gid = 1000; //default group
     newTab.i_links_count = 1;
-    newTab.i_blocks = 0;
+    unsigned int realBlocksNeeded = ((fileSize-1)/block_size)+1;
+    newTab.i_blocks = realBlocksNeeded * (block_size/512);
     newTab.i_flags = 0;
     newTab.i_osd1 = 0;
     newTab.i_generation = 0;
@@ -673,6 +669,53 @@ void VdiFile::writeNewInode(DirectoryEntry &newEntry, InodeTable newTab, unsigne
         newTab.i_osd2[i] = 0;
     }
     this->allocateBlockPointers(newTab.i_block, fileSize,input);
+
+    QVector<unsigned char> inodeByteVec;
+
+    //convert InodeTable stuct to vector of bytes (including little endian conversion)
+    this->buildInodeByteVector(inodeByteVec, newTab);
+
+    cout << "inode byte vector " << endl;
+    foreach (unsigned char c, inodeByteVec) {
+        cout << hex << (int)c << " ";
+    }
+    cout << endl;
+
+    cout << "write inode at offset " << hex << this->fsManager->getInodeOffset(newEntry.inode) << endl;
+    //write byte vector to file
+    addBytesToFile(&inodeByteVec, this->fsManager->getInodeOffset(newEntry.inode), input);
+}
+
+void VdiFile::buildInodeByteVector(QVector<unsigned char> &inodeByteVec, InodeTable &newTab) {
+    addBytesToVector(inodeByteVec, newTab.i_mode, sizeof(newTab.i_mode));
+    addBytesToVector(inodeByteVec, newTab.i_uid, sizeof(newTab.i_uid));
+    addBytesToVector(inodeByteVec, newTab.i_size, sizeof(newTab.i_size));
+    addBytesToVector(inodeByteVec, newTab.i_atime, sizeof(newTab.i_atime));
+    addBytesToVector(inodeByteVec, newTab.i_ctime, sizeof(newTab.i_ctime));
+    addBytesToVector(inodeByteVec, newTab.i_mtime, sizeof(newTab.i_mtime));
+    addBytesToVector(inodeByteVec, newTab.i_dtime, sizeof(newTab.i_dtime));
+    addBytesToVector(inodeByteVec, newTab.i_gid, sizeof(newTab.i_gid));
+    addBytesToVector(inodeByteVec, newTab.i_links_count, sizeof(newTab.i_links_count));
+    addBytesToVector(inodeByteVec, newTab.i_blocks, sizeof(newTab.i_blocks));
+    addBytesToVector(inodeByteVec, newTab.i_flags, sizeof(newTab.i_flags));
+    addBytesToVector(inodeByteVec, newTab.i_osd1, sizeof(newTab.i_osd1));
+    addBytesToVector(inodeByteVec, newTab.i_mode, sizeof(newTab.i_mode));
+    addBytesToVector(inodeByteVec, newTab.i_mode, sizeof(newTab.i_mode));
+    addBytesToVector(inodeByteVec, newTab.i_mode, sizeof(newTab.i_mode));
+    addBytesToVector(inodeByteVec, newTab.i_mode, sizeof(newTab.i_mode));
+    addBytesToVector(inodeByteVec, newTab.i_mode, sizeof(newTab.i_mode));
+    addBytesToVector(inodeByteVec, newTab.i_mode, sizeof(newTab.i_mode));
+
+    for (int i = 0; i < 15; i++) {
+        addBytesToVector(inodeByteVec, newTab.i_block[i], sizeof(newTab.i_block[i]));
+    }
+    addBytesToVector(inodeByteVec, newTab.i_generation, sizeof(newTab.i_generation));
+    addBytesToVector(inodeByteVec, newTab.i_file_acl, sizeof(newTab.i_file_acl));
+    addBytesToVector(inodeByteVec, newTab.i_dir_acl, sizeof(newTab.i_dir_acl));
+    addBytesToVector(inodeByteVec, newTab.i_faddr, sizeof(newTab.i_faddr));
+    for (int i = 0; i < 12; i++) {
+        addBytesToVector(inodeByteVec, newTab.i_osd2[i], sizeof(newTab.i_osd2[i]));
+    }
 }
 
 void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSize, fstream& input) {
@@ -681,7 +724,7 @@ void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSiz
         if ((i+1) < blocksNeeded && i < 12) {
                 i_block[i] = findFreeBitmap(blockBitmap);
                 cout << "iBlock"<< i<< " equals " << i_block[i] << " for this instance"<< endl;
-                updateBitmap (i_block[i], input,false,true);
+                updateBitmap (i_block[i], input, false);
              }
         else
              i_block[i] = 0;
@@ -698,7 +741,7 @@ void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSiz
             unsigned int buffer = findFreeBitmap(blockBitmap);
             //findFreeBlock
             buffer = findFreeBitmap(blockBitmap);
-            updateBitmap (buffer, input,false, true);
+            updateBitmap (buffer, input,false);
 
             //appendvalues to vector of char in order to write
             bytesToAdd.push_back(buffer & 0xFF); // least significant
@@ -712,7 +755,7 @@ void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSiz
             for(int i=0; i<blocksNeeded; i++){
                 //findFreeBlock
                 buffer = findFreeBitmap(blockBitmap);
-                updateBitmap (buffer, input,false,true);
+                updateBitmap (buffer, input,false);
 
                 //appendvalues to vector of char in order to write
                 bytesToAdd.push_back(buffer & 0xFF); // least significant
@@ -733,7 +776,6 @@ void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSiz
     long long offset = bootBlockLocation +i_block[12]*block_size;
     addBytesToFile(&bytesToAdd,offset,input);
     //we have to remember to write to the block bitmaps that we took them up
-
 }
 
 void VdiFile::allocateIndirectBlockPointers(InodeTable &tab, unsigned int fileSize) {
