@@ -207,7 +207,6 @@ void VdiFile::transferToLocalFS(CSCI5806::ext2File *sourceFile, QDir *destDir) {
     OutputFileIntoLocalFS.close();
 }
 
-
 void VdiFile::loadLocalFile(InodeTable* InodeTab, unsigned int size, unsigned int inodeIndexNum, fstream& input , ofstream& localFile){
 
     cout << "The size of this field is " << size << " bytes" << endl;
@@ -383,41 +382,16 @@ unsigned long long VdiFile::triplyIndirectPointersValues(unsigned long long bloc
 // end of doublyindirect
 }
 
-
 void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QModelIndex *index, QFileInfo *sourceFile) {
     qDebug() << "destination folder on VDI " << VDIFolder->getName() << " source file local FS " << sourceFile->absoluteFilePath();
     //open file,check to make sure its open
     string sourceDir = sourceFile->absoluteFilePath().toStdString();
     InputFileIntoVdiFS.open(sourceDir.c_str(), ios::in|ios::binary|ios::ate);
 
-/*
-    trialToDekstop.open("/Users/Andy/Desktop/trial.txt", ios::in|ios::out|ios::binary);
-    if (InputFileIntoVdiFS.is_open()){
-        cout << hex << "File is open and is ready to go" << endl;
-        }
-
-    InputFileIntoVdiFS.seekg(1);
-    InputFileIntoVdiFS >> noskipws;
-    string inputString;
-
-    for(int i=0; i< 32; i++){
-        InputData->push_back((char) InputFileIntoVdiFS.get());
-        //cout << "The value at " << i << " is: " << InputData->at(i) << " with a total size of: " << InputData->size() << " ..." << InputData->length() << endl;
-        inputString=inputString+InputData->at(i);
-
-
-    }
-    cout << "We got here after vector" << inputString << endl;
-    cout << "The length of the string is" << InputData->length() << endl;
-
-
-    trialToDekstop.seekp(32|ios::beg);
-    trialToDekstop.write(inputString.c_str(),InputData->length());
-
-    trialToDekstop.close();
-    */
-
     cout << "The size of that file was " << InputFileIntoVdiFS.tellg() << endl;
+
+    if(InputFileIntoVdiFS.tellg() > 3000)
+        QMessageBox::information(NULL, tr("Upload Time"), tr("Your upload may take a little time. Please click 'OK' to start download and please do not click off of this window until complete..."));
 
     //get folder table
     InodeTable *tab = VDIFolder->getInodeTable();
@@ -833,7 +807,6 @@ void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSiz
     newAddresses.clear();
 }
 
-
 void VdiFile::addBlockPointers(unsigned int block_num, unsigned int numberOfBlocksToAllocate, fstream& input, QVector<unsigned int> *blocks){
     QVector <unsigned char> bytesToAdd;
 
@@ -850,7 +823,6 @@ void VdiFile::addBlockPointers(unsigned int block_num, unsigned int numberOfBloc
     long long offset = fsManager->getBlockOffset(block_num);
     addBytesToFile(&bytesToAdd,offset,input);
 }
-
 
 void VdiFile::writeToVDIFS(InodeTable* InodeTab, unsigned int size, unsigned int inodeIndexNum, fstream& input , ifstream& localFile){
 
@@ -875,7 +847,7 @@ void VdiFile::writeToVDIFS(InodeTable* InodeTab, unsigned int size, unsigned int
             size=size-block_size;
             cout << "The current size in direct is: " << size << endl;
             //cout << "Size "<< size << "  block size " << block_size << " differ" << (size-block_size) << endl;
-            //emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+            emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
             //cout << "We are out of the loop right now" << endl;
             }
         else{
@@ -887,7 +859,7 @@ void VdiFile::writeToVDIFS(InodeTable* InodeTab, unsigned int size, unsigned int
                 }
             size =0;
             cout << "The current size in direct is: " << size << endl;
-            //emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+            emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
             }
         cout << "We are in the direct with Inode Index num" << inodeIndexNum << endl;
         addBytesToFile(&addToFile,offset,input);
@@ -897,17 +869,17 @@ void VdiFile::writeToVDIFS(InodeTable* InodeTab, unsigned int size, unsigned int
         cout << "The block pointer to the singly indirect is: " << hex << InodeTab->i_block[inodeIndexNum] << endl;
         cout << "Entering Singly Indirect..." << endl;
         size = singlyIndirectPointersValuesWrite(InodeTab->i_block[inodeIndexNum],input,localFile,size);
-        //emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
         }
     else if (inodeIndexNum ==13)    {
         cout << "Entering Doubly Indirect..." << endl;
         size = doublyIndirectPointersValuesWrite(InodeTab->i_block[inodeIndexNum],input,localFile,size);
-        //emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
         }
     else if (inodeIndexNum ==14)    {
         cout << "Entering Triply Indirect..." << endl;
         size = triplyIndirectPointersValuesWrite(InodeTab->i_block[inodeIndexNum],input,localFile,size);
-        //emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
         }
 
     inodeIndexNum++;
@@ -975,7 +947,7 @@ unsigned long long VdiFile::singlyIndirectPointersValuesWrite(unsigned long long
         addToFile.clear();
         if(size == 0) break;
 
-        //emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
  }
 
 
@@ -999,7 +971,7 @@ unsigned long long VdiFile::doublyIndirectPointersValuesWrite(unsigned long long
     while(doublyIterator < DoublyIndirectPointers->size() && DoublyIndirectPointers->at(doublyIterator) !=0 && size>0){
         //offset = bootBlockLocation+(block_size * (DoublyIndirectPointers->at(doublyIterator)));
               size = singlyIndirectPointersValuesWrite(DoublyIndirectPointers->at(doublyIterator),input,localFile,size);
-        //emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
         doublyIterator++;
         qDebug() << "Doubly Indirect..." << endl;
         if(size == 0) break;
@@ -1026,7 +998,7 @@ unsigned long long VdiFile::triplyIndirectPointersValuesWrite(unsigned long long
     while(triplyIterator < TriplyIndirectPointers->size() && TriplyIndirectPointers->at(triplyIterator) !=0 && size>0){
         //offset = bootBlockLocation+(block_size * (DoublyIndirectPointers->at(doublyIterator)));
                size = doublyIndirectPointersValuesWrite(TriplyIndirectPointers->at(triplyIterator),input,localFile,size);
-        //emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
         triplyIterator++;
         qDebug() << "Triply Indirect..." << endl;
         if(size == 0) break;
