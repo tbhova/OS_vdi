@@ -56,6 +56,11 @@ MainWindow::MainWindow(QWidget *parent) :
     QFont newFont("Courier", 12, QFont::Bold, false);
     WELCOME_BOX.setWindowTitle("VDI File Transfer - Morgan, Hovanec");
     WELCOME_BOX.setFont(newFont);
+    WELCOME_BOX.setBaseSize(1900,550);
+    WELCOME_BOX.setMinimumWidth(700);
+    WELCOME_BOX.setMinimumHeight(500);
+    WELCOME_BOX.setMaximumWidth(700);
+    WELCOME_BOX.setMaximumHeight(500);
     WELCOME_BOX.setInformativeText("                   WELCOME! \n \n \n"
                                    "Thank you for choosing the Morgan/Hovanec VDI File Transfer System \n\n"
                                    "This program was built for YSU CSCI 5806: Operating Systems \n \n"
@@ -67,25 +72,34 @@ MainWindow::MainWindow(QWidget *parent) :
                                    "          - tbhovanec@student.ysu.edu \n \n\n\n\n ");
     WELCOME_BOX.informativeText();
     WELCOME_BOX.setDetailedText("                   WELCOME! \n \n \n"
-                                "Thank you for choosing the Morgan/Hovanec VDI File Transfer System \n\n"
-                                "This program was built for YSU CSCI 5806: Operating Systems \n \n"
+                                "Thank you for choosing the Morgan/Hovanec VDI File Transfer System! \n\n"
+                                "This program was built for YSU CSCI 5806: Operating Systems \n"
+                                "We will now be able to transfer information in AND out of a ext2 filesystem \n"
+                                "contained within a vdi file.\n\n"
                                 "Instructor: Dr. Robert Kramer \n"
                                 "          - rwkramer@ysu.edu \n\n"
                                 "Students: Andrew Morgan \n"
-                                "          - asmorgan@student.ysu.edu \n \n"
+                                "          - asmorgan@student.ysu.edu \n\n"
                                 "          Tyler Hovanec \n"
-                                "          - tbhovanec@student.ysu.edu \n \n\n\n\n "
+                                "          - tbhovanec@student.ysu.edu \n \n\n\n\n"
                                 "More Information About Course:\n"
                                 "   CSCI 5806: Operating Systems \n"
                                 "   Department of Computer Science Information Systems\n"
                                 "   Youngstown State University\n"
                                 "   1 University Plaza\n"
                                 "   Youngstown, OH 44555\n"
-                                "Built in QT for Windows using MinGW Compiler\n\n\n"
+                                "Built in QT 5.51 for Windows using MinGW Compiler\n\n\n"
                                 "Objective: \n\n"
                                 "   - Read in Virtualbox VDI File containing an EXT2 Filesytem\n"
                                 "   - Read and Write files into and out of the VDI files\n"
-                                "   - Be able to update tables and bitmaps without causing system error\n");
+                                "   - Be able to update tables and bitmaps without causing system error\n\n"
+                                "Documentation: \n"
+                                "This is an interactive GUI that will update the .vdi file as we move files\n"
+                                "in and out of it. We will also have access to all files on the local machine. \n"
+                                "Number of corrupted .vdi files making this: 46\n"
+                                "Number of working hours: 240+\n"
+                                "Number of lines of code: ~3600\n"
+                                "Number of OS students who had a great time: 2 \n");
     WELCOME_BOX.setParent(this);
 
     WELCOME_BOX.exec();
@@ -227,6 +241,7 @@ void MainWindow::processProgressUpdate(int value) {
     static int oldValue = -1;
     if (oldValue != value)
         progress->setValue(value);
+        QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
     oldValue = value;
     if (value == 100) {
         QTimer::singleShot(8000, this, SLOT(hideStatusBar()));
