@@ -99,7 +99,6 @@ private:
 
 
     unsigned long long bootBlockLocation, superBlockLocation, block_size, group_size,FileSizeForProgressBar,OffsetForProgressBar;
-    unsigned int inode_bitmap_address, block_bitmap_address;
 };
 }
 
