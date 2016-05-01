@@ -149,12 +149,6 @@ void VdiFile::openFile(QString fileName) {
     //groupDescriptors->push_back(new ext2GroupDescriptor (this, group_count, gdtLocation, input));
     groupDescriptors = new ext2GroupDescriptor (this, group_count, gdtLocation, input);
 
-    block_bitmap_address = bootBlockLocation + block_size*groupDescriptors->getBlockBitmap(0);
-    inode_bitmap_address = bootBlockLocation + block_size*groupDescriptors->getInodeBitmap(0);
-    cout << "Hello:: Inode Bitmap Location: " << hex << setw(2) << setfill('0') << inode_bitmap_address << endl;
-    unsigned int inode_table_address = bootBlockLocation + block_size*groupDescriptors->getInodeTable(0);
-    cout << "Hello:: Inode Table Location: " << hex << setw(2) << setfill('0') << inode_table_address << endl;
-
     //cout << hex << setw(2) << setfill('0') << inode_table_address <<" "<<endl << endl<< endl;
     //unsigned int block_bitmap = getStreamData(4,inode_bitmap_address, input);
 
@@ -224,7 +218,7 @@ void VdiFile::loadLocalFile(InodeTable* InodeTab, unsigned int size, unsigned in
         //cout << "Our current offset is " << offset << endl;
         //cout << "Size "<< size << "  block size " << block_size << " differ" << (size-block_size) << endl;
         if(size >block_size){
-            for(int i=0; i<block_size; i++){
+            for(unsigned int i=0; i<block_size; i++){
                 //input.seekg(offset+i);
                 localFile << (char)getStreamData(1,offset +i,input,"",false);
                 //input.clear();
@@ -236,7 +230,7 @@ void VdiFile::loadLocalFile(InodeTable* InodeTab, unsigned int size, unsigned in
             }
         else{
 
-            for (int i=0; i<size; i++){
+            for (unsigned int i=0; i<size; i++){
                 //input.seekg(offset+i);
                 localFile << (char)getStreamData(1,offset +i,input,"",false);
                 //input.clear();
@@ -281,22 +275,24 @@ unsigned long long VdiFile::singlyIndirectPointersValues(unsigned long long bloc
     //cout << "The offset we got for you" << hex << offset << endl;
     //cout << "Before the for loop" << endl;
     //cout << getStreamData(4,offset,input,"",false) << endl;
-    unsigned long long lastSize = size;
+
+    //unsigned long long lastSize = size;
+
     SinglyIndirectPointers->clear();
-    for(int i=0; i<block_size; i=i+4){ //4 is the number of bytes in each entry
+    for(unsigned int i=0; i<block_size; i=i+4){ //4 is the number of bytes in each entry
         SinglyIndirectPointers->push_back(getStreamData(4,offset+i,input,"",false));
         //cout << SinglyIndirectPointers->back() << endl;
         if(SinglyIndirectPointers->back() == 0)
             break;
     }
     cout << "The size of the Vector is now: " << SinglyIndirectPointers->size() << endl;
-    unsigned int iterator=0;
+    int iterator=0;
     while(iterator < SinglyIndirectPointers->size() && size>0 && SinglyIndirectPointers->at(iterator) !=0){
         offset = bootBlockLocation+(block_size * (SinglyIndirectPointers->at(iterator)));
         if(size > block_size){
             //cout << "We got into the if " << endl;
             //cout << "Our Current size is "<< size << endl;
-            for(int i=0; i<block_size; i++){
+            for(unsigned int i=0; i<block_size; i++){
                 //input.seekg(offset+i);
                 localFile << (char)getStreamData(1,offset +i,input,"",false);
                 //input.clear();
@@ -308,7 +304,7 @@ unsigned long long VdiFile::singlyIndirectPointersValues(unsigned long long bloc
         } else {
             //cout << "We got into the else " << endl;
             //cout << "Our Current size is "<< size << endl;
-            for (int i=0; i<size; i++){
+            for (unsigned int i=0; i<size; i++){
                 //input.seekg(offset+i);
                 localFile << (char)getStreamData(1,offset +i,input,"",false);
                 //input.clear();
@@ -337,14 +333,14 @@ unsigned long long VdiFile::doublyIndirectPointersValues(unsigned long long bloc
     unsigned long long offsetStartDoublyIndirect = bootBlockLocation+(block_size * (blockNumberOfDoublyIndirect));
     // we know that each entry is 4 bytes long due to what we used for inode reading in ext
     DoublyIndirectPointers->clear();
-    for(int i=0; i<block_size; i=i+4){ //4 is the number of bytes in each entry
+    for(unsigned int i=0; i<block_size; i=i+4){ //4 is the number of bytes in each entry
         DoublyIndirectPointers->push_back(getStreamData(4,offsetStartDoublyIndirect+i,input,"",false));
         //cout << DoublyIndirectPointers->back() << endl;
         if(DoublyIndirectPointers->back() == 0)
             break;
     }
     //cout << "Done with for loop" << endl;
-    unsigned int doublyIterator=0;
+    int doublyIterator=0;
     while(doublyIterator < DoublyIndirectPointers->size() && DoublyIndirectPointers->at(doublyIterator) !=0 && size>0){
         //offset = bootBlockLocation+(block_size * (DoublyIndirectPointers->at(doublyIterator)));
         size = singlyIndirectPointersValues(DoublyIndirectPointers->at(doublyIterator),input,localFile,size);
@@ -364,14 +360,14 @@ unsigned long long VdiFile::triplyIndirectPointersValues(unsigned long long bloc
     unsigned long long offsetStartTriplyIndirect = bootBlockLocation+(block_size * (blockNumberOfTriplyIndirect));
     // we know that each entry is 4 bytes long due to what we used for inode reading in ext
     TriplyIndirectPointers->clear();
-    for(int i=0; i<block_size; i=i+4){ //4 is the number of bytes in each entry
+    for(unsigned int i=0; i<block_size; i=i+4){ //4 is the number of bytes in each entry
         TriplyIndirectPointers->push_back(getStreamData(4,offsetStartTriplyIndirect+i,input,"",false));
         //cout << TriplyIndirectPointers->back() << endl;
         if(TriplyIndirectPointers->back() == 0)
             break;
     }
     //cout << "Done with for loop" << endl;
-    unsigned int triplyIterator=0;
+    int triplyIterator=0;
     while(triplyIterator < TriplyIndirectPointers->size() && TriplyIndirectPointers->at(triplyIterator) !=0 && size>0){
         //offset = bootBlockLocation+(block_size * (DoublyIndirectPointers->at(doublyIterator)));
         size = doublyIndirectPointersValues(TriplyIndirectPointers->at(triplyIterator),input,localFile,size);
@@ -462,24 +458,23 @@ void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QModelIndex *index,
 }
 
 void VdiFile::updateBitmap (unsigned int inodeOrBlockNumber, fstream& VDIFile, bool isInodeBitmap){
-#warning bad
-    if (inodeOrBlockNumber > block_size*8) {
-        return;
-    }
-
     inodeOrBlockNumber--; //this converts us into 0 based indexing on the inodeNumber
+
+    unsigned int group = inodeOrBlockNumber/(block_size*8);
+    unsigned int localNumber = inodeOrBlockNumber%(block_size*8);
+
     long long location;
-    long long inodeByteNumber = inodeOrBlockNumber/8;
+    long long inodeByteNumber = localNumber/8;
     vector <bool> *localVec;
     if(isInodeBitmap){
         localVec =inodesBitmap;
-        location =inode_bitmap_address;}
+        location = fsManager->getBlockOffset(groupDescriptors->getBlockBitmap(group));}
     else{
         localVec = blockBitmap;
-        location = block_bitmap_address;}
+        location = fsManager->getBlockOffset(groupDescriptors->getInodeBitmap(group));}
     QString byteString;
-    for(int i=0; i<8; i++){
-        if(inodesBitmap->at(inodeByteNumber*8+i) == true)
+    for(int i=0; i<8; i++) {
+        if(localVec->at(inodeByteNumber*8 + group*block_size*8  +i) == true)
             byteString.append('1');
         else
             byteString.append('0');
@@ -539,6 +534,9 @@ void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, uns
     //find out if we have enough space to place directory entry
     unsigned short usedInBlock = 0;
     unsigned short startOfLastCurrent = 0;
+
+    //unsigned short startOfLastCurrent = 0;
+
     unsigned short SizeOfLast =0;
     cout << "Block Offset: " <<fsManager->getBlockOffset(destBlock) << endl;
     for (unsigned int i = 24; i < block_size;) { //start at 24 to get beginning of directory entry
@@ -602,11 +600,11 @@ void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, uns
     addBytesToVector(dirEntry, newEntry.rec_len, sizeof(newEntry.rec_len));
     addBytesToVector(dirEntry, newEntry.name_len, sizeof(newEntry.name_len));
     addBytesToVector(dirEntry, newEntry.file_type, sizeof(newEntry.file_type));
-    for (int i = 0; i < newEntry.name.size(); i++) {
+    for (unsigned int i = 0; i < newEntry.name.size(); i++) {
         addBytesToVector(dirEntry, newEntry.name.at(i), sizeof(char));
     }
     //pad with \0 bytes
-    for (int i = 0; i < newEntry.rec_len-calculatedSize; i++) {
+    for (unsigned int i = 0; i < newEntry.rec_len-calculatedSize; i++) {
         addBytesToVector(dirEntry, 0, 1);
     }
     cout << "dir Entry byte array: ";
@@ -653,15 +651,15 @@ void VdiFile::addBytesToVector(QVector<unsigned char> &vec, unsigned long long v
 
 unsigned int VdiFile::findFreeBitmap(vector<bool> *vec) {
     //next fit strategy
-    static int i = 0;
-    int start = i;
+    static unsigned int i = 0;
+    unsigned int start = i;
     for (; i < vec->size(); i++) { //skip badBlocks and root iNodes
         if (!vec->at(i)) {
             vec->at(i) = true; //inode is now used
             return i+1; //1 based iNode indexing
         }
     }
-    for (int j = 0; j < start; j++) { //skip badBlocks and root iNodes
+    for (unsigned int j = 0; j < start; j++) { //skip badBlocks and root iNodes
         if (!vec->at(j)) {
             vec->at(j) = true; //inode is now used
             return j+1; //1 based iNode indexing
@@ -672,8 +670,6 @@ unsigned int VdiFile::findFreeBitmap(vector<bool> *vec) {
 }
 
 void VdiFile::writeNewInode(DirectoryEntry &newEntry, InodeTable &newTab, unsigned int fileSize, fstream &input) {
-    long long writeOffset = this->fsManager->getInodeOffset(newEntry.inode);
-
     newTab.i_mode = 33204; //-rw-rw-r--
     newTab.i_uid = 1000; //default user
     newTab.i_size = fileSize;
@@ -742,7 +738,7 @@ void VdiFile::buildInodeByteVector(QVector<unsigned char> &inodeByteVec, InodeTa
 void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSize, fstream& input) {
     unsigned int blocksNeeded = ((fileSize-1)/block_size)+1;
     cout << " The number of blocks needed is: " << blocksNeeded << endl;
-    for (int i = 0; i < 15; i++) { //up to 15 to set all non used blocks to 0
+    for (unsigned int i = 0; i < 15; i++) { //up to 15 to set all non used blocks to 0
         if ((i+1) <= blocksNeeded && i <12) {
                 i_block[i] = findFreeBitmap(blockBitmap);
                 cout << "iBlock"<< i<< " equals " <<dec << i_block[i] << " for this instance"<< endl;
@@ -840,9 +836,8 @@ void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSiz
 
 void VdiFile::addBlockPointers(unsigned int block_num, unsigned int numberOfBlocksToAllocate, fstream& input, QVector<unsigned int> *blocks){
     QVector <unsigned char> bytesToAdd;
-    unsigned int buffer;
 
-    for(int i=0; i< numberOfBlocksToAllocate; i++){
+    for(unsigned int i=0; i< numberOfBlocksToAllocate; i++){
         //findFreeBlock
         unsigned int buffer = findFreeBitmap(blockBitmap);
         if (blocks != NULL)
@@ -871,7 +866,7 @@ void VdiFile::writeToVDIFS(InodeTable* InodeTab, unsigned int size, unsigned int
         //cout << "Our current offset is " << offset << endl;
         //cout << "Size "<< size << "  block size " << block_size << " differ" << (size-block_size) << endl;
         if(size >block_size){
-            for(int i=0; i<block_size; i++){
+            for(unsigned int i=0; i<block_size; i++){
                 unsigned char getVal = localFile.get();
                 //cout << hex <<(int) getVal << endl;
                 addToFile.push_back(getVal);
@@ -885,7 +880,7 @@ void VdiFile::writeToVDIFS(InodeTable* InodeTab, unsigned int size, unsigned int
             }
         else{
 
-            for (int i=0; i<size; i++){
+            for (unsigned int i=0; i<size; i++){
                 unsigned char getVal = localFile.get();
                 //cout << hex <<(int) getVal << endl;
                 addToFile.push_back(getVal);
@@ -935,22 +930,24 @@ unsigned long long VdiFile::singlyIndirectPointersValuesWrite(unsigned long long
     //cout << "Before the for loop" << endl;
     //cout << getStreamData(4,offset,input,"",false) << endl;
     QVector <unsigned char> addToFile;
-    unsigned long long lastSize = size;
+
+    //unsigned long long lastSize = size;
+
     SinglyIndirectPointers->clear();
-    for(int i=0; i<block_size; i=i+4){ //4 is the number of bytes in each entry
+    for(unsigned int i=0; i<block_size; i=i+4){ //4 is the number of bytes in each entry
         SinglyIndirectPointers->push_back(getStreamData(4,offset+i,input,"",false));
         //cout << SinglyIndirectPointers->back() << endl;
         if(SinglyIndirectPointers->back() == 0)
             break;
     }
     cout << "The size of the Vector is now: " << SinglyIndirectPointers->size() << endl;
-    unsigned int iterator=0;
+    int iterator=0;
     while(iterator < SinglyIndirectPointers->size() && size>0 && SinglyIndirectPointers->at(iterator) !=0){
         offset = bootBlockLocation+(block_size * (SinglyIndirectPointers->at(iterator)));
         if(size > block_size){
             //cout << "We got into the if " << endl;
             cout << "Our Current size is "<< size << endl;
-            for(int i=0; i<block_size; i++){
+            for(unsigned int i=0; i<block_size; i++){
                 unsigned char getVal = localFile.get();
                 //cout << hex <<(int) getVal << endl;
                 addToFile.push_back(getVal);
@@ -963,7 +960,7 @@ unsigned long long VdiFile::singlyIndirectPointersValuesWrite(unsigned long long
         } else {
             //cout << "We got into the else " << endl;
             //cout << "Our Current size is "<< size << endl;
-            for (int i=0; i<size; i++){
+            for (unsigned int i=0; i<size; i++){
                 unsigned char getVal = localFile.get();
                 //cout << hex <<(int) getVal << endl;
                 addToFile.push_back(getVal);
@@ -991,14 +988,14 @@ unsigned long long VdiFile::doublyIndirectPointersValuesWrite(unsigned long long
     unsigned long long offsetStartDoublyIndirect = bootBlockLocation+(block_size * (blockNumberOfDoublyIndirect));
     // we know that each entry is 4 bytes long due to what we used for inode reading in ext
     DoublyIndirectPointers->clear();
-    for(int i=0; i<block_size; i=i+4){ //4 is the number of bytes in each entry
+    for(unsigned int i=0; i<block_size; i=i+4){ //4 is the number of bytes in each entry
         DoublyIndirectPointers->push_back(getStreamData(4,offsetStartDoublyIndirect+i,input,"",false));
         //cout << DoublyIndirectPointers->back() << endl;
         if(DoublyIndirectPointers->back() == 0)
             break;
     }
     //cout << "Done with for loop" << endl;
-    unsigned int doublyIterator=0;
+    int doublyIterator=0;
     while(doublyIterator < DoublyIndirectPointers->size() && DoublyIndirectPointers->at(doublyIterator) !=0 && size>0){
         //offset = bootBlockLocation+(block_size * (DoublyIndirectPointers->at(doublyIterator)));
               size = singlyIndirectPointersValuesWrite(DoublyIndirectPointers->at(doublyIterator),input,localFile,size);
@@ -1018,14 +1015,14 @@ unsigned long long VdiFile::triplyIndirectPointersValuesWrite(unsigned long long
     unsigned long long offsetStartTriplyIndirect = bootBlockLocation+(block_size * (blockNumberOfTriplyIndirect));
     // we know that each entry is 4 bytes long due to what we used for inode reading in ext
     TriplyIndirectPointers->clear();
-    for(int i=0; i<block_size; i=i+4){ //4 is the number of bytes in each entry
+    for(unsigned int i=0; i<block_size; i=i+4){ //4 is the number of bytes in each entry
         TriplyIndirectPointers->push_back(getStreamData(4,offsetStartTriplyIndirect+i,input,"",false));
         //cout << TriplyIndirectPointers->back() << endl;
         if(TriplyIndirectPointers->back() == 0)
             break;
     }
     //cout << "Done with for loop" << endl;
-    unsigned int triplyIterator=0;
+    int triplyIterator=0;
     while(triplyIterator < TriplyIndirectPointers->size() && TriplyIndirectPointers->at(triplyIterator) !=0 && size>0){
         //offset = bootBlockLocation+(block_size * (DoublyIndirectPointers->at(doublyIterator)));
                size = doublyIndirectPointersValuesWrite(TriplyIndirectPointers->at(triplyIterator),input,localFile,size);
