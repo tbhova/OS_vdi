@@ -216,7 +216,7 @@ void MainWindow::on_copyToVdiPushButton_clicked()
 
     //emit signal with the ext2File and the destination folder
 
-    QMessageBox::information(this,tr("Funny right?"), tr("Did you really expect this feature to work?"));
+    //QMessageBox::information(this,tr("Funny right?"), tr("Did you really expect this feature to work?"));
     progressLabel->setVisible(true);
     progress->setVisible(true);
     progress->setValue(0);

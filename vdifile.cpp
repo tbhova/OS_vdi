@@ -28,6 +28,7 @@
 #include <qmessagebox.h>
 #include <cstring>
 #include <QDateTime>
+#include <algorithm>
 
 using namespace std;
 using namespace CSCI5806;
@@ -163,13 +164,18 @@ void VdiFile::openFile(QString fileName) {
     // fillDataBlockBitmap(DataBlockBitmap, block_bitmap_address, inode_bitmap_address, input);
     //cout << "This is the adress of block bitmap" << hex<< block_bitmap_address << endl;
 
-    addBitsFromStreamData(blockBitmap, block_size*8, block_bitmap_address, input);
-    addBitsFromStreamData(inodesBitmap, block_size*8, inode_bitmap_address, input);
-    //cout << dec <<blockBitmap->size() << " " << sizeof(*blockBitmap) << endl;
-    //cout << blockBitmap->max_size() << endl;
-    cout << "Bit reading/ converting complete" << endl;
-
     fsManager = new ext2FileSystemManager(&input, groupDescriptors, superBlock, bootBlockLocation);
+
+    blockBitmap->push_back(true); //superBlock
+    for (unsigned int i = 0; i < group_count; i++) {
+        addBitsFromStreamData(blockBitmap, block_size*8, fsManager->getBlockOffset(groupDescriptors->getBlockBitmap(i)), input);
+        addBitsFromStreamData(inodesBitmap, block_size*8, fsManager->getBlockOffset(groupDescriptors->getInodeBitmap(i)), input);
+    }
+    cout << "Bit reading/ converting complete" << endl;
+    cout << "size of block bitmap " << dec << blockBitmap->size() << endl;
+    cout << "size of inode bitmap " << dec << inodesBitmap->size() << endl;
+    cout << "free blocks " << std::count(blockBitmap->begin(), blockBitmap->end(), false);
+
     emit FSManagerConstructed(fsManager);
 }
 
@@ -456,6 +462,11 @@ void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QModelIndex *index,
 }
 
 void VdiFile::updateBitmap (unsigned int inodeOrBlockNumber, fstream& VDIFile, bool isInodeBitmap){
+#warning bad
+    if (inodeOrBlockNumber > block_size*8) {
+        return;
+    }
+
     inodeOrBlockNumber--; //this converts us into 0 based indexing on the inodeNumber
     long long location;
     long long inodeByteNumber = inodeOrBlockNumber/8;
@@ -477,7 +488,7 @@ void VdiFile::updateBitmap (unsigned int inodeOrBlockNumber, fstream& VDIFile, b
     bool ok;
     string byteInput;
     byteInput = byteInput + (char) byteString.toUShort(&ok,2);
-    cout << "Size "<< sizeof(byteInput) << " with value of " << byteInput << endl;
+    //cout << "Size "<< sizeof(byteInput) << " with value of " << byteInput << endl;
 
     /* Now we need to open up the file and and replace this new byte with what was orginally there */
     location = location +inodeByteNumber;
@@ -641,14 +652,23 @@ void VdiFile::addBytesToVector(QVector<unsigned char> &vec, unsigned long long v
 }
 
 unsigned int VdiFile::findFreeBitmap(vector<bool> *vec) {
-    for (unsigned int i = 2; i < vec->size(); i++) { //skip badBlocks and root iNodes
+    //next fit strategy
+    static int i = 0;
+    int start = i;
+    for (; i < vec->size(); i++) { //skip badBlocks and root iNodes
         if (!vec->at(i)) {
             vec->at(i) = true; //inode is now used
             return i+1; //1 based iNode indexing
         }
     }
-    cout << "error, no free iNode s";
-    return inodesBitmap->size();
+    for (int j = 0; j < start; j++) { //skip badBlocks and root iNodes
+        if (!vec->at(j)) {
+            vec->at(j) = true; //inode is now used
+            return j+1; //1 based iNode indexing
+        }
+    }
+    cout << "error, no free blocks or iNodes" << endl;
+    return vec->size();
 }
 
 void VdiFile::writeNewInode(DirectoryEntry &newEntry, InodeTable &newTab, unsigned int fileSize, fstream &input) {
@@ -749,30 +769,36 @@ void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSiz
 
     if (blocksNeeded == 0) return;
     //doubly indirect
+    cout << "doubly allocate blocks" << endl;
+    cout << "block bitmap size = " << blockBitmap->size() << endl;
     i_block[13] = findFreeBitmap(blockBitmap);
     updateBitmap (i_block[13], input,false);
-    /*cout << "iBlock13 equals " <<dec << i_block[13] << " for this instance"<< endl;
+    cout << "iBlock13 equals " <<dec << i_block[13] << " for this instance"<< endl;
     cout << "iblock13 at offset " << hex <<fsManager->getBlockOffset(i_block[13]) << endl;
-    cout << "The number of blocks we still need are: " << dec << blocksNeeded << endl;*/
+    cout << "The number of blocks we still need are: " << dec << blocksNeeded << endl;
 
     unsigned int doublyBlocksAvail = spotsAvailableForAddresses*spotsAvailableForAddresses;
     blocksToAllocate = (blocksNeeded < doublyBlocksAvail) ? blocksNeeded : doublyBlocksAvail;
-    //cout << "blocks to allocated " <<blocksToAllocate << endl;
+    cout << "blocks to allocated " <<blocksToAllocate << endl;
     QVector<unsigned int> newAddresses;
     addBlockPointers(i_block[13],1 + (blocksToAllocate-1)/spotsAvailableForAddresses,input, &newAddresses);
-    //cout << "number new address " << newAddresses.size() << endl;
+    cout << "number new address " << newAddresses.size() << endl;
     foreach (unsigned int  i, newAddresses) {
         blocksToAllocate = (blocksNeeded < spotsAvailableForAddresses)?blocksNeeded:spotsAvailableForAddresses;
-        /*cout << "blocks to allocated " <<blocksToAllocate << endl;
+        cout << "blocks to allocated " <<blocksToAllocate << endl;
         cout << "block number i " << i << endl;
-        cout << "block i offset offset " << fsManager->getBlockOffset(i) << endl;*/
+        cout << "block i offset offset " << fsManager->getBlockOffset(i) << endl;
         addBlockPointers(i, blocksToAllocate, input);
         blocksNeeded -= blocksToAllocate;
+        cout << "The number of blocks we still need are: " << dec << blocksNeeded << endl;
     }
     newAddresses.clear();
+    cout << "end doubly allocate blocks" << endl;
 
     //triply
     if (blocksNeeded == 0) return;
+    cout << "triply allocate blocks" << endl;
+    cout << "blocks still needed " << blocksNeeded << endl;
     i_block[14] = findFreeBitmap(blockBitmap);
     updateBitmap (i_block[14], input,false);
     cout << "iBlock14 equals " <<dec << i_block[14] << " for this instance"<< endl;
@@ -780,6 +806,10 @@ void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSiz
     cout << "The number of blocks we still need are: " << dec << blocksNeeded << endl;
 
     unsigned int triplyBlocksAvail = doublyBlocksAvail*spotsAvailableForAddresses;
+    cout << " singly pointers avail " << spotsAvailableForAddresses << endl;
+    cout << " doubly pointers avail " << doublyBlocksAvail << endl;
+    cout << " triply pointers avail " << triplyBlocksAvail << endl;
+
     blocksToAllocate = (blocksNeeded < triplyBlocksAvail) ? blocksNeeded : triplyBlocksAvail;
     cout << "DOUBLY blocks to allocated " << blocksToAllocate << endl;
 
@@ -791,11 +821,11 @@ void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSiz
         cout << "SINGLY blocks to allocated " << blocksToAllocate << endl;
         cout << "block number i " << i << endl;
         cout << "block i offset offset " << fsManager->getBlockOffset(i) << endl;
-        addBlockPointers(i, blocksToAllocate, input, &newAddresses2);
-
+        addBlockPointers(i, 1 + (blocksToAllocate-1)/spotsAvailableForAddresses, input, &newAddresses2);
+        cout << "number new address2 " << newAddresses2.size() << endl;
         foreach (unsigned int  i, newAddresses2) {
             blocksToAllocate = (blocksNeeded < spotsAvailableForAddresses)?blocksNeeded:spotsAvailableForAddresses;
-            cout << "DIRECT blocks to allocated " <<blocksToAllocate << endl;
+            cout << "DIRECT blocks to allocated " << blocksToAllocate << endl;
             cout << "block number i " << i << endl;
             cout << "block i offset offset " << fsManager->getBlockOffset(i) << endl;
             addBlockPointers(i, blocksToAllocate, input);
