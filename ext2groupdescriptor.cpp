@@ -39,5 +39,3 @@ int ext2GroupDescriptor::getInodeTable(int group) {
     cout << "InodeTable Location (block#): " << dec << groupDescriptors->at(group).bg_inode_table << endl;
     return groupDescriptors->at(group).bg_inode_table;
 }
-
-
