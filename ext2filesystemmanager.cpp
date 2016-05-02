@@ -21,12 +21,11 @@ ext2FileSystemManager::ext2FileSystemManager(fstream *file, ext2GroupDescriptor 
     qDebug() << "begin construct fsManager";
     getInodeTableData(2); //root is inode 2
     root = new ext2Folder(tab, 2, QObject::tr("/"));
-    //root->setPath("/");
     addFilesAndFolders(root);
 }
 
 ext2FileSystemManager::~ext2FileSystemManager() {
-    //delete tab;
+    delete root;
 }
 
 ext2Folder* ext2FileSystemManager::getFolderAtPath(QString path) {
@@ -56,13 +55,6 @@ bool ext2FileSystemManager::exploreToPath(QString path) {
 
 
     //determine whether we should return early
-    /*foreach (ext2Folder *f, *(current->getFolders())) {
-        if (f->getFolders()->size() != 0 || f->getFiles()->size() != 0) {
-            //we have already explored this folder, no need to reexplore
-            qDebug() << "folder " << f->getName() << " already explored.";
-            return false;
-        }
-    }*/
     qDebug() << "end traverse current = " << current->getName();
     bool entryAdded = false;
     //call addfilesFolders for all folders in the current folder
@@ -148,7 +140,8 @@ void ext2FileSystemManager::addEntry(ext2Folder *folder) {
         foreach (ext2File *f, *folder->getFiles()) {
             if (*f == *newFile) {
                 exists = true;
-                qDebug() << "file already in folder";
+                //qDebug() << "file already in folder";
+                delete newFile; //delete this now since it won't be deleted by the destructor
                 break;
             }
         }
@@ -165,13 +158,14 @@ void ext2FileSystemManager::addEntry(ext2Folder *folder) {
         foreach (ext2Folder *f, *folder->getFolders()) {
             if (*f == *newFolder) {
                 exists = true;
-                qDebug() << "folder already in folder";
+                //qDebug() << "folder already in folder";
+                delete newFolder; //delete this now since it won't be deleted by the destructor
                 break;
             }
         }
         if (!exists) {
             folder->getFolders()->append(newFolder);
-            cout << "add folder " << newFolder->getName().toStdString() << " to folder " << folder->getName().toStdString() << endl;
+            //cout << "add folder " << newFolder->getName().toStdString() << " to folder " << folder->getName().toStdString() << endl;
         }
         break;
     }

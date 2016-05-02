@@ -64,6 +64,13 @@ VdiFile::~VdiFile() {
         delete inodesBitmap;
     if (fsManager != NULL)
         delete fsManager;
+
+    delete blockBitmap;
+    delete inodesBitmap;
+    delete SinglyIndirectPointers;
+    delete DoublyIndirectPointers;
+    delete TriplyIndirectPointers;
+    delete InputData;
 }
 
 

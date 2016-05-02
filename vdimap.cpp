@@ -21,6 +21,10 @@ VdiMap::VdiMap(QObject *parent, long long startOffset, long long stopOffset, fst
 
 }
 
+VdiMap::~VdiMap() {
+    delete map;
+}
+
 int VdiMap::getMappedLocation(int location) {
     return map->at(location);
 

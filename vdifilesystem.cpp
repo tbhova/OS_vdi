@@ -25,10 +25,10 @@ VdiFileSystem::VdiFileSystem(QTreeView *initialTree, QObject *parent) : QAbstrac
     rootData.push_back(tr("Type"));
     rootData.push_back(tr("Date Modified"));
 #ifdef  lsl
+    rootData.push_back(tr("Permissions"));
     rootData.push_back(tr("Hard Links"));
     rootData.push_back(tr("Owner"));
     rootData.push_back(tr("Group"));
-    rootData.push_back(tr("Permissions"));
 #endif
     rootNode = new VDIFileSystemTreeItem(rootData, NULL, NULL);
 
@@ -98,10 +98,6 @@ void VdiFileSystem::setupModelData(ext2FSEntry *extNode, VDIFileSystemTreeItem *
     data.push_back(time.toString(QObject::tr("M/d/yyyy h:mm AP")));
 
 #ifdef lsl
-    data.push_back(QString::number(extNode->getInodeTable()->i_links_count));
-    data.push_back(QString::number(extNode->getInodeTable()->i_uid));
-    data.push_back(QString::number(extNode->getInodeTable()->i_gid));
-
     unsigned short mode = extNode->getInodeTable()->i_mode;
     if ((mode & S_IRWXU) == S_IRWXU) {
         permissions.append("rwx");
@@ -164,6 +160,9 @@ void VdiFileSystem::setupModelData(ext2FSEntry *extNode, VDIFileSystemTreeItem *
     }
 
     data.push_back(permissions);
+    data.push_back(QString::number(extNode->getInodeTable()->i_links_count));
+    data.push_back(QString::number(extNode->getInodeTable()->i_uid));
+    data.push_back(QString::number(extNode->getInodeTable()->i_gid));
 #endif
 
     //special sauce

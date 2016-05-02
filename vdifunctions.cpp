@@ -85,12 +85,11 @@ unsigned long long getStreamData(int size, long long seek_to, fstream &input, st
     size_of_part=convertEndian(data, size, littleEndian);
 
 
-    if (output) {
+    if (output && !name.empty()) {
         cout <<"Size of "<< name << ":" << dec << size_of_part << endl;
         cout << endl;
     }
     return size_of_part;
-
 }
 
 void addBitsFromStreamData(vector<bool> *bits, int numBits, long long seek_to, fstream &input){
@@ -104,8 +103,8 @@ void addBitsFromStreamData(vector<bool> *bits, int numBits, long long seek_to, f
         if(i % (sizeof(unsigned long long)*8) == 0) {
 
             temp = getStreamData(sizeof(unsigned long long), seek_to+(sizeof(unsigned long long))*seeks, input, (string)"  ", false, true);
-            cout << endl << "address: " << hex << seek_to+(sizeof(unsigned long long))*seeks << endl;
-            cout << hex << temp << endl;
+            //cout << endl << "address: " << hex << seek_to+(sizeof(unsigned long long))*seeks << endl;
+            //cout << hex << temp << endl;
             seeks++;
         }
         bits->push_back((temp & ((unsigned long long)1 << (sizeof(unsigned long long)*8-1-(i % (sizeof(unsigned long long)*8))))) > 0);

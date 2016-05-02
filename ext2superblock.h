@@ -4,11 +4,16 @@
 #include <QObject>
 
 namespace CSCI5806 {
+/* reads in and stores information in the super block
+ * */
+
 class ext2SuperBlock : public QObject
 {
     Q_OBJECT
 public:
     explicit ext2SuperBlock(QObject *parent, long long startOffset,  std::fstream &file);
+
+    //methods to get data needed elsewhere in the program
     int getGroupCount();
     int getGroupDescriptorBlockNumber();
     int getBlockSize();

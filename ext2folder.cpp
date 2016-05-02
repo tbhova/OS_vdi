@@ -9,6 +9,17 @@ ext2Folder::ext2Folder(InodeTable tab, unsigned int iNodeNum, QString entryName)
     files = new QVector<ext2File*>;
 }
 
+ext2Folder::~ext2Folder() {
+    for (int i = 0; i < folders->size(); i++)
+        delete folders->at(i);
+    for (int i = 0; i < files->size(); i++)
+        delete files->at(i);
+
+    delete folders;
+    delete files;
+
+}
+
 QVector<ext2Folder*>* ext2Folder::getFolders() {
     return folders;
 }
