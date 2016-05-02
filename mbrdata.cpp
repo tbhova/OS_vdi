@@ -18,16 +18,16 @@ unsigned char getStreamDataChar(int size, long long seek_to, fstream &input){
         cout << hex << setw(2) << setfill('0') << (int)data[i] << " ";
     }
     cout <<"" <<endl;
-    return data[size];
+    return data[size-1];
 
 }
 
 mbrData::mbrData(QObject *parent, long long startOffset,  fstream &file) : QObject(parent)
 {
-    partitionTable1[16] = getStreamDataChar(16, startOffset+446,file);
-    partitionTable2[16] = getStreamDataChar(16, startOffset+462,file);
-    partitionTable3[16] = getStreamDataChar(16, startOffset+478,file);
-    partitionTable4[16] = getStreamDataChar(16, startOffset+494,file);
+    partitionTable1[0] = getStreamDataChar(16, startOffset+446,file);
+    partitionTable2[0] = getStreamDataChar(16, startOffset+462,file);
+    partitionTable3[0] = getStreamDataChar(16, startOffset+478,file);
+    partitionTable4[0] = getStreamDataChar(16, startOffset+494,file);
 
     cout <<"Done getting data from Partitions" <<endl;
     cout << "The Magic Number for mbr is:" <<endl;
