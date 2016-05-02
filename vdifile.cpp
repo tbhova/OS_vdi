@@ -49,7 +49,6 @@ VdiFile::VdiFile(QObject *parent) : QObject(parent)
 }
 
 VdiFile::~VdiFile() {
-#warning delete everything allocated with new
     if (map != NULL)
         delete map;
     if (mbr != NULL)
@@ -161,17 +160,25 @@ void VdiFile::openFile(QString fileName) {
     //cout << "This is the adress of block bitmap" << hex<< block_bitmap_address << endl;
 
     fsManager = new ext2FileSystemManager(&input, groupDescriptors, superBlock, bootBlockLocation);
-
-    blockBitmap->push_back(true); //superBlock
+    inodesBitmap->push_back(true);
+    //blockBitmap->push_back(true); //superBlock
     for (unsigned int i = 0; i < group_count; i++) {
-        addBitsFromStreamData(blockBitmap, block_size*8, fsManager->getBlockOffset(groupDescriptors->getBlockBitmap(i)), input);
-        unsigned int inodeBitmapSize = (superBlock->getInodesPerGroup() < block_size*8) ? superBlock->getInodesPerGroup() : block_size*8;
-        addBitsFromStreamData(inodesBitmap, inodeBitmapSize, fsManager->getBlockOffset(groupDescriptors->getInodeBitmap(i)), input);
+        addBitsFromStreamData(blockBitmap, superBlock->getBlocksPerGroup(), fsManager->getBlockOffset(groupDescriptors->getBlockBitmap(i)), input);
+        addBitsFromStreamData(inodesBitmap, superBlock->getInodesPerGroup(), fsManager->getBlockOffset(groupDescriptors->getInodeBitmap(i)), input);
     }
+
+    if (!blockBitmap->at(1033))
+        cout << "false" << endl;
+    blockBitmap->at(1033) = true;
+    blockBitmap->at(1034) = true;
+    if (blockBitmap->at(1033))
+        cout << "true" << endl;
+    updateBitmap(1033, input, false);
+
     cout << "Bit reading/ converting complete" << endl;
-    cout << "size of block bitmap " << dec << blockBitmap->size() << endl;
-    cout << "size of inode bitmap " << dec << inodesBitmap->size() << endl;
-    cout << "free blocks " << std::count(blockBitmap->begin(), blockBitmap->end(), false);
+    //cout << "size of block bitmap " << dec << blockBitmap->size() << endl;
+    //cout << "size of inode bitmap " << dec << inodesBitmap->size() << endl;
+    //cout << "free blocks " << std::count(blockBitmap->begin(), blockBitmap->end(), false);
 
     emit FSManagerConstructed(fsManager);
 }
@@ -436,27 +443,39 @@ void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QModelIndex *index,
 }
 
 void VdiFile::updateBitmap (unsigned int inodeOrBlockNumber, fstream& VDIFile, bool isInodeBitmap){
-    inodeOrBlockNumber--; //this converts us into 0 based indexing on the inodeNumber
+    //inodeOrBlockNumber--; //this converts us into 0 based indexing on the inodeNumber
 
     unsigned int group;
     unsigned int localNumber;
+    unsigned int bitmapSize;
 
     long long location;
-    long long inodeByteNumber = localNumber/8;
     vector <bool> *localVec;
     if(isInodeBitmap){
-        unsigned int group = inodeOrBlockNumber/(superBlock->getInodesPerGroup());
-        unsigned int localNumber = inodeOrBlockNumber%(superBlock->getInodesPerGroup());
+        bitmapSize = superBlock->getInodesPerGroup();
         localVec =inodesBitmap;
-        location = fsManager->getBlockOffset(groupDescriptors->getBlockBitmap(group));}
-    else{
-        group = inodeOrBlockNumber/(block_size*8);
-        localNumber = inodeOrBlockNumber%(block_size*8);
+    }
+    else {
+        bitmapSize = superBlock->getBlocksPerGroup();
         localVec = blockBitmap;
-        location = fsManager->getBlockOffset(groupDescriptors->getInodeBitmap(group));}
+    }
+
+    group = inodeOrBlockNumber/(bitmapSize);
+    cout << "group number update bitmap " << group << endl;
+    localNumber = inodeOrBlockNumber%(bitmapSize);
+    long long inodeByteNumber = localNumber/8;
+
+    if(isInodeBitmap){
+        location = fsManager->getBlockOffset(groupDescriptors->getInodeBitmap(group));
+    }
+    else {
+        location = fsManager->getBlockOffset(groupDescriptors->getBlockBitmap(group));
+        cout << location << endl;
+    }
+
     QString byteString;
-    for(int i=0; i<8; i++) {
-        if(localVec->at(inodeByteNumber*8 + group*block_size*8  +i) == true)
+    for(int i=7; i>=0; i--) {
+        if(localVec->at(inodeByteNumber*8 + group*bitmapSize  +i) == true)
             byteString.append('1');
         else
             byteString.append('0');
@@ -570,12 +589,10 @@ void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, uns
         //there is not enough size in the current block
         usedInBlock = 0;
 #warning ToDo allocate new block and update directory pointers, and update destBlock
-        qDebug() << "very bad, this code needs finished";
+        //we can only place directory entries for now if we don't need to place them in a new block
         return;
     }
 
-#warning make newEntry.rec_len go to 1024 like the existing entries do
-#warning update old (last) record length (new length is startOfLastCurrent-usedInBlock)
     //build QVector<unsigned char> for directory entry
     QVector<unsigned char> dirEntry;
     addBytesToVector(dirEntry, newEntry.inode, sizeof(newEntry.inode));
@@ -638,13 +655,15 @@ unsigned int VdiFile::findFreeBitmap(vector<bool> *vec) {
     for (; i < vec->size(); i++) { //skip badBlocks and root iNodes
         if (!vec->at(i)) {
             vec->at(i) = true; //inode is now used
-            return i+1; //1 based iNode indexing
+            if(vec=blockBitmap) cout << " We are trying to write to block " << i << endl;
+            return i; //1 based iNode indexing
         }
     }
     for (unsigned int j = 0; j < start; j++) { //skip badBlocks and root iNodes
         if (!vec->at(j)) {
             vec->at(j) = true; //inode is now used
-            return j+1; //1 based iNode indexing
+            if(vec=blockBitmap) cout << " We are trying to write to block " << i << endl;
+            return j; //1 based iNode indexing
         }
     }
     cout << "error, no free blocks or iNodes" << endl;
@@ -1028,6 +1047,3 @@ unsigned long long VdiFile::triplyIndirectPointersValuesWrite(unsigned long long
 
 // end of triplyindirect
 }
-
-
-

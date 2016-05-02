@@ -17,7 +17,7 @@ ext2SuperBlock::ext2SuperBlock(QObject *parent, long long startOffset,  fstream 
     //for our use.
 
     //Note the names of these are standardized, and were found online to keep it easy to read
-    cout << "Start of SuperBlock" <<endl;
+    //cout << "Start of SuperBlock" <<endl;
     s_inodes_count = getStreamData(4,startOffset,file, "Number of Inodes");            /* Inodes count */
     s_blocks_count = getStreamData(4,startOffset+4,file, "Number of Blocks");          /* Blocks count */
     s_r_blocks_count = getStreamData(4,startOffset+8,file, " Reserved Blocks");        /* Reserved blocks count */
@@ -58,7 +58,7 @@ ext2SuperBlock::ext2SuperBlock(QObject *parent, long long startOffset,  fstream 
     block_size = 1024*pow (2,s_log_block_size);
     cout << "The block size for the file system is: " << block_size << endl;
 
-    cout << "The block multiplier is" << getGroupDescriptorBlockNumber() << endl;
+    //cout << "The block multiplier is" << getGroupDescriptorBlockNumber() << endl;
 }
 
 int ext2SuperBlock::getGroupCount() {

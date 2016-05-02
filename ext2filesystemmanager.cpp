@@ -13,12 +13,12 @@ ext2FileSystemManager::ext2FileSystemManager(fstream *file, ext2GroupDescriptor 
     input = file;
     groupDescriptor = group;
     //cout << "iNodeTableAddress " << inodeAddress << endl;
-    cout << "bootBlockAddress " << bootBlockAddress << endl;
+    //cout << "bootBlockAddress " << bootBlockAddress << endl;
     superBlock = super;
     bootBlockAddress = bootBlock;
     block_size = super->getBlockSize();
     //get root info
-    qDebug() << "begin construct fsManager";
+    //qDebug() << "begin construct fsManager";
     getInodeTableData(2); //root is inode 2
     root = new ext2Folder(tab, 2, QObject::tr("/"));
     addFilesAndFolders(root);
@@ -55,11 +55,11 @@ bool ext2FileSystemManager::exploreToPath(QString path) {
 
 
     //determine whether we should return early
-    qDebug() << "end traverse current = " << current->getName();
+    //qDebug() << "end traverse current = " << current->getName();
     bool entryAdded = false;
     //call addfilesFolders for all folders in the current folder
     foreach (ext2Folder *f, *(current->getFolders())) {
-        qDebug() << "addFilesAndFolders" <<(f->getName());
+        qDebug() << "addFilesAndFolders at folder " <<(f->getName());
 
         //original vector sizes
         int origFiles = f->getFiles()->size();
@@ -75,17 +75,16 @@ bool ext2FileSystemManager::exploreToPath(QString path) {
 }
 
 void ext2FileSystemManager::addFilesAndFolders(ext2Folder *folder) {
-    cout << "add files and folders - folderName = " << folder->getName().toStdString() << endl;
+    //cout << "add files and folders - folderName = " << folder->getName().toStdString() << endl;
     const InodeTable *tempTab = folder->getInodeTable();
-    cout << "tempTab->i_blocks " << tempTab->i_blocks << endl;
+    //cout << "tempTab->i_blocks " << tempTab->i_blocks << endl;
     for (unsigned int i = 0; (i < (tempTab->i_blocks)/(block_size/512)) && (i < 12); i++) {
-        qDebug() << "i " << i << " blocks " << (tempTab->i_blocks)/(block_size/512);
-        qDebug() << "add files i_block " << tempTab->i_block[i];
+        //qDebug() << "i " << i << " blocks " << (tempTab->i_blocks)/(block_size/512);
+        //qDebug() << "add files i_block " << tempTab->i_block[i];
         if (tempTab->i_block[i] == 0)
             break;
         fillInFilesFromBlock(folder, tempTab->i_block[i], 24);
     }
-#warning add indirection
     for (int i = 0; i < 15; i++)
         cout << dec << "dir i_block " << i << " " << tempTab->i_block[i] << endl;
 }
@@ -93,12 +92,12 @@ void ext2FileSystemManager::addFilesAndFolders(ext2Folder *folder) {
 void ext2FileSystemManager::fillInFilesFromBlock(ext2Folder *folder, unsigned int block_num, unsigned long long offsetOfStruct) {
     while (true) {
         long long offset = this->getBlockOffset(block_num) + offsetOfStruct;
-        cout << "fill in files from block - folderName = " << folder->getName().toStdString() << endl;
-        cout << hex << "offset " << offset << endl;
-        cout << dec << bootBlockAddress << endl;
-        cout << block_size << endl;
-        cout << block_num << endl;
-        cout << offsetOfStruct << endl;
+        //cout << "fill in files from block - folderName = " << folder->getName().toStdString() << endl;
+        //cout << hex << "offset " << offset << endl;
+        //cout << dec << bootBlockAddress << endl;
+        //cout << block_size << endl;
+        //cout << block_num << endl;
+        //cout << offsetOfStruct << endl;
         stringstream ss;
 
         InodeIn.inode = (unsigned int)getStreamData(4, offset, *input, "Inode Number", true);
@@ -111,7 +110,7 @@ void ext2FileSystemManager::fillInFilesFromBlock(ext2Folder *folder, unsigned in
 
         InodeIn.name = ss.str();
 
-        cout << dec << "` the file is " << InodeIn.name << endl;
+        cout << dec << "The file is " << InodeIn.name << endl;
 
         offsetOfStruct += InodeIn.rec_len; //increment running count
         if (InodeIn.file_type == 1 || InodeIn.file_type == 2) {
@@ -124,8 +123,8 @@ void ext2FileSystemManager::fillInFilesFromBlock(ext2Folder *folder, unsigned in
 }
 
 void ext2FileSystemManager::addEntry(ext2Folder *folder) {
-    cout << "add entry - folderName = " << folder->getName().toStdString() << endl;
-    cout << "add entry name  = " << InodeIn.name << endl;
+    //cout << "add entry - folderName = " << folder->getName().toStdString() << endl;
+    //cout << "add entry name  = " << InodeIn.name << endl;
     if (InodeIn.name == ".." || InodeIn.name == ".")
         return;
     ext2File *newFile;
@@ -165,7 +164,7 @@ void ext2FileSystemManager::addEntry(ext2Folder *folder) {
         }
         if (!exists) {
             folder->getFolders()->append(newFolder);
-            //cout << "add folder " << newFolder->getName().toStdString() << " to folder " << folder->getName().toStdString() << endl;
+            cout << "add folder " << newFolder->getName().toStdString() << " to folder " << folder->getName().toStdString() << endl;
         }
         break;
     }
@@ -206,21 +205,21 @@ ext2Folder* ext2FileSystemManager::getRoot() const {
 }
 
 long long ext2FileSystemManager::getInodeOffset(unsigned int InodeNumber) {
-    cout << "InodeNumber = " << dec << InodeNumber << endl;
+    /*cout << "InodeNumber = " << dec << InodeNumber << endl;
     cout << "block_size" << block_size << endl;
     cout << "super block size" << superBlock->getBlockSize() << endl;
-    cout << "blocksupergroup" << superBlock->getBlocksPerGroup() << endl;
+    cout << "blocksupergroup" << superBlock->getBlocksPerGroup() << endl;*/
 
     unsigned int block_group= (InodeNumber -1) /superBlock->getInodesPerGroup();
-    cout << "block_group " << block_group << endl;
+    //cout << "block_group " << block_group << endl;
     unsigned int local_inode_index= (InodeNumber-1) % superBlock->getInodesPerGroup();
-    cout << "local_inode_index " << local_inode_index << endl;
+    //cout << "local_inode_index " << local_inode_index << endl;
 
     long long offset = bootBlockAddress + block_size*groupDescriptor->getInodeTable(block_group) + (local_inode_index * sizeof(tab));
 
-    cout << "offset " << hex << offset << endl;
-    cout << "sizeof tab " << dec << sizeof(tab) << endl;
-    cout << "bootBlockAddress " << bootBlockAddress << endl;
+    //cout << "offset " << hex << offset << endl;
+    //cout << "sizeof tab " << dec << sizeof(tab) << endl;
+    //cout << "bootBlockAddress " << bootBlockAddress << endl;
 
     return offset;
 }

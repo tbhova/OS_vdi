@@ -106,7 +106,6 @@ MainWindow::MainWindow(QWidget *parent) :
 }
 
 MainWindow::~MainWindow() {
-#warning double check for memory leaks
     delete ui;
     delete vdiFS;
     delete localFS;

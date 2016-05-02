@@ -59,7 +59,7 @@ unsigned long long convertEndian(unsigned char C[], int size, bool littleEndian)
 //get data from Stream
 unsigned long long getStreamData(int size, long long seek_to, fstream &input, string name, bool output, bool littleEndian, bool afterVDIMap){
     unsigned char data[size];
-    static reads = 0;
+    static int reads = 0;
 
     if (reads > 2048) {
         input.clear();
@@ -100,27 +100,39 @@ unsigned long long getStreamData(int size, long long seek_to, fstream &input, st
 }
 
 void addBitsFromStreamData(vector<bool> *bits, int numBits, long long seek_to, fstream &input){
-    unsigned long long temp;
+    unsigned char temp;
+    //cout << "add bits " << hex <<  seek_to << endl;
 
     input.clear();
     input.seekg(seek_to);
     int seeks = 0;
-    for(int i = 0; i < numBits; i++) {
-        //if we have used all the bits in the long long, lets get another
-        if(i % (sizeof(unsigned long long)*8) == 0) {
 
-            temp = getStreamData(sizeof(unsigned long long), seek_to+(sizeof(unsigned long long))*seeks, input, (string)"  ", false, true);
-            //cout << endl << "address: " << hex << seek_to+(sizeof(unsigned long long))*seeks << endl;
-            //cout << hex << temp << endl;
+    for (int i = 0; i < numBits/8; i++) {
+        temp = getStreamData(1, seek_to + seeks, input, "", false, true);
+        //cout <<  hex<< (int)temp << endl;
+        seeks++;
+        for (int j = 0; j < 8; j++) {
+            bits->push_back((temp & ((unsigned char)1 << j)) > 0);
+        }
+    }
+
+    /*for(int i = numBits -1; i>=0; i--) {
+        //if we have used all the bits in the char
+        if((i-sizeof(unsigned char)*8-1) % (sizeof(unsigned char)*8) == 0) {
+
+            temp = getStreamData(sizeof(unsigned char), seek_to+(sizeof(unsigned char))*seeks, input, (string)"  ", false, false);
+            cout << endl << "address: " << hex << seek_to+(sizeof(unsigned char))*seeks << endl;
+            cout << hex << temp << endl;
             seeks++;
         }
-        bits->push_back((temp & ((unsigned long long)1 << (sizeof(unsigned long long)*8-1-(i % (sizeof(unsigned long long)*8))))) > 0);
-        //cout << hex << ((unsigned long long)1 << (sizeof(unsigned long long)*8-1-(i % (sizeof(unsigned long long)*8)))) << ' ';
+        bits->push_back((temp & ((unsigned char)1 << (sizeof(unsigned char)*8-1-(i % (sizeof(unsigned char)*8))))) > 0);
+        cout << hex << ((unsigned char)1 << (sizeof(unsigned char)*8-1-(i % (sizeof(unsigned char)*8)))) << ' ';
         //if (bits->back())
         //    cout << '1';
         //else cout << '0';
     }
     //cout << endl << endl;
+    */
 }
 
 //get data from Stream
