@@ -45,7 +45,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, MainWindow::transferToLocalFS, vdiFS, VdiFileSystem::transferToLocalFS);
     connect(this, MainWindow::transferToVDI, vdiFS, VdiFileSystem::transferToVDI);
 
-    //connect(vdiFS, VdiFileSystem::progressUpdate, progress, QProgressBar::setValue);
     connect(vdiFS, VdiFileSystem::progressUpdate, this, MainWindow::processProgressUpdate);
 
 
@@ -107,7 +106,6 @@ MainWindow::MainWindow(QWidget *parent) :
 }
 
 MainWindow::~MainWindow() {
-#warning double check for memory leaks
     delete ui;
     delete vdiFS;
     delete localFS;

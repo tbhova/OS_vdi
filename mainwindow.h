@@ -12,6 +12,9 @@
 #include <QLabel>
 #include <QProgressBar>
 
+/* This is the top level gui program and basically like our main
+ * Most of the gui work is done in the Qt Designer, and reflected in the xml file
+ * */
 
 
 namespace Ui {

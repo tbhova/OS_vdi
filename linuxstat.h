@@ -1,6 +1,10 @@
 #ifndef LINUXSTAT_H
 #define LINUXSTAT_H
 
+/* shorted version of linux's stat.h file
+ * relevant data here for determining permissions
+ */
+
 #define	S_IRWXU	0x1C0			/* RWX mask for owner */
 #define	S_IRUSR	0x100			/* R for owner */
 #define	S_IWUSR	0x80			/* W for owner */

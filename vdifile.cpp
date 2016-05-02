@@ -1,5 +1,4 @@
 #include "vdifile.h"
-#include <QMessageBox>
 #include <QFileDialog>
 #include <string>
 #include <iostream>
@@ -10,9 +9,7 @@
 #include <QTextStream>
 #include <QMessageBox>
 #include <qmessagebox.h>
-#include <iostream>
 #include <String>
-#include <iostream>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
@@ -20,12 +17,9 @@
 #include <fstream>
 #include <cmath>
 #include <sstream>
-#include <string>
 #include "vdifunctions.h"
 #include <QDebug>
 #include <ios>
-#include <QMessageBox>
-#include <qmessagebox.h>
 #include <cstring>
 #include <QDateTime>
 #include <algorithm>
@@ -49,7 +43,6 @@ VdiFile::VdiFile(QObject *parent) : QObject(parent)
 }
 
 VdiFile::~VdiFile() {
-#warning delete everything allocated with new
     if (map != NULL)
         delete map;
     if (mbr != NULL)
@@ -64,6 +57,11 @@ VdiFile::~VdiFile() {
         delete inodesBitmap;
     if (fsManager != NULL)
         delete fsManager;
+
+    delete SinglyIndirectPointers;
+    delete DoublyIndirectPointers;
+    delete TriplyIndirectPointers;
+    delete InputData;
 }
 
 
@@ -129,9 +127,6 @@ void VdiFile::openFile(QString fileName) {
     unsigned int group_count = superBlock->getGroupCount();
     block_size = superBlock->getBlockSize();
 
-    cout << "andy block_size" << block_size << endl;
-    cout << "andy super block size" << superBlock->getBlockSize() << endl;
-    cout << "andy blocksupergroup" << superBlock->getBlocksPerGroup() << endl;
     group_size = block_size*superBlock->getBlocksPerGroup();
     cout << "The total size of this block group is (bytes): " << group_size << endl;
 
@@ -158,17 +153,27 @@ void VdiFile::openFile(QString fileName) {
     // fillDataBlockBitmap(DataBlockBitmap, block_bitmap_address, inode_bitmap_address, input);
     //cout << "This is the adress of block bitmap" << hex<< block_bitmap_address << endl;
 
+    cout << "inodes per group " << superBlock->getInodesPerGroup() << endl;
     fsManager = new ext2FileSystemManager(&input, groupDescriptors, superBlock, bootBlockLocation);
-
-    blockBitmap->push_back(true); //superBlock
+   // inodesBitmap->push_back(true);
+    //blockBitmap->push_back(true); //superBlock
     for (unsigned int i = 0; i < group_count; i++) {
-        addBitsFromStreamData(blockBitmap, block_size*8, fsManager->getBlockOffset(groupDescriptors->getBlockBitmap(i)), input);
-        addBitsFromStreamData(inodesBitmap, block_size*8, fsManager->getBlockOffset(groupDescriptors->getInodeBitmap(i)), input);
+        addBitsFromStreamData(blockBitmap, superBlock->getBlocksPerGroup(), fsManager->getBlockOffset(groupDescriptors->getBlockBitmap(i)), input);
+        addBitsFromStreamData(inodesBitmap, superBlock->getInodesPerGroup(), fsManager->getBlockOffset(groupDescriptors->getInodeBitmap(i)), input);
     }
+    for (int i = 0; i < blockBitmap->size(); i ++) {
+        if (blockBitmap->at(i))
+            cout << "used block " << i << endl;
+    }
+    for (int i = 0; i < inodesBitmap->size(); i ++) {
+        if (inodesBitmap->at(i))
+            cout << "used inode " << i << endl;
+    }
+
     cout << "Bit reading/ converting complete" << endl;
-    cout << "size of block bitmap " << dec << blockBitmap->size() << endl;
-    cout << "size of inode bitmap " << dec << inodesBitmap->size() << endl;
-    cout << "free blocks " << std::count(blockBitmap->begin(), blockBitmap->end(), false);
+    //cout << "size of block bitmap " << dec << blockBitmap->size() << endl;
+    //cout << "size of inode bitmap " << dec << inodesBitmap->size() << endl;
+    //cout << "free blocks " << std::count(blockBitmap->begin(), blockBitmap->end(), false);
 
     emit FSManagerConstructed(fsManager);
 }
@@ -224,7 +229,7 @@ void VdiFile::loadLocalFile(InodeTable* InodeTab, unsigned int size, unsigned in
                 //cout << "Looping in here: " << i << endl;
                 }
             size=size-block_size;
-            emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+            emit progressUpdate ((FileSizeForProgressBar-(int)size)/(FileSizeForProgressBar/100));
             //cout << "We are out of the loop right now" << endl;
             }
         else{
@@ -237,28 +242,26 @@ void VdiFile::loadLocalFile(InodeTable* InodeTab, unsigned int size, unsigned in
             size =0;
             emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
             }
-        cout << "We are in the direct with Inode Index num" << inodeIndexNum << endl;
+        //cout << "We are in the direct with Inode Index num" << inodeIndexNum << endl;
     }
     else if (inodeIndexNum ==12)    {
         qDebug() << "Entering Singly Indirect..." << endl;
         size = singlyIndirectPointersValues(InodeTab->i_block[inodeIndexNum],input,localFile,size);
-        //emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
         }
     else if (inodeIndexNum ==13)    {
         qDebug() << "Entering Doubly Indirect..." << endl;
         size = doublyIndirectPointersValues(InodeTab->i_block[inodeIndexNum],input,localFile,size);
-        //emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
         }
     else if (inodeIndexNum ==14)    {
         qDebug() << "Entering Triply Indirect..." << endl;
         size = triplyIndirectPointersValues(InodeTab->i_block[inodeIndexNum],input,localFile,size);
-        //emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
         }
 
     inodeIndexNum++;
-    cout << "The size before the if was" <<size<< endl;
     if(size!=0){
-        cout << "We got into here" << endl;
         loadLocalFile(InodeTab, size, inodeIndexNum, input, localFile);
     }
     else{
@@ -284,7 +287,7 @@ unsigned long long VdiFile::singlyIndirectPointersValues(unsigned long long bloc
         if(SinglyIndirectPointers->back() == 0)
             break;
     }
-    cout << "The size of the Vector is now: " << SinglyIndirectPointers->size() << endl;
+    //cout << "The size of the Vector is now: " << SinglyIndirectPointers->size() << endl;
     int iterator=0;
     while(iterator < SinglyIndirectPointers->size() && size>0 && SinglyIndirectPointers->at(iterator) !=0){
         offset = bootBlockLocation+(block_size * (SinglyIndirectPointers->at(iterator)));
@@ -323,7 +326,7 @@ unsigned long long VdiFile::singlyIndirectPointersValues(unsigned long long bloc
 
 
 
-    cout << "The size we returned was" << size<< endl;
+    //cout << "The size we returned was" << size<< endl;
     return size;
     // end of singly indirect
 }
@@ -390,23 +393,23 @@ void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QModelIndex *index,
 
     cout << "The size of that file was " << InputFileIntoVdiFS.tellg() << endl;
 
-    if(InputFileIntoVdiFS.tellg() > 3000)
+    if(InputFileIntoVdiFS.tellg() > 500000)
         QMessageBox::information(NULL, tr("Upload Time"), tr("Your upload may take a little time. Please click 'OK' to start download and please do not click off of this window until complete..."));
 
     //get folder table
     InodeTable *tab = VDIFolder->getInodeTable();
-    cout << "Received table from VDI folder" << endl;
+    //cout << "Received table from VDI folder" << endl;
 
     //get folder inode number
     unsigned int inodeNum = VDIFolder->getInodeNumber();
-    cout << "The inode number for VDIFolder -> getInodeNumber is " << inodeNum << " that tells us where the inode for the folder is" << endl;
+    //cout << "The inode number for VDIFolder -> getInodeNumber is " << inodeNum << " that tells us where the inode for the folder is" << endl;
 
     if (this->fsManager == NULL) {
         return;
     }
     //get folder inode offset in disk
     long long folderInodeOffset = fsManager->getInodeOffset(inodeNum);
-    cout << " The inode offset for the folder is (fsmanager -> getInodeOffset(inodeNum): " << hex <<folderInodeOffset << endl;
+    //cout << " The inode offset for the folder is (fsmanager -> getInodeOffset(inodeNum): " << hex <<folderInodeOffset << endl;
     DirectoryEntry newEntry;
     //create and write directory entry to the directory
     this->writeDirectoryEntry(newEntry, tab, inodeNum, folderInodeOffset, sourceFile);
@@ -416,39 +419,56 @@ void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QModelIndex *index,
     this->writeNewInode(newEntry, newTab, InputFileIntoVdiFS.tellg(),input);
 
     //write data to blocks
+    FileSizeForProgressBar = InputFileIntoVdiFS.tellg();
     this->writeToVDIFS(&newTab,InputFileIntoVdiFS.tellg(),0,input,InputFileIntoVdiFS);
     //close the file you are writing from
     InputFileIntoVdiFS.close();
 
     if(VDIFolder->getName() != "/") {
-        cout << "update not root" << endl;
+        //cout << "update not root" << endl;
         QModelIndex i = index->parent();
         emit updateFolder(i); // update parent folder (2 folders up from file written)
     } else {
-        cout << "update root" << endl;
+        //cout << "update root" << endl;
         fsManager->addFilesAndFolders(VDIFolder);
         emit this->updateRoot();
     }
 }
 
 void VdiFile::updateBitmap (unsigned int inodeOrBlockNumber, fstream& VDIFile, bool isInodeBitmap){
-    inodeOrBlockNumber--; //this converts us into 0 based indexing on the inodeNumber
+    //inodeOrBlockNumber--; //this converts us into 0 based indexing on the inodeNumber
 
-    unsigned int group = inodeOrBlockNumber/(block_size*8);
-    unsigned int localNumber = inodeOrBlockNumber%(block_size*8);
+    unsigned int group;
+    unsigned int localNumber;
+    unsigned int bitmapSize;
 
     long long location;
-    long long inodeByteNumber = localNumber/8;
     vector <bool> *localVec;
     if(isInodeBitmap){
+        bitmapSize = superBlock->getInodesPerGroup();
         localVec =inodesBitmap;
-        location = fsManager->getBlockOffset(groupDescriptors->getBlockBitmap(group));}
-    else{
+    }
+    else {
+        bitmapSize = superBlock->getBlocksPerGroup();
         localVec = blockBitmap;
-        location = fsManager->getBlockOffset(groupDescriptors->getInodeBitmap(group));}
+    }
+
+    group = inodeOrBlockNumber/(bitmapSize);
+    //cout << "group number update bitmap " << group << endl;
+    localNumber = inodeOrBlockNumber%(bitmapSize);
+    long long inodeByteNumber = localNumber/8;
+
+    if(isInodeBitmap){
+        location = fsManager->getBlockOffset(groupDescriptors->getInodeBitmap(group));
+    }
+    else {
+        location = fsManager->getBlockOffset(groupDescriptors->getBlockBitmap(group));
+      //  cout << location << endl;
+    }
+
     QString byteString;
-    for(int i=0; i<8; i++) {
-        if(localVec->at(inodeByteNumber*8 + group*block_size*8  +i) == true)
+    for(int i=7; i>=0; i--) {
+        if(localVec->at(inodeByteNumber*8 + group*bitmapSize  +i) == true)
             byteString.append('1');
         else
             byteString.append('0');
@@ -479,18 +499,18 @@ void VdiFile::addBytesToFile (QVector <unsigned char> * toLoadVector, long long 
 
 void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, unsigned int inodeNum, long long folderInodeOffset, QFileInfo *sourceFile) {
     newEntry.name = sourceFile->fileName().toStdString();
-    cout << "Name: " << newEntry.name << endl;
+    //cout << "Name: " << newEntry.name << endl;
     newEntry.name_len = newEntry.name.size();
-    cout << "Name Length: " << dec<<(int)newEntry.name_len << endl;
+    //cout << "Name Length: " << dec<<(int)newEntry.name_len << endl;
     newEntry.rec_len = newEntry.name.size() + sizeof(newEntry.file_type) + sizeof(newEntry.inode) + sizeof(newEntry.name_len) + sizeof(newEntry.rec_len);
-    cout << "Record length: " << newEntry.rec_len << endl;
+    //cout << "Record length: " << newEntry.rec_len << endl;
     unsigned int calculatedSize = newEntry.rec_len;
     if (newEntry.rec_len % 4 != 0) {
         newEntry.rec_len += 4 - (newEntry.rec_len % 4); //align to 4 byte blocks
     }
-    cout << "New Record length: " << (int)newEntry.rec_len << endl;
+    //cout << "New Record length: " << (int)newEntry.rec_len << endl;
     newEntry.inode = this->findFreeBitmap(inodesBitmap);
-    cout << "NewEntry Inode: "<< hex << newEntry.inode <<endl;
+    //cout << "NewEntry Inode: "<< hex << newEntry.inode <<endl;
     newEntry.file_type = 1; //we only support writing files
     //update inodeBitmap
 
@@ -498,12 +518,12 @@ void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, uns
 
     //find space in directory blocks to write DirectoryEntry
     unsigned int destinationBlockIndex = tab->i_blocks/(block_size/512);
-    cout << "Destination Block Index: " << destinationBlockIndex << endl;
+    //cout << "Destination Block Index: " << destinationBlockIndex << endl;
     qDebug() << "destBlock " << destinationBlockIndex;
 
     //get last block used in directory
     unsigned int destBlock = fsManager->getBlockNumAtIndex(tab, destinationBlockIndex-1);
-    cout << "Destination block" <<destBlock << endl; //should return 130041 for folder examples
+    //cout << "Destination block" <<destBlock << endl; //should return 130041 for folder examples
 
     //find out if we have enough space to place directory entry
     unsigned short usedInBlock = 0;
@@ -512,7 +532,7 @@ void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, uns
     //unsigned short startOfLastCurrent = 0;
 
     unsigned short SizeOfLast =0;
-    cout << "Block Offset: " <<fsManager->getBlockOffset(destBlock) << endl;
+    //cout << "Block Offset: " <<fsManager->getBlockOffset(destBlock) << endl;
     for (unsigned int i = 24; i < block_size;) { //start at 24 to get beginning of directory entry
         unsigned short rec_len = getStreamData(2, fsManager->getBlockOffset(destBlock) + i+4, input, "Directory Length", true);
         unsigned char file_type = getStreamData(1, fsManager->getBlockOffset(destBlock) +i+7, input, "File Type", true);
@@ -544,14 +564,14 @@ void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, uns
         }
 
     }
-    cout << "Value used in block: " <<usedInBlock << endl;
+    //cout << "Value used in block: " <<usedInBlock << endl;
 
     /* Change value of length for the directory entry directly before the one we add*/
     QVector <unsigned char> bytesToAddToFile;
     SizeOfLast= (((SizeOfLast-1)/4)+1)*4 +8;
-    cout << "Size of last: " << SizeOfLast<< endl;
-    cout << "Least significant for size: " << hex <<(SizeOfLast & 0xFF); // least significant
-    cout << "Most significant for size: " << hex <<((SizeOfLast>> 8) & 0xFF);
+    //cout << "Size of last: " << SizeOfLast<< endl;
+    //cout << "Least significant for size: " << hex <<(SizeOfLast & 0xFF); // least significant
+    //cout << "Most significant for size: " << hex <<((SizeOfLast>> 8) & 0xFF);
     bytesToAddToFile.push_back((SizeOfLast & 0xFF));
     bytesToAddToFile.push_back(((SizeOfLast>> 8) & 0xFF));
     unsigned short beginningOfLastEntry = usedInBlock - SizeOfLast+4;
@@ -562,12 +582,10 @@ void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, uns
         //there is not enough size in the current block
         usedInBlock = 0;
 #warning ToDo allocate new block and update directory pointers, and update destBlock
-        qDebug() << "very bad, this code needs finished";
+        //we can only place directory entries for now if we don't need to place them in a new block
         return;
     }
 
-#warning make newEntry.rec_len go to 1024 like the existing entries do
-#warning update old (last) record length (new length is startOfLastCurrent-usedInBlock)
     //build QVector<unsigned char> for directory entry
     QVector<unsigned char> dirEntry;
     addBytesToVector(dirEntry, newEntry.inode, sizeof(newEntry.inode));
@@ -581,25 +599,24 @@ void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, uns
     for (unsigned int i = 0; i < newEntry.rec_len-calculatedSize; i++) {
         addBytesToVector(dirEntry, 0, 1);
     }
-    cout << "dir Entry byte array: ";
-    for (int j = 0; j < dirEntry.size(); j++) {
+    //cout << "dir Entry byte array: ";
+    /*for (int j = 0; j < dirEntry.size(); j++) {
         cout << dirEntry.at(j) << " ";
     }
-    cout << endl;
+    cout << endl;*/
 
     //find offset to write at from destBlock and usedInBlock
     long long writeOffset = this->fsManager->getBlockOffset(destBlock) + usedInBlock;
-    cout << "dest block " << destBlock << endl;
-    cout << "write offset " << writeOffset << endl;
+    //cout << "dest block " << destBlock << endl;
+    //cout << "write offset " << writeOffset << endl;
 
-    cout << "directory entry bytes: " << endl;
-    foreach (unsigned char c, dirEntry) {
+    //cout << "directory entry bytes: " << endl;
+    /*foreach (unsigned char c, dirEntry) {
         if (isalpha(c))
             cout << hex << c << " ";
         else
             cout << hex << (int)c << " ";
-    }
-    cout << dec << endl;
+    }*/
     //write QVector at offset
     this->addBytesToFile(&dirEntry, writeOffset, input);
 
@@ -607,12 +624,12 @@ void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, uns
     /*Change the length of the entry we add to finish off the rest of the block*/
     QVector <unsigned char> bytesToAddToFile2;
     unsigned short newEntryDirLength = block_size-usedInBlock;
-    cout << "Size of newEntryDirLength: " << newEntryDirLength << endl;
-    cout << "Least significant for size: " << hex <<(newEntryDirLength& 0xFF); // least significant
-    cout << "Most significant for size: " << hex <<((newEntryDirLength>> 8) & 0xFF);
+    //cout << "Size of newEntryDirLength: " << newEntryDirLength << endl;
+    //cout << "Least significant for size: " << hex <<(newEntryDirLength& 0xFF); // least significant
+    //cout << "Most significant for size: " << hex <<((newEntryDirLength>> 8) & 0xFF);
     bytesToAddToFile2.push_back((newEntryDirLength & 0xFF));
     bytesToAddToFile2.push_back(((newEntryDirLength>> 8) & 0xFF));
-    cout << "The offset we used to write: " << hex << bootBlockLocation+destBlock*block_size+usedInBlock+4 << endl;
+    //cout << "The offset we used to write: " << hex << bootBlockLocation+destBlock*block_size+usedInBlock+4 << endl;
     addBytesToFile(&bytesToAddToFile2,bootBlockLocation+destBlock*block_size+usedInBlock+4,input);
 }
 
@@ -630,13 +647,15 @@ unsigned int VdiFile::findFreeBitmap(vector<bool> *vec) {
     for (; i < vec->size(); i++) { //skip badBlocks and root iNodes
         if (!vec->at(i)) {
             vec->at(i) = true; //inode is now used
-            return i+1; //1 based iNode indexing
+            //if(vec=blockBitmap) cout << " We are trying to write to block " << i << endl;
+            return i-1+superBlock->getGroupDescriptorBlockNumber(); //1 based iNode indexing
         }
     }
     for (unsigned int j = 0; j < start; j++) { //skip badBlocks and root iNodes
         if (!vec->at(j)) {
             vec->at(j) = true; //inode is now used
-            return j+1; //1 based iNode indexing
+            if(vec=blockBitmap) cout << " We are trying to write to block " << i << endl;
+            return j-1+superBlock->getGroupDescriptorBlockNumber(); //1 based iNode indexing
         }
     }
     cout << "error, no free blocks or iNodes" << endl;
@@ -711,11 +730,11 @@ void VdiFile::buildInodeByteVector(QVector<unsigned char> &inodeByteVec, InodeTa
 
 void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSize, fstream& input) {
     unsigned int blocksNeeded = ((fileSize-1)/block_size)+1;
-    cout << " The number of blocks needed is: " << blocksNeeded << endl;
+    //cout << " The number of blocks needed is: " << blocksNeeded << endl;
     for (unsigned int i = 0; i < 15; i++) { //up to 15 to set all non used blocks to 0
         if ((i+1) <= blocksNeeded && i <12) {
                 i_block[i] = findFreeBitmap(blockBitmap);
-                cout << "iBlock"<< i<< " equals " <<dec << i_block[i] << " for this instance"<< endl;
+                //cout << "iBlock"<< i<< " equals " <<dec << i_block[i] << " for this instance"<< endl;
                 updateBitmap (i_block[i], input, false);
              }
         else{
@@ -730,8 +749,8 @@ void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSiz
     unsigned int spotsAvailableForAddresses = block_size/4; //number of pointers we can store in one block
     i_block[12] = findFreeBitmap(blockBitmap);
     updateBitmap (i_block[12], input,false);
-    cout << "iBlock12 equals " <<dec << i_block[12] << " for this instance"<< endl;
-    cout << "The number of blocks we still need are: " << blocksNeeded << endl;
+    //cout << "iBlock12 equals " <<dec << i_block[12] << " for this instance"<< endl;
+    //cout << "The number of blocks we still need are: " << blocksNeeded << endl;
     unsigned int blocksToAllocate = (blocksNeeded < spotsAvailableForAddresses)?blocksNeeded:spotsAvailableForAddresses;
     addBlockPointers(i_block[12],blocksToAllocate,input);
 
@@ -739,65 +758,65 @@ void VdiFile::allocateBlockPointers(unsigned int i_block[], unsigned int fileSiz
 
     if (blocksNeeded == 0) return;
     //doubly indirect
-    cout << "doubly allocate blocks" << endl;
-    cout << "block bitmap size = " << blockBitmap->size() << endl;
+    //cout << "doubly allocate blocks" << endl;
+    //cout << "block bitmap size = " << blockBitmap->size() << endl;
     i_block[13] = findFreeBitmap(blockBitmap);
     updateBitmap (i_block[13], input,false);
-    cout << "iBlock13 equals " <<dec << i_block[13] << " for this instance"<< endl;
-    cout << "iblock13 at offset " << hex <<fsManager->getBlockOffset(i_block[13]) << endl;
-    cout << "The number of blocks we still need are: " << dec << blocksNeeded << endl;
+    //cout << "iBlock13 equals " <<dec << i_block[13] << " for this instance"<< endl;
+    //cout << "iblock13 at offset " << hex <<fsManager->getBlockOffset(i_block[13]) << endl;
+    //cout << "The number of blocks we still need are: " << dec << blocksNeeded << endl;
 
     unsigned int doublyBlocksAvail = spotsAvailableForAddresses*spotsAvailableForAddresses;
     blocksToAllocate = (blocksNeeded < doublyBlocksAvail) ? blocksNeeded : doublyBlocksAvail;
-    cout << "blocks to allocated " <<blocksToAllocate << endl;
+    //cout << "blocks to allocated " <<blocksToAllocate << endl;
     QVector<unsigned int> newAddresses;
     addBlockPointers(i_block[13],1 + (blocksToAllocate-1)/spotsAvailableForAddresses,input, &newAddresses);
-    cout << "number new address " << newAddresses.size() << endl;
+    //cout << "number new address " << newAddresses.size() << endl;
     foreach (unsigned int  i, newAddresses) {
         blocksToAllocate = (blocksNeeded < spotsAvailableForAddresses)?blocksNeeded:spotsAvailableForAddresses;
-        cout << "blocks to allocated " <<blocksToAllocate << endl;
-        cout << "block number i " << i << endl;
-        cout << "block i offset offset " << fsManager->getBlockOffset(i) << endl;
+        //cout << "blocks to allocated " <<blocksToAllocate << endl;
+        //cout << "block number i " << i << endl;
+        //cout << "block i offset offset " << fsManager->getBlockOffset(i) << endl;
         addBlockPointers(i, blocksToAllocate, input);
         blocksNeeded -= blocksToAllocate;
-        cout << "The number of blocks we still need are: " << dec << blocksNeeded << endl;
+        //cout << "The number of blocks we still need are: " << dec << blocksNeeded << endl;
     }
     newAddresses.clear();
-    cout << "end doubly allocate blocks" << endl;
+    //cout << "end doubly allocate blocks" << endl;
 
     //triply
     if (blocksNeeded == 0) return;
-    cout << "triply allocate blocks" << endl;
-    cout << "blocks still needed " << blocksNeeded << endl;
+    //cout << "triply allocate blocks" << endl;
+    //cout << "blocks still needed " << blocksNeeded << endl;
     i_block[14] = findFreeBitmap(blockBitmap);
     updateBitmap (i_block[14], input,false);
-    cout << "iBlock14 equals " <<dec << i_block[14] << " for this instance"<< endl;
-    cout << "iblock14 at offset " << hex <<fsManager->getBlockOffset(i_block[14]) << endl;
-    cout << "The number of blocks we still need are: " << dec << blocksNeeded << endl;
+    //cout << "iBlock14 equals " <<dec << i_block[14] << " for this instance"<< endl;
+    //cout << "iblock14 at offset " << hex <<fsManager->getBlockOffset(i_block[14]) << endl;
+    //cout << "The number of blocks we still need are: " << dec << blocksNeeded << endl;
 
     unsigned int triplyBlocksAvail = doublyBlocksAvail*spotsAvailableForAddresses;
-    cout << " singly pointers avail " << spotsAvailableForAddresses << endl;
-    cout << " doubly pointers avail " << doublyBlocksAvail << endl;
-    cout << " triply pointers avail " << triplyBlocksAvail << endl;
+    //cout << " singly pointers avail " << spotsAvailableForAddresses << endl;
+    //cout << " doubly pointers avail " << doublyBlocksAvail << endl;
+    //cout << " triply pointers avail " << triplyBlocksAvail << endl;
 
     blocksToAllocate = (blocksNeeded < triplyBlocksAvail) ? blocksNeeded : triplyBlocksAvail;
-    cout << "DOUBLY blocks to allocated " << blocksToAllocate << endl;
+    //cout << "DOUBLY blocks to allocated " << blocksToAllocate << endl;
 
     addBlockPointers(i_block[14],1 + (blocksToAllocate-1)/doublyBlocksAvail, input, &newAddresses);
-    cout << "number new address " << newAddresses.size() << endl;
+    //cout << "number new address " << newAddresses.size() << endl;
     foreach (unsigned int  i, newAddresses) {
         QVector<unsigned int> newAddresses2;
         blocksToAllocate = (blocksNeeded < doublyBlocksAvail)?blocksNeeded:doublyBlocksAvail;
-        cout << "SINGLY blocks to allocated " << blocksToAllocate << endl;
-        cout << "block number i " << i << endl;
-        cout << "block i offset offset " << fsManager->getBlockOffset(i) << endl;
+        //cout << "SINGLY blocks to allocated " << blocksToAllocate << endl;
+        //cout << "block number i " << i << endl;
+        //cout << "block i offset offset " << fsManager->getBlockOffset(i) << endl;
         addBlockPointers(i, 1 + (blocksToAllocate-1)/spotsAvailableForAddresses, input, &newAddresses2);
-        cout << "number new address2 " << newAddresses2.size() << endl;
+        //cout << "number new address2 " << newAddresses2.size() << endl;
         foreach (unsigned int  i, newAddresses2) {
             blocksToAllocate = (blocksNeeded < spotsAvailableForAddresses)?blocksNeeded:spotsAvailableForAddresses;
-            cout << "DIRECT blocks to allocated " << blocksToAllocate << endl;
-            cout << "block number i " << i << endl;
-            cout << "block i offset offset " << fsManager->getBlockOffset(i) << endl;
+            //cout << "DIRECT blocks to allocated " << blocksToAllocate << endl;
+            //cout << "block number i " << i << endl;
+            //cout << "block i offset offset " << fsManager->getBlockOffset(i) << endl;
             addBlockPointers(i, blocksToAllocate, input);
             blocksNeeded -= blocksToAllocate;
         }
@@ -826,8 +845,8 @@ void VdiFile::addBlockPointers(unsigned int block_num, unsigned int numberOfBloc
 
 void VdiFile::writeToVDIFS(InodeTable* InodeTab, unsigned int size, unsigned int inodeIndexNum, fstream& input , ifstream& localFile){
 
-    cout << "The size of this field is " << size << " bytes" << endl;
-    cout << "Inode index num" << inodeIndexNum << endl;
+    //cout << "The size of this field is " << size << " bytes" << endl;
+    //cout << "Inode index num" << inodeIndexNum << endl;
     while(size!=0){
       if(inodeIndexNum<12){
         long long block_num = InodeTab->i_block[inodeIndexNum];
@@ -845,9 +864,10 @@ void VdiFile::writeToVDIFS(InodeTable* InodeTab, unsigned int size, unsigned int
                 //cout << "Looping in here: " << i << endl;
                 }
             size=size-block_size;
-            cout << "The current size in direct is: " << size << endl;
+            //cout << "The current size in direct is: " << size << endl;
+            //cout << "fileSizeforprogress bar " << FileSizeForProgressBar << " size " << size << endl;
             //cout << "Size "<< size << "  block size " << block_size << " differ" << (size-block_size) << endl;
-            emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+            writeToVDIProgressUpdate(size, FileSizeForProgressBar);
             //cout << "We are out of the loop right now" << endl;
             }
         else{
@@ -858,15 +878,17 @@ void VdiFile::writeToVDIFS(InodeTable* InodeTab, unsigned int size, unsigned int
                 addToFile.push_back(getVal);
                 }
             size =0;
-            cout << "The current size in direct is: " << size << endl;
-            emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+            //cout << "The current size in direct is: " << size << endl;
+            //cout << "fileSizeforprogress bar " << FileSizeForProgressBar << " size " << size << endl;
+            writeToVDIProgressUpdate(size, FileSizeForProgressBar);
+            //cout << "We are out of the loop2 right now" << endl;
             }
-        cout << "We are in the direct with Inode Index num" << inodeIndexNum << endl;
+        //cout << "We are in the direct with Inode Index num" << inodeIndexNum << endl;
         addBytesToFile(&addToFile,offset,input);
         addToFile.clear();
       }
     else if (inodeIndexNum ==12)    {
-        cout << "The block pointer to the singly indirect is: " << hex << InodeTab->i_block[inodeIndexNum] << endl;
+        //cout << "The block pointer to the singly indirect is: " << hex << InodeTab->i_block[inodeIndexNum] << endl;
         cout << "Entering Singly Indirect..." << endl;
         size = singlyIndirectPointersValuesWrite(InodeTab->i_block[inodeIndexNum],input,localFile,size);
         emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
@@ -874,16 +896,16 @@ void VdiFile::writeToVDIFS(InodeTable* InodeTab, unsigned int size, unsigned int
     else if (inodeIndexNum ==13)    {
         cout << "Entering Doubly Indirect..." << endl;
         size = doublyIndirectPointersValuesWrite(InodeTab->i_block[inodeIndexNum],input,localFile,size);
-        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+        writeToVDIProgressUpdate(size, FileSizeForProgressBar);
         }
     else if (inodeIndexNum ==14)    {
         cout << "Entering Triply Indirect..." << endl;
         size = triplyIndirectPointersValuesWrite(InodeTab->i_block[inodeIndexNum],input,localFile,size);
-        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+        writeToVDIProgressUpdate(size, FileSizeForProgressBar);
         }
 
     inodeIndexNum++;
-    cout << "The size of iNodeNum" <<inodeIndexNum<< endl;
+    //cout << "The size of iNodeNum" <<inodeIndexNum<< endl;
     if(inodeIndexNum>14)
         break;
     }
@@ -892,6 +914,14 @@ void VdiFile::writeToVDIFS(InodeTable* InodeTab, unsigned int size, unsigned int
 
 
 
+}
+void VdiFile::writeToVDIProgressUpdate(unsigned long long size, unsigned long long fileSize) {
+    if (size == 0 || fileSize == 0) {
+        emit progressUpdate(100);
+        return;
+    }
+
+    emit progressUpdate((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
 }
 
 unsigned long long VdiFile::singlyIndirectPointersValuesWrite(unsigned long long blockNumberOfSinglyIndirect, fstream& input, ifstream& localFile, unsigned long long size){
@@ -912,7 +942,7 @@ unsigned long long VdiFile::singlyIndirectPointersValuesWrite(unsigned long long
         if(SinglyIndirectPointers->back() == 0)
             break;
     }
-    cout << "The size of the Vector is now: " << SinglyIndirectPointers->size() << endl;
+    //cout << "The size of the Vector is now: " << SinglyIndirectPointers->size() << endl;
     int iterator=0;
     while(iterator < SinglyIndirectPointers->size() && size>0 && SinglyIndirectPointers->at(iterator) !=0){
         offset = bootBlockLocation+(block_size * (SinglyIndirectPointers->at(iterator)));
@@ -926,7 +956,7 @@ unsigned long long VdiFile::singlyIndirectPointersValuesWrite(unsigned long long
                 //cout << "Looping in here: " << i << endl;
             }
             size= size-block_size;
-            cout << "The current size in singly indirect is: " << size << endl;
+            //cout << "The current size in singly indirect is: " << size << endl;
 
             //cout << "We are out of the loop right now" << endl;
         } else {
@@ -938,7 +968,7 @@ unsigned long long VdiFile::singlyIndirectPointersValuesWrite(unsigned long long
                 addToFile.push_back(getVal);
             }
             size =0;
-            cout << "The current size in singly indirect is: " << size << endl;
+            //cout << "The current size in singly indirect is: " << size << endl;
         }
 
         iterator ++;
@@ -947,11 +977,11 @@ unsigned long long VdiFile::singlyIndirectPointersValuesWrite(unsigned long long
         addToFile.clear();
         if(size == 0) break;
 
-        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+        writeToVDIProgressUpdate(size, FileSizeForProgressBar);
  }
 
 
-    cout << "The size we returned was" << size<< endl;
+    //cout << "The size we returned was" << size<< endl;
     return size;
     // end of singly indirect
 }
@@ -971,7 +1001,7 @@ unsigned long long VdiFile::doublyIndirectPointersValuesWrite(unsigned long long
     while(doublyIterator < DoublyIndirectPointers->size() && DoublyIndirectPointers->at(doublyIterator) !=0 && size>0){
         //offset = bootBlockLocation+(block_size * (DoublyIndirectPointers->at(doublyIterator)));
               size = singlyIndirectPointersValuesWrite(DoublyIndirectPointers->at(doublyIterator),input,localFile,size);
-        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+        writeToVDIProgressUpdate(size, FileSizeForProgressBar);
         doublyIterator++;
         qDebug() << "Doubly Indirect..." << endl;
         if(size == 0) break;
@@ -998,7 +1028,7 @@ unsigned long long VdiFile::triplyIndirectPointersValuesWrite(unsigned long long
     while(triplyIterator < TriplyIndirectPointers->size() && TriplyIndirectPointers->at(triplyIterator) !=0 && size>0){
         //offset = bootBlockLocation+(block_size * (DoublyIndirectPointers->at(doublyIterator)));
                size = doublyIndirectPointersValuesWrite(TriplyIndirectPointers->at(triplyIterator),input,localFile,size);
-        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+        writeToVDIProgressUpdate(size, FileSizeForProgressBar);
         triplyIterator++;
         qDebug() << "Triply Indirect..." << endl;
         if(size == 0) break;
@@ -1009,6 +1039,3 @@ unsigned long long VdiFile::triplyIndirectPointersValuesWrite(unsigned long long
 
 // end of triplyindirect
 }
-
-
-

@@ -4,6 +4,10 @@
 #include <QObject>
 #include <QString>
 
+/* ext2 file system entry - abstract class subclassed to a folder or file
+ * holds inode table, name, and inodeNumber
+ * */
+
 namespace CSCI5806 {
 struct InodeTable {
     unsigned short i_mode;          /*File/directory type and permissions */

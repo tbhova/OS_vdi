@@ -5,6 +5,10 @@
 
 #include <QObject>
 
+/* This class holds the mbr data. We don't really do much with it.
+ *
+ * */
+
 namespace CSCI5806 {
 class mbrData : public QObject
 {

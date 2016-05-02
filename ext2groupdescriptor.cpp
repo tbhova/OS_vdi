@@ -12,7 +12,7 @@ ext2GroupDescriptor::ext2GroupDescriptor(QObject *parent, int group_count, long 
     groupDescriptors = new QVector <ext2_group_desc>;
 
     cout << "Read in data from group descriptor table" << endl;
-    for(int i=offset; i< (offset + (group_count * 32)); i+=32){
+    for(int i=offset; i< (offset + (group_count * 32)); i+=32) {
        blockGroup.bg_block_bitmap = getStreamData(4,i,file,"Block Bitmap Block");
        blockGroup.bg_inode_bitmap = getStreamData(4,i+4, file,"Inode Bitmap Block");
        blockGroup.bg_inode_table = getStreamData(4,i+8, file,"Inode Table Block");
@@ -25,17 +25,21 @@ ext2GroupDescriptor::ext2GroupDescriptor(QObject *parent, int group_count, long 
     }
 }
 
+ext2GroupDescriptor::~ext2GroupDescriptor() {
+    delete groupDescriptors;
+}
+
 int ext2GroupDescriptor::getBlockBitmap(int group) {
-    cout << "Block Bitmap Location (block#): " <<dec << groupDescriptors->at(group).bg_block_bitmap << endl;
+    //cout << "Block Bitmap Location (block#): " <<dec << groupDescriptors->at(group).bg_block_bitmap << endl;
     return groupDescriptors->at(group).bg_block_bitmap;
 }
 
 int ext2GroupDescriptor::getInodeBitmap(int group) {
-    cout << "Inode Bitmap Location (block#): " <<dec << groupDescriptors->at(group).bg_inode_bitmap << endl;
+    //cout << "Inode Bitmap Location (block#): " <<dec << groupDescriptors->at(group).bg_inode_bitmap << endl;
     return groupDescriptors->at(group).bg_inode_bitmap;
 }
 
 int ext2GroupDescriptor::getInodeTable(int group) {
-    cout << "InodeTable Location (block#): " << dec << groupDescriptors->at(group).bg_inode_table << endl;
+    //cout << "InodeTable Location (block#): " << dec << groupDescriptors->at(group).bg_inode_table << endl;
     return groupDescriptors->at(group).bg_inode_table;
 }
