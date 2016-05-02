@@ -65,8 +65,6 @@ VdiFile::~VdiFile() {
     if (fsManager != NULL)
         delete fsManager;
 
-    delete blockBitmap;
-    delete inodesBitmap;
     delete SinglyIndirectPointers;
     delete DoublyIndirectPointers;
     delete TriplyIndirectPointers;
@@ -136,9 +134,6 @@ void VdiFile::openFile(QString fileName) {
     unsigned int group_count = superBlock->getGroupCount();
     block_size = superBlock->getBlockSize();
 
-    cout << "andy block_size" << block_size << endl;
-    cout << "andy super block size" << superBlock->getBlockSize() << endl;
-    cout << "andy blocksupergroup" << superBlock->getBlocksPerGroup() << endl;
     group_size = block_size*superBlock->getBlocksPerGroup();
     cout << "The total size of this block group is (bytes): " << group_size << endl;
 
@@ -170,7 +165,8 @@ void VdiFile::openFile(QString fileName) {
     blockBitmap->push_back(true); //superBlock
     for (unsigned int i = 0; i < group_count; i++) {
         addBitsFromStreamData(blockBitmap, block_size*8, fsManager->getBlockOffset(groupDescriptors->getBlockBitmap(i)), input);
-        addBitsFromStreamData(inodesBitmap, block_size*8, fsManager->getBlockOffset(groupDescriptors->getInodeBitmap(i)), input);
+        unsigned int inodeBitmapSize = (superBlock->getInodesPerGroup() < block_size*8) ? superBlock->getInodesPerGroup() : block_size*8;
+        addBitsFromStreamData(inodesBitmap, inodeBitmapSize, fsManager->getBlockOffset(groupDescriptors->getInodeBitmap(i)), input);
     }
     cout << "Bit reading/ converting complete" << endl;
     cout << "size of block bitmap " << dec << blockBitmap->size() << endl;
@@ -231,7 +227,7 @@ void VdiFile::loadLocalFile(InodeTable* InodeTab, unsigned int size, unsigned in
                 //cout << "Looping in here: " << i << endl;
                 }
             size=size-block_size;
-            emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+            emit progressUpdate ((FileSizeForProgressBar-(int)size)/(FileSizeForProgressBar/100));
             //cout << "We are out of the loop right now" << endl;
             }
         else{
@@ -249,17 +245,17 @@ void VdiFile::loadLocalFile(InodeTable* InodeTab, unsigned int size, unsigned in
     else if (inodeIndexNum ==12)    {
         qDebug() << "Entering Singly Indirect..." << endl;
         size = singlyIndirectPointersValues(InodeTab->i_block[inodeIndexNum],input,localFile,size);
-        //emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
         }
     else if (inodeIndexNum ==13)    {
         qDebug() << "Entering Doubly Indirect..." << endl;
         size = doublyIndirectPointersValues(InodeTab->i_block[inodeIndexNum],input,localFile,size);
-        //emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
         }
     else if (inodeIndexNum ==14)    {
         qDebug() << "Entering Triply Indirect..." << endl;
         size = triplyIndirectPointersValues(InodeTab->i_block[inodeIndexNum],input,localFile,size);
-        //emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
         }
 
     inodeIndexNum++;
@@ -423,6 +419,7 @@ void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QModelIndex *index,
     this->writeNewInode(newEntry, newTab, InputFileIntoVdiFS.tellg(),input);
 
     //write data to blocks
+    FileSizeForProgressBar = InputFileIntoVdiFS.tellg();
     this->writeToVDIFS(&newTab,InputFileIntoVdiFS.tellg(),0,input,InputFileIntoVdiFS);
     //close the file you are writing from
     InputFileIntoVdiFS.close();
@@ -441,16 +438,20 @@ void VdiFile::transferToVDI(CSCI5806::ext2Folder *VDIFolder, QModelIndex *index,
 void VdiFile::updateBitmap (unsigned int inodeOrBlockNumber, fstream& VDIFile, bool isInodeBitmap){
     inodeOrBlockNumber--; //this converts us into 0 based indexing on the inodeNumber
 
-    unsigned int group = inodeOrBlockNumber/(block_size*8);
-    unsigned int localNumber = inodeOrBlockNumber%(block_size*8);
+    unsigned int group;
+    unsigned int localNumber;
 
     long long location;
     long long inodeByteNumber = localNumber/8;
     vector <bool> *localVec;
     if(isInodeBitmap){
+        unsigned int group = inodeOrBlockNumber/(superBlock->getInodesPerGroup());
+        unsigned int localNumber = inodeOrBlockNumber%(superBlock->getInodesPerGroup());
         localVec =inodesBitmap;
         location = fsManager->getBlockOffset(groupDescriptors->getBlockBitmap(group));}
     else{
+        group = inodeOrBlockNumber/(block_size*8);
+        localNumber = inodeOrBlockNumber%(block_size*8);
         localVec = blockBitmap;
         location = fsManager->getBlockOffset(groupDescriptors->getInodeBitmap(group));}
     QString byteString;
@@ -853,9 +854,10 @@ void VdiFile::writeToVDIFS(InodeTable* InodeTab, unsigned int size, unsigned int
                 }
             size=size-block_size;
             cout << "The current size in direct is: " << size << endl;
+            cout << "fileSizeforprogress bar " << FileSizeForProgressBar << " size " << size << endl;
             //cout << "Size "<< size << "  block size " << block_size << " differ" << (size-block_size) << endl;
-            emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
-            //cout << "We are out of the loop right now" << endl;
+            writeToVDIProgressUpdate(size, FileSizeForProgressBar);
+            cout << "We are out of the loop right now" << endl;
             }
         else{
 
@@ -866,7 +868,9 @@ void VdiFile::writeToVDIFS(InodeTable* InodeTab, unsigned int size, unsigned int
                 }
             size =0;
             cout << "The current size in direct is: " << size << endl;
-            emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+            cout << "fileSizeforprogress bar " << FileSizeForProgressBar << " size " << size << endl;
+            writeToVDIProgressUpdate(size, FileSizeForProgressBar);
+            cout << "We are out of the loop2 right now" << endl;
             }
         cout << "We are in the direct with Inode Index num" << inodeIndexNum << endl;
         addBytesToFile(&addToFile,offset,input);
@@ -881,12 +885,12 @@ void VdiFile::writeToVDIFS(InodeTable* InodeTab, unsigned int size, unsigned int
     else if (inodeIndexNum ==13)    {
         cout << "Entering Doubly Indirect..." << endl;
         size = doublyIndirectPointersValuesWrite(InodeTab->i_block[inodeIndexNum],input,localFile,size);
-        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+        writeToVDIProgressUpdate(size, FileSizeForProgressBar);
         }
     else if (inodeIndexNum ==14)    {
         cout << "Entering Triply Indirect..." << endl;
         size = triplyIndirectPointersValuesWrite(InodeTab->i_block[inodeIndexNum],input,localFile,size);
-        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+        writeToVDIProgressUpdate(size, FileSizeForProgressBar);
         }
 
     inodeIndexNum++;
@@ -899,6 +903,14 @@ void VdiFile::writeToVDIFS(InodeTable* InodeTab, unsigned int size, unsigned int
 
 
 
+}
+void VdiFile::writeToVDIProgressUpdate(unsigned long long size, unsigned long long fileSize) {
+    if (size == 0 || fileSize == 0) {
+        emit progressUpdate(100);
+        return;
+    }
+
+    emit progressUpdate((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
 }
 
 unsigned long long VdiFile::singlyIndirectPointersValuesWrite(unsigned long long blockNumberOfSinglyIndirect, fstream& input, ifstream& localFile, unsigned long long size){
@@ -954,7 +966,7 @@ unsigned long long VdiFile::singlyIndirectPointersValuesWrite(unsigned long long
         addToFile.clear();
         if(size == 0) break;
 
-        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+        writeToVDIProgressUpdate(size, FileSizeForProgressBar);
  }
 
 
@@ -978,7 +990,7 @@ unsigned long long VdiFile::doublyIndirectPointersValuesWrite(unsigned long long
     while(doublyIterator < DoublyIndirectPointers->size() && DoublyIndirectPointers->at(doublyIterator) !=0 && size>0){
         //offset = bootBlockLocation+(block_size * (DoublyIndirectPointers->at(doublyIterator)));
               size = singlyIndirectPointersValuesWrite(DoublyIndirectPointers->at(doublyIterator),input,localFile,size);
-        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+        writeToVDIProgressUpdate(size, FileSizeForProgressBar);
         doublyIterator++;
         qDebug() << "Doubly Indirect..." << endl;
         if(size == 0) break;
@@ -1005,7 +1017,7 @@ unsigned long long VdiFile::triplyIndirectPointersValuesWrite(unsigned long long
     while(triplyIterator < TriplyIndirectPointers->size() && TriplyIndirectPointers->at(triplyIterator) !=0 && size>0){
         //offset = bootBlockLocation+(block_size * (DoublyIndirectPointers->at(doublyIterator)));
                size = doublyIndirectPointersValuesWrite(TriplyIndirectPointers->at(triplyIterator),input,localFile,size);
-        emit progressUpdate ((FileSizeForProgressBar-size)/(FileSizeForProgressBar/100));
+        writeToVDIProgressUpdate(size, FileSizeForProgressBar);
         triplyIterator++;
         qDebug() << "Triply Indirect..." << endl;
         if(size == 0) break;

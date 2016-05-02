@@ -59,7 +59,14 @@ unsigned long long convertEndian(unsigned char C[], int size, bool littleEndian)
 //get data from Stream
 unsigned long long getStreamData(int size, long long seek_to, fstream &input, string name, bool output, bool littleEndian, bool afterVDIMap){
     unsigned char data[size];
-    input.clear();
+    static reads = 0;
+
+    if (reads > 2048) {
+        input.clear();
+        reads = 0;
+    }
+
+    reads += 8;
 
     //VDI translation to other blocks
     if(afterVDIMap){

@@ -74,6 +74,7 @@ private:
     void allocateBlockPointers(unsigned int i_block[], unsigned int fileSize, std::fstream& input);
     void buildInodeByteVector(QVector<unsigned char> &inodeByteVec, InodeTable &newTab);
     void addBlockPointers(unsigned int block_num, unsigned int numberOfBlocksToAllocate, std::fstream& input, QVector<unsigned int> *blocks = NULL);
+    void writeToVDIProgressUpdate(unsigned long long size, unsigned long long fileSize);
 
     QFile *vdi; //whatever filetype we intend to use
     VdiMap *map;
