@@ -85,8 +85,8 @@ void ext2FileSystemManager::addFilesAndFolders(ext2Folder *folder) {
             break;
         fillInFilesFromBlock(folder, tempTab->i_block[i], 24);
     }
-    for (int i = 0; i < 15; i++)
-        cout << dec << "dir i_block " << i << " " << tempTab->i_block[i] << endl;
+    /*for (int i = 0; i < 15; i++)
+        cout << dec << "dir i_block " << i << " " << tempTab->i_block[i] << endl;*/
 }
 
 void ext2FileSystemManager::fillInFilesFromBlock(ext2Folder *folder, unsigned int block_num, unsigned long long offsetOfStruct) {
