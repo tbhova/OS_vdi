@@ -161,14 +161,14 @@ void VdiFile::openFile(QString fileName) {
         addBitsFromStreamData(blockBitmap, superBlock->getBlocksPerGroup(), fsManager->getBlockOffset(groupDescriptors->getBlockBitmap(i)), input);
         addBitsFromStreamData(inodesBitmap, superBlock->getInodesPerGroup(), fsManager->getBlockOffset(groupDescriptors->getInodeBitmap(i)), input);
     }
-    for (int i = 0; i < blockBitmap->size(); i ++) {
+    /*for (int i = 0; i < blockBitmap->size(); i ++) {
         if (blockBitmap->at(i))
             cout << "used block " << i << endl;
     }
     for (int i = 0; i < inodesBitmap->size(); i ++) {
         if (inodesBitmap->at(i))
             cout << "used inode " << i << endl;
-    }
+    }*/
 
     cout << "Bit reading/ converting complete" << endl;
     //cout << "size of block bitmap " << dec << blockBitmap->size() << endl;
@@ -529,8 +529,6 @@ void VdiFile::writeDirectoryEntry(DirectoryEntry &newEntry, InodeTable *tab, uns
     unsigned short usedInBlock = 0;
     unsigned short startOfLastCurrent = 0;
 
-    //unsigned short startOfLastCurrent = 0;
-
     unsigned short SizeOfLast =0;
     //cout << "Block Offset: " <<fsManager->getBlockOffset(destBlock) << endl;
     for (unsigned int i = 24; i < block_size;) { //start at 24 to get beginning of directory entry
@@ -654,7 +652,7 @@ unsigned int VdiFile::findFreeBitmap(vector<bool> *vec) {
     for (unsigned int j = 0; j < start; j++) { //skip badBlocks and root iNodes
         if (!vec->at(j)) {
             vec->at(j) = true; //inode is now used
-            if(vec=blockBitmap) cout << " We are trying to write to block " << i << endl;
+            //if(vec==blockBitmap) cout << " We are trying to write to block " << i << endl;
             return j-1+superBlock->getGroupDescriptorBlockNumber(); //1 based iNode indexing
         }
     }
