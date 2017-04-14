@@ -37,16 +37,16 @@ VdiFileSystem::VdiFileSystem(QTreeView *initialTree, QObject *parent) : QAbstrac
 
     fsManager = NULL;
     //signal passthrough
-    connect(vdi, VdiFile::vdiFileSelected, this, VdiFileSystem::vdiFileSelected);
-    connect(this, VdiFileSystem::onBrowseVDIClicked, vdi, VdiFile::selectVdiPrompt);
-    connect(vdi, VdiFile::FSManagerConstructed, this, VdiFileSystem::fsManagerConstructed);
+    connect(vdi, &VdiFile::vdiFileSelected, this, &VdiFileSystem::vdiFileSelected);
+    connect(this, &VdiFileSystem::onBrowseVDIClicked, vdi, &VdiFile::selectVdiPrompt);
+    connect(vdi, &VdiFile::FSManagerConstructed, this, &VdiFileSystem::fsManagerConstructed);
 
-    connect(tree, QTreeView::expanded, this, VdiFileSystem::folderExpanded);
-    connect(this, VdiFileSystem::transferToLocalFS, vdi, VdiFile::transferToLocalFS);
-    connect(this, VdiFileSystem::transferToVDI, vdi, VdiFile::transferToVDI);
-    connect(vdi, VdiFile::progressUpdate, this, VdiFileSystem::progressUpdate);
-    connect(vdi, VdiFile::updateFolder, this, VdiFileSystem::folderExpanded);
-    connect(vdi, VdiFile::updateRoot, this, VdiFileSystem::updateRootNode);
+    connect(tree, &QTreeView::expanded, this, &VdiFileSystem::folderExpanded);
+    connect(this, &VdiFileSystem::transferToLocalFS, vdi, &VdiFile::transferToLocalFS);
+    connect(this, &VdiFileSystem::transferToVDI, vdi, &VdiFile::transferToVDI);
+    connect(vdi, &VdiFile::progressUpdate, this, &VdiFileSystem::progressUpdate);
+    connect(vdi, &VdiFile::updateFolder, this, &VdiFileSystem::folderExpanded);
+    connect(vdi, &VdiFile::updateRoot, this, &VdiFileSystem::updateRootNode);
 }
 
 VdiFileSystem::~VdiFileSystem() {

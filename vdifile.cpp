@@ -4,12 +4,12 @@
 #include <iostream>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QFileDialog.h>
+#include <QFileDialog>
 #include <QFile>
 #include <QTextStream>
 #include <QMessageBox>
 #include <qmessagebox.h>
-#include <String>
+#include <string>
 #include <iostream>
 #include <sstream>
 #include <iomanip>

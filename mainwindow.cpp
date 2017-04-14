@@ -1,12 +1,12 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QFileDialog.h>
+#include <QFileDialog>
 #include <QFile>
 #include <QTextStream>
 #include <QMessageBox>
 #include <qmessagebox.h>
 #include <iostream>
-#include <String>
+#include <string>
 #include <iostream>
 #include <iostream>
 #include <sstream>
@@ -40,12 +40,12 @@ MainWindow::MainWindow(QWidget *parent) :
     progress->setVisible(false);
     progressLabel->setVisible(false);
 
-    connect(vdiFS, VdiFileSystem::vdiFileSelected, this, onVdiFileChosen); //update GUI text
-    connect(this, MainWindow::browseVDIClicked, vdiFS, VdiFileSystem::onBrowseVDIClicked);
-    connect(this, MainWindow::transferToLocalFS, vdiFS, VdiFileSystem::transferToLocalFS);
-    connect(this, MainWindow::transferToVDI, vdiFS, VdiFileSystem::transferToVDI);
+    connect(vdiFS, &VdiFileSystem::vdiFileSelected, this, &MainWindow::onVdiFileChosen); //update GUI text
+    connect(this, &MainWindow::browseVDIClicked, vdiFS, &VdiFileSystem::onBrowseVDIClicked);
+    connect(this, &MainWindow::transferToLocalFS, vdiFS, &VdiFileSystem::transferToLocalFS);
+    connect(this, &MainWindow::transferToVDI, vdiFS, &VdiFileSystem::transferToVDI);
 
-    connect(vdiFS, VdiFileSystem::progressUpdate, this, MainWindow::processProgressUpdate);
+    connect(vdiFS, &VdiFileSystem::progressUpdate, this, &MainWindow::processProgressUpdate);
 
 
     QMessageBox WELCOME_BOX(this);
