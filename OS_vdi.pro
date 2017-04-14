@@ -11,6 +11,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = OS_vdi
 TEMPLATE = app
 
+QMAKE_CXXFLAGS += -fno-omit-frame-pointer
 
 SOURCES += main.cpp\
         mainwindow.cpp \
