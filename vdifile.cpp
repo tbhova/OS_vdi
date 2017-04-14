@@ -487,13 +487,10 @@ void VdiFile::updateBitmap (unsigned int inodeOrBlockNumber, fstream& VDIFile, b
 }
 
 void VdiFile::addBytesToFile (QVector <unsigned char> * toLoadVector, long long offset,fstream& VDIFile ){
-    string localAddToFile;
-    for(int i=0; i<toLoadVector->length(); i++){
-        localAddToFile = localAddToFile + (char)toLoadVector->at(i);
-    }
+    char* localAddToFile = (char*)toLoadVector->data();
 
     VDIFile.seekp (offset|ios::beg);
-    VDIFile.write(localAddToFile.c_str(),localAddToFile.length());
+    VDIFile.write(localAddToFile,toLoadVector->size());
 
 }
 
